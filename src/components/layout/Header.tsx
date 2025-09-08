@@ -21,6 +21,7 @@ export function Header() {
     { name: t("home"), href: "/" },
     { name: t("events"), href: "/events" },
     { name: t("createEvent"), href: "/create-event" },
+    { name: t("manageEvent"), href: "/manage-event" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
