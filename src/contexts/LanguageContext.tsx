@@ -14,6 +14,7 @@ const translations = {
     home: "Home",
     events: "Events",
     createEvent: "Create Event",
+    manageEvent: "Manage Event",
     
     // Common
     search: "Search",
@@ -50,6 +51,7 @@ const translations = {
     home: "หน้าแรก",
     events: "อีเวนต์",
     createEvent: "สร้างอีเวนต์",
+    manageEvent: "จัดการอีเวนต์",
     
     // Common
     search: "ค้นหา",
