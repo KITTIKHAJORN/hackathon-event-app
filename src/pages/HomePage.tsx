@@ -38,45 +38,46 @@ export function HomePage() {
     loadFeaturedEvents();
   }, [toast]);
 
+  // Event categories for homepage
   const categories = [
     {
       name: t("technology"),
       icon: Code,
-      count: 124,
-      href: "/events?category=technology",
-      gradient: "from-blue-500 to-cyan-500",
+      count: 24,
+      gradient: "from-blue-500 to-purple-600",
+      href: "/events?category=technology"
     },
     {
       name: t("music"),
       icon: Music,
-      count: 87,
-      href: "/events?category=music",
-      gradient: "from-purple-500 to-pink-500",
+      count: 18,
+      gradient: "from-pink-500 to-red-500",
+      href: "/events?category=music"
     },
     {
       name: t("workshop"),
       icon: Users,
-      count: 156,
-      href: "/events?category=workshop",
-      gradient: "from-green-500 to-emerald-500",
+      count: 32,
+      gradient: "from-green-500 to-teal-500",
+      href: "/events?category=workshop"
     },
     {
       name: t("conference"),
       icon: Presentation,
-      count: 93,
-      href: "/events?category=conference",
-      gradient: "from-orange-500 to-red-500",
-    },
+      count: 15,
+      gradient: "from-orange-500 to-yellow-500",
+      href: "/events?category=conference"
+    }
   ];
 
   return (
-    <div className="flex flex-col">
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0">
-          <img
+      <section className="relative py-20 md:py-32 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-dark">
+          <img 
             src={heroImage}
-            alt="Hero"
+            alt="Hero background"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-black/50" />
@@ -161,37 +162,41 @@ export function HomePage() {
           <div className="flex justify-between items-center mb-12">
             <div>
               <h2 className="text-3xl font-bold mb-4">{t("featuredEvents")}</h2>
-              <p className="text-muted-foreground text-lg">
-                Don't miss these amazing events
+              <p className="text-muted-foreground">
+                Discover our handpicked selection of amazing events
               </p>
             </div>
             <Button variant="outline" asChild>
               <Link to="/events">
-                View All
+                View All Events
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {loading ? (
-              [...Array(3)].map((_, i) => (
+
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(3)].map((_, i) => (
                 <div key={i} className="animate-pulse">
                   <div className="bg-muted rounded-lg h-48 mb-4"></div>
                   <div className="bg-muted rounded h-4 mb-2"></div>
                   <div className="bg-muted rounded h-4 w-3/4"></div>
                 </div>
-              ))
-            ) : (
-              featuredEvents.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  variant="featured"
-                />
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          ) : featuredEvents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredEvents.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">
+                No featured events available at the moment.
+              </p>
+            </div>
+          )}
         </div>
       </section>
     </div>
