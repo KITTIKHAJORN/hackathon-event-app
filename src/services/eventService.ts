@@ -1,4 +1,6 @@
 // Event API Service
+import { otpService, EventOTPInfo } from './otpService';
+
 const API_BASE_URL = 'http://54.169.154.143:3863';
 const TICKET_API_URL = 'http://54.169.154.143:3863/event-tickets';
 
@@ -137,6 +139,39 @@ export interface TicketApiResponse {
   Count: number;
 }
 
+export interface CreateEventRequest {
+  title: string;
+  description: string;
+  category: string;
+  date: string;
+  time: string;
+  endTime?: string;
+  location: string;
+  address?: string;
+  isOnline?: boolean;
+  maxAttendees: number;
+  tickets: Array<{
+    type: string;
+    price: number;
+    description?: string;
+  }>;
+  tags: string[];
+  image?: string;
+  creatorEmail: string;
+}
+
+export interface CreateEventResponse {
+  success: boolean;
+  eventId: string;
+  otp: EventOTPInfo;
+  message: string;
+}
+
+// Location data based on categories
+interface LocationByCategory {
+  [category: string]: string[];
+}
+
 class EventService {
   private async fetchApi<T>(endpoint: string): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -158,18 +193,74 @@ class EventService {
     }
   }
 
-  async getAllEvents(): Promise<EventData[]> {
-    console.log('🔄 Fetching events from API...');
-    const response = await this.fetchApi<ApiResponse>('/events/');
-    console.log('✅ API Response received:', response);
-    if (Array.isArray(response) && response.length > 0) {
-      const events = response[0].eventSystem.events;
-      console.log('📊 Events loaded:', events.length);
-      return events;
-    }
-    console.log('⚠️ No events found in response');
-    return [];
+  // Get locations based on category
+  // In a real application, this would fetch from an API endpoint like `/locations?category=${category}`
+  getLocationSuggestionsByCategory(category: string): string[] {
+    // This is sample data based on the API response
+    // In a real application, this would come from an API endpoint
+    const locationsByCategory: LocationByCategory = {
+      "conference": [
+        "BITEC Bangna",
+        "Queen Sirikit National Convention Center",
+        "Impact Challenger",
+        "Centara Grand at CentralWorld",
+        "Anantara Siam Bangkok Hotel",
+        "The Berkeley Hotel Pratunam"
+      ],
+      "workshop": [
+        "Lebua State Tower",
+        "The Commons",
+        "Hubba Hubba",
+        "True Digital Park",
+        "Knowledge Park",
+        "TechHub Bangkok"
+      ],
+      "networking": [
+        "Somerset Lake Point",
+        "The Roof @38th Bar",
+        "Above Eleven",
+        "Octave Rooftop Lounge",
+        "Red Sky Bar",
+        "Gaggan Anand"
+      ],
+      "entertainment": [
+        "Lumpini Park Amphitheater",
+        "Sanam Luang",
+        "Lumphini Park",
+        "Siam Paragon",
+        "CentralWorld",
+        "ICONSIAM"
+      ],
+      "sports": [
+        "Lumpini Park",
+        "Benjakitti Park",
+        "Suan Lum Ratchad",
+        "Huai Khwang Stadium",
+        "Suphachalasai Stadium",
+        "Rajamangala Stadium"
+      ],
+      "cultural": [
+        "Wat Phra Kaew",
+        "Grand Palace",
+        "Wat Arun",
+        "Wat Pho",
+        "National Museum",
+        "Bangkok Art and Culture Centre"
+      ],
+      "default": [
+        "Central Business District",
+        "Silom",
+        "Sukhumvit",
+        "Sathorn",
+        "Ratchada",
+        "Thonglor"
+      ]
+    };
+
+    return locationsByCategory[category] || locationsByCategory["default"] || [];
   }
+
+
 
   async getEventById(id: string): Promise<EventData | null> {
     const events = await this.getAllEvents();
@@ -307,6 +398,191 @@ class EventService {
     } catch (error) {
       console.error('❌ Error updating ticket status:', error);
       return false;
+    }
+  }
+
+  // Event Management with OTP
+  async createEvent(eventData: CreateEventRequest): Promise<CreateEventResponse> {
+    try {
+      // Generate a unique event ID
+      const eventId = `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Create OTP for the event
+      const otpInfo = otpService.createEventOTP(eventId, eventData.creatorEmail);
+      
+      // In a real application, you would send this data to your backend API
+      // For now, we'll simulate the API response
+      console.log('🎪 Creating event with OTP:', { eventId, otpInfo, eventData });
+      
+      // Store event data locally (in production, this would be sent to backend)
+      const localEvents = this.getLocalEvents();
+      const newEvent: EventData = {
+        id: eventId,
+        title: eventData.title,
+        description: eventData.description,
+        category: eventData.category,
+        type: 'public',
+        status: 'active',
+        featured: false,
+        organizer: {
+          name: eventData.creatorEmail.split('@')[0],
+          contact: eventData.creatorEmail,
+          phone: ''
+        },
+        schedule: {
+          startDate: eventData.date,
+          endDate: eventData.date,
+          startTime: eventData.time,
+          endTime: eventData.endTime || eventData.time,
+          timezone: 'Asia/Bangkok'
+        },
+        location: {
+          type: eventData.isOnline ? 'online' : 'onsite',
+          venue: eventData.location,
+          address: eventData.address
+        },
+        pricing: {
+          currency: 'THB',
+          regular: eventData.tickets[0]?.price || 0
+        },
+        capacity: {
+          max: eventData.maxAttendees,
+          registered: 0,
+          available: eventData.maxAttendees
+        },
+        images: {
+          banner: eventData.image || '/placeholder.svg',
+          thumbnail: eventData.image || '/placeholder.svg',
+          gallery: []
+        },
+        tags: eventData.tags
+      };
+      
+      localEvents.push(newEvent);
+      this.saveLocalEvents(localEvents);
+      
+      return {
+        success: true,
+        eventId,
+        otp: otpInfo,
+        message: 'Event created successfully with OTP for management'
+      };
+    } catch (error) {
+      console.error('❌ Error creating event:', error);
+      throw new Error('Failed to create event');
+    }
+  }
+
+  async verifyEventOTP(eventId: string, otp: string, email: string): Promise<boolean> {
+    return otpService.verifyEventOTP(eventId, otp, email);
+  }
+
+  async regenerateEventOTP(eventId: string, email: string): Promise<string | null> {
+    return otpService.regenerateOTP(eventId, email);
+  }
+
+  canManageEvent(eventId: string, email: string): boolean {
+    return otpService.canManageEvent(eventId, email);
+  }
+
+  getUserEvents(email: string): string[] {
+    return otpService.getUserEvents(email);
+  }
+
+  async updateEvent(eventId: string, eventData: Partial<CreateEventRequest>, otp: string, email: string): Promise<boolean> {
+    try {
+      // Verify OTP first
+      if (!this.verifyEventOTP(eventId, otp, email)) {
+        throw new Error('Invalid OTP or unauthorized access');
+      }
+
+      const localEvents = this.getLocalEvents();
+      const eventIndex = localEvents.findIndex(event => event.id === eventId);
+      
+      if (eventIndex === -1) {
+        throw new Error('Event not found');
+      }
+
+      // Update event data
+      const updatedEvent = {
+        ...localEvents[eventIndex],
+        title: eventData.title || localEvents[eventIndex].title,
+        description: eventData.description || localEvents[eventIndex].description,
+        category: eventData.category || localEvents[eventIndex].category,
+        // Update other fields as needed
+      };
+
+      localEvents[eventIndex] = updatedEvent;
+      this.saveLocalEvents(localEvents);
+
+      return true;
+    } catch (error) {
+      console.error('❌ Error updating event:', error);
+      return false;
+    }
+  }
+
+  async deleteEvent(eventId: string, otp: string, email: string): Promise<boolean> {
+    try {
+      // Verify OTP first
+      if (!this.verifyEventOTP(eventId, otp, email)) {
+        throw new Error('Invalid OTP or unauthorized access');
+      }
+
+      const localEvents = this.getLocalEvents();
+      const filteredEvents = localEvents.filter(event => event.id !== eventId);
+      
+      this.saveLocalEvents(filteredEvents);
+      return true;
+    } catch (error) {
+      console.error('❌ Error deleting event:', error);
+      return false;
+    }
+  }
+
+  // Local storage helpers for demo purposes
+  private getLocalEvents(): EventData[] {
+    try {
+      const stored = localStorage.getItem('local_events');
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('Error reading local events:', error);
+      return [];
+    }
+  }
+
+  private saveLocalEvents(events: EventData[]): void {
+    try {
+      localStorage.setItem('local_events', JSON.stringify(events));
+    } catch (error) {
+      console.error('Error saving local events:', error);
+    }
+  }
+
+  // Override getAllEvents to include local events
+  async getAllEvents(): Promise<EventData[]> {
+    console.log('🔄 Fetching events from API and local storage...');
+    
+    try {
+      // Get events from API
+      const response = await this.fetchApi<ApiResponse>('/events/');
+      let apiEvents: EventData[] = [];
+      
+      if (Array.isArray(response) && response.length > 0) {
+        apiEvents = response[0].eventSystem.events;
+      }
+      
+      // Get local events
+      const localEvents = this.getLocalEvents();
+      
+      // Combine both sources
+      const allEvents = [...apiEvents, ...localEvents];
+      console.log('📊 Total events loaded:', allEvents.length, '(API:', apiEvents.length, ', Local:', localEvents.length, ')');
+      
+      return allEvents;
+    } catch (error) {
+      console.error('❌ Error loading events, falling back to local events only:', error);
+      return this.getLocalEvents();
     }
   }
 }
