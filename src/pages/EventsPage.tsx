@@ -1,283 +1,268 @@
-import { useState } from "react";
-import { Filter, Grid, List, SlidersHorizontal } from "lucide-react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import Layout from "@/components/layout/Layout";
-import EventCard from "@/components/event/EventCard";
-import SearchBar from "@/components/common/SearchBar";
-import techConference from "@/assets/tech-conference.jpg";
-import musicFestival from "@/assets/music-festival.jpg";
-import workshop from "@/assets/workshop.jpg";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { EventCard } from "@/components/event/EventCard";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Search, Filter, SlidersHorizontal } from "lucide-react";
+import techImage from "@/assets/tech-conference.jpg";
+import musicImage from "@/assets/music-festival.jpg";
+import workshopImage from "@/assets/workshop.jpg";
 
-const EventsPage = () => {
+export function EventsPage() {
+  const { t } = useLanguage();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedLocation, setSelectedLocation] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Mock events data
-  const events = [
+  const allEvents = [
     {
       id: "1",
-      title: "Tech Conference Bangkok 2024",
-      description: "การประชุมเทคโนโลยีที่ใหญ่ที่สุดในเอเชียตะวันออกเฉียงใต้ มาร่วมเรียนรู้เทรนด์เทคโนโลยีล่าสุด",
-      image: techConference,
-      date: "15 มีนาคม 2024",
-      time: "09:00 - 17:00",
-      location: "Impact Muang Thong Thani",
-      category: "การประชุม",
-      price: 2500,
-      attendees: 850,
-      maxAttendees: 1000,
-      isOnline: false
+      title: "Tech Innovation Hackathon 2024",
+      description: "Join the biggest tech hackathon of the year with prizes worth $50,000",
+      image: techImage,
+      date: "2024-12-15",
+      location: "Bangkok, Thailand",
+      category: "technology",
+      price: 0,
+      currency: "THB",
+      attendees: 342,
+      maxAttendees: 500,
     },
     {
       id: "2",
-      title: "Green Festival 2024",
-      description: "เทศกาลดนตรีเพื่อสิ่งแวดล้อม ร่วมสร้างสำนึกรักษ์โลกไปพร้อมกับดนตรีสุดมันส์",
-      image: musicFestival,
-      date: "22 มีนาคม 2024",
-      time: "16:00 - 23:00",
-      location: "Lumpini Park",
-      category: "คอนเสิร์ต",
-      price: 1200,
-      attendees: 2500,
-      maxAttendees: 3000,
-      isOnline: false
+      title: "Electronic Music Festival",
+      description: "Experience the best electronic music with world-class DJs",
+      image: musicImage,
+      date: "2024-12-20",
+      location: "Phuket, Thailand",
+      category: "music",
+      price: 1500,
+      currency: "THB",
+      attendees: 892,
+      maxAttendees: 1000,
     },
     {
       id: "3",
-      title: "Digital Marketing Workshop",
-      description: "อบรมเชิงปฏิบัติการด้านการตลาดดิจิทัล เรียนรู้เทคนิคล่าสุดจากผู้เชี่ยวชาญ",
-      image: workshop,
-      date: "28 มีนาคม 2024",
-      time: "13:00 - 17:00",
-      location: "Online Workshop",
-      category: "อบรม",
-      price: 0,
-      attendees: 180,
-      maxAttendees: 200,
-      isOnline: true
+      title: "Web Development Workshop",
+      description: "Learn modern web development with React and TypeScript",
+      image: workshopImage,
+      date: "2024-12-10",
+      location: "Chiang Mai, Thailand",
+      category: "workshop",
+      price: 500,
+      currency: "THB",
+      attendees: 45,
+      maxAttendees: 50,
     },
-    // Duplicate for more content
     {
       id: "4",
-      title: "AI & Machine Learning Summit",
-      description: "งานประชุมเรื่อง AI และ Machine Learning สำหรับนักพัฒนาและนักธุรกิจ",
-      image: techConference,
-      date: "5 เมษายน 2024",
-      time: "09:00 - 16:00",
-      location: "Siam Paragon",
-      category: "การประชุม",
-      price: 3500,
-      attendees: 450,
-      maxAttendees: 500,
-      isOnline: false
+      title: "AI Conference 2024",
+      description: "Explore the future of artificial intelligence with industry experts",
+      image: techImage,
+      date: "2024-12-25",
+      location: "Bangkok, Thailand",
+      category: "conference",
+      price: 2000,
+      currency: "THB",
+      attendees: 234,
+      maxAttendees: 300,
     },
     {
       id: "5",
-      title: "Indie Music Night",
-      description: "คืนดนตรี Indie ที่รวมศิลปินคุณภาพจากทั่วประเทศ",
-      image: musicFestival,
-      date: "12 เมษายน 2024",
-      time: "19:00 - 24:00",
-      location: "RCA",
-      category: "คอนเสิร์ต",
-      price: 800,
-      attendees: 280,
-      maxAttendees: 400,
-      isOnline: false
+      title: "Rock Music Festival",
+      description: "The biggest rock festival in Southeast Asia",
+      image: musicImage,
+      date: "2024-12-30",
+      location: "Pattaya, Thailand",
+      category: "music",
+      price: 1200,
+      currency: "THB",
+      attendees: 1456,
+      maxAttendees: 2000,
     },
     {
       id: "6",
-      title: "Photography Masterclass",
-      description: "เรียนรู้เทคนิคการถ่ายภาพจากมือโปรระดับนานาชาติ",
-      image: workshop,
-      date: "18 เมษายน 2024",
-      time: "10:00 - 16:00",
-      location: "Creative Space",
-      category: "อบรม",
-      price: 1500,
-      attendees: 35,
+      title: "Design Thinking Workshop",
+      description: "Learn design thinking methodologies from UX experts",
+      image: workshopImage,
+      date: "2024-12-18",
+      location: "Bangkok, Thailand",
+      category: "workshop",
+      price: 800,
+      currency: "THB",
+      attendees: 32,
       maxAttendees: 40,
-      isOnline: false
-    }
+    },
   ];
 
+  const filteredEvents = useMemo(() => {
+    return allEvents.filter((event) => {
+      const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === "all" || event.category === selectedCategory;
+      const matchesLocation = selectedLocation === "all" || 
+        event.location.toLowerCase().includes(selectedLocation.toLowerCase());
+      
+      return matchesSearch && matchesCategory && matchesLocation;
+    });
+  }, [allEvents, searchQuery, selectedCategory, selectedLocation]);
+
   const categories = [
-    "ทั้งหมด",
-    "การประชุม",
-    "อบรม",
-    "คอนเสิร์ต",
-    "นิทรรศการ",
-    "กีฬา"
+    { value: "all", label: "All Categories" },
+    { value: "technology", label: t("technology") },
+    { value: "music", label: t("music") },
+    { value: "workshop", label: t("workshop") },
+    { value: "conference", label: t("conference") },
+  ];
+
+  const locations = [
+    { value: "all", label: "All Locations" },
+    { value: "bangkok", label: "Bangkok" },
+    { value: "phuket", label: "Phuket" },
+    { value: "chiang mai", label: "Chiang Mai" },
+    { value: "pattaya", label: "Pattaya" },
   ];
 
   return (
-    <Layout>
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            อีเวนต์ทั้งหมด
-          </h1>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="bg-muted/30 py-12">
+        <div className="container mx-auto px-4">
+          <h1 className="text-3xl font-bold mb-4">{t("events")}</h1>
           <p className="text-muted-foreground text-lg">
-            ค้นพบอีเวนต์ที่น่าสนใจและเหมาะกับคุณ
+            Discover amazing events happening around you
           </p>
         </div>
+      </div>
 
-        {/* Search Bar */}
-        <div className="mb-8">
-          <SearchBar 
-            onFilterToggle={() => setShowFilters(!showFilters)}
-            showFilter={true}
-          />
-        </div>
-
-        {/* Filters Panel */}
-        {showFilters && (
-          <div className="bg-card rounded-2xl p-6 shadow-card mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {/* Category Filter */}
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-3">
-                  หมวดหมู่
-                </label>
-                <div className="space-y-2">
-                  {categories.map((category) => (
-                    <label key={category} className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="category"
-                        value={category}
-                        className="w-4 h-4 text-primary border-border focus:ring-primary"
-                      />
-                      <span className="text-sm text-foreground">{category}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Price Filter */}
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-3">
-                  ราคา
-                </label>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" className="w-4 h-4 text-primary border-border focus:ring-primary" />
-                    <span className="text-sm text-foreground">ฟรี</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" className="w-4 h-4 text-primary border-border focus:ring-primary" />
-                    <span className="text-sm text-foreground">0 - 1,000 บาท</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" className="w-4 h-4 text-primary border-border focus:ring-primary" />
-                    <span className="text-sm text-foreground">1,000 - 5,000 บาท</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" className="w-4 h-4 text-primary border-border focus:ring-primary" />
-                    <span className="text-sm text-foreground">5,000+ บาท</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Location Type */}
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-3">
-                  รูปแบบ
-                </label>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" className="w-4 h-4 text-primary border-border focus:ring-primary" />
-                    <span className="text-sm text-foreground">ออนไลน์</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" className="w-4 h-4 text-primary border-border focus:ring-primary" />
-                    <span className="text-sm text-foreground">ออนไซต์</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" className="w-4 h-4 text-primary border-border focus:ring-primary" />
-                    <span className="text-sm text-foreground">ไฮบริด</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Date Filter */}
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-3">
-                  วันที่
-                </label>
-                <div className="space-y-3">
-                  <input
-                    type="date"
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <Button variant="outline" size="sm" className="w-full">
-                    ล้างตัวกรอง
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Filters Sidebar */}
+          <div className="lg:w-80">
+            <Card className="sticky top-24">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-semibold text-lg">{t("filter")}</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="lg:hidden"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
                   </Button>
                 </div>
-              </div>
+
+                <div className={`space-y-6 ${!showFilters && "hidden lg:block"}`}>
+                  {/* Search */}
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      {t("search")}
+                    </label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        placeholder="Search events..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Category Filter */}
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      {t("category")}
+                    </label>
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.value} value={category.value}>
+                            {category.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Location Filter */}
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      {t("location")}
+                    </label>
+                    <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {locations.map((location) => (
+                          <SelectItem key={location.value} value={location.value}>
+                            {location.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Clear Filters */}
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSelectedCategory("all");
+                      setSelectedLocation("all");
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Events Grid */}
+          <div className="flex-1">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">
+                {filteredEvents.length} events found
+              </h2>
             </div>
-          </div>
-        )}
 
-        {/* Controls */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <span className="text-muted-foreground">
-              พบ {events.length} อีเวนต์
-            </span>
-            <select className="px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
-              <option>เรียงตามวันที่</option>
-              <option>เรียงตามราคา</option>
-              <option>เรียงตามความนิยม</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              size="icon"
-              onClick={() => setViewMode('grid')}
-            >
-              <Grid className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="icon"
-              onClick={() => setViewMode('list')}
-            >
-              <List className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Events Grid */}
-        <div className={`grid gap-8 ${viewMode === 'grid' 
-          ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
-          : 'grid-cols-1'
-        }`}>
-          {events.map((event) => (
-            <EventCard key={event.id} {...event} />
-          ))}
-        </div>
-
-        {/* Pagination */}
-        <div className="flex justify-center mt-12">
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              ก่อนหน้า
-            </Button>
-            <Button variant="default" size="sm">1</Button>
-            <Button variant="ghost" size="sm">2</Button>
-            <Button variant="ghost" size="sm">3</Button>
-            <Button variant="outline" size="sm">
-              ถัดไป
-            </Button>
+            {filteredEvents.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="text-muted-foreground text-lg mb-4">
+                  No events found matching your criteria
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedCategory("all");
+                    setSelectedLocation("all");
+                  }}
+                >
+                  Clear all filters
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </Layout>
+    </div>
   );
-};
-
-export default EventsPage;
+}

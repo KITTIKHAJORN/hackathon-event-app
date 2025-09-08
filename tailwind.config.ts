@@ -22,8 +22,6 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
-          glow: "hsl(var(--primary-glow))",
-          dark: "hsl(var(--primary-dark))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -49,34 +47,31 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        sidebar: {
-          DEFAULT: "hsl(var(--sidebar-background))",
-          foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-          accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
+        lime: {
+          DEFAULT: "hsl(var(--lime))",
+          foreground: "hsl(var(--lime-foreground))",
         },
+      },
+      backgroundImage: {
+        "gradient-primary": "var(--gradient-primary)",
+        "gradient-dark": "var(--gradient-dark)",
+        "gradient-card": "var(--gradient-card)",
+        "gradient-hover": "var(--gradient-hover)",
+      },
+      boxShadow: {
+        "glow": "var(--shadow-glow)",
+        "event-card": "0 4px 20px rgba(0, 0, 0, 0.1)",
+        "event-card-hover": "0 8px 30px rgba(173, 252, 0, 0.2)",
+      },
+      transitionProperty: {
+        "all": "var(--transition-all)",
+        "colors": "var(--transition-colors)",
+        "transform": "var(--transition-transform)",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        "2xl": "1rem",
-        "3xl": "1.5rem",
-      },
-      boxShadow: {
-        'card': 'var(--shadow-card)',
-        'glow': 'var(--shadow-glow)',
-      },
-      backgroundImage: {
-        'gradient-primary': 'var(--gradient-primary)',
-        'gradient-hero': 'var(--gradient-hero)',
-      },
-      transitionProperty: {
-        'smooth': 'var(--transition-smooth)',
       },
       keyframes: {
         "accordion-down": {
