@@ -28,3 +28,5 @@ A modern React-based event management frontend application built with Vite and T
 ```bash
 git clone <your-repository-url>
 cd event-frontend
+
+กไ
