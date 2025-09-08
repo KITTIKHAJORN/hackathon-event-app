@@ -12,7 +12,7 @@ import { EventDetailPage } from "@/pages/EventDetailPage";
 import { EventRegistrationPage } from "@/pages/EventRegistrationPage";
 import { CreateEventPage } from "@/pages/CreateEventPage";
 import { EventManagementPage } from "@/pages/EventManagementPage";
-import { NotFound } from "@/pages/NotFound";
+import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
