@@ -4,37 +4,25 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Users, DollarSign } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-interface Event {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  date: string;
-  location: string;
-  category: string;
-  price: number;
-  currency: string;
-  attendees: number;
-  maxAttendees: number;
-}
+import { EventData } from "@/services/eventService";
 
 interface EventCardProps {
-  event: Event;
+  event: EventData;
   variant?: "default" | "featured";
 }
 
 export function EventCard({ event, variant = "default" }: EventCardProps) {
   const { t } = useLanguage();
 
-  const formatPrice = (price: number, currency: string) => {
-    if (price === 0) return t("free");
-    return `${price} ${currency}`;
+  const formatPrice = (pricing: EventData['pricing']) => {
+    const price = pricing.regular || pricing.earlyBird || pricing.adult || 0;
+    if (price === 0 || pricing.free === 0) return t("free");
+    return `${price.toLocaleString()} ${pricing.currency}`;
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString("th-TH", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -57,7 +45,7 @@ export function EventCard({ event, variant = "default" }: EventCardProps) {
     }`}>
       <div className="relative overflow-hidden">
         <img
-          src={event.image}
+          src={event.images?.banner || event.images?.thumbnail || '/placeholder.svg'}
           alt={event.title}
           className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
         />
@@ -65,9 +53,9 @@ export function EventCard({ event, variant = "default" }: EventCardProps) {
         <Badge
           className={`absolute top-3 left-3 ${getCategoryColor(event.category)}`}
         >
-          {t(event.category)}
+          {event.category}
         </Badge>
-        {variant === "featured" && (
+        {(variant === "featured" || event.featured) && (
           <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground">
             Featured
           </Badge>
@@ -85,20 +73,20 @@ export function EventCard({ event, variant = "default" }: EventCardProps) {
         <div className="space-y-2">
           <div className="flex items-center text-sm text-muted-foreground">
             <Calendar className="h-4 w-4 mr-2 text-primary" />
-            {formatDate(event.date)}
+            {formatDate(event.schedule.startDate)}
           </div>
           <div className="flex items-center text-sm text-muted-foreground">
             <MapPin className="h-4 w-4 mr-2 text-primary" />
-            {event.location}
+            {event.location.venue || event.location.address || 'Online Event'}
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center text-sm text-muted-foreground">
               <Users className="h-4 w-4 mr-2 text-primary" />
-              {event.attendees}/{event.maxAttendees}
+              {event.capacity.registered}/{event.capacity.max}
             </div>
             <div className="flex items-center text-sm font-medium text-primary">
               <DollarSign className="h-4 w-4 mr-1" />
-              {formatPrice(event.price, event.currency)}
+              {formatPrice(event.pricing)}
             </div>
           </div>
         </div>

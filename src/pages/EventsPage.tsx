@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,118 +6,67 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EventCard } from "@/components/event/EventCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Search, Filter, SlidersHorizontal } from "lucide-react";
-import techImage from "@/assets/tech-conference.jpg";
-import musicImage from "@/assets/music-festival.jpg";
-import workshopImage from "@/assets/workshop.jpg";
+import { eventService, EventData } from "@/services/eventService";
+import { useToast } from "@/hooks/use-toast";
 
 export function EventsPage() {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [allEvents, setAllEvents] = useState<EventData[]>([]);
+  const [categories, setCategories] = useState<Array<{id: string; name: string}>>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock events data
-  const allEvents = [
-    {
-      id: "1",
-      title: "Tech Innovation Hackathon 2024",
-      description: "Join the biggest tech hackathon of the year with prizes worth $50,000",
-      image: techImage,
-      date: "2024-12-15",
-      location: "Bangkok, Thailand",
-      category: "technology",
-      price: 0,
-      currency: "THB",
-      attendees: 342,
-      maxAttendees: 500,
-    },
-    {
-      id: "2",
-      title: "Electronic Music Festival",
-      description: "Experience the best electronic music with world-class DJs",
-      image: musicImage,
-      date: "2024-12-20",
-      location: "Phuket, Thailand",
-      category: "music",
-      price: 1500,
-      currency: "THB",
-      attendees: 892,
-      maxAttendees: 1000,
-    },
-    {
-      id: "3",
-      title: "Web Development Workshop",
-      description: "Learn modern web development with React and TypeScript",
-      image: workshopImage,
-      date: "2024-12-10",
-      location: "Chiang Mai, Thailand",
-      category: "workshop",
-      price: 500,
-      currency: "THB",
-      attendees: 45,
-      maxAttendees: 50,
-    },
-    {
-      id: "4",
-      title: "AI Conference 2024",
-      description: "Explore the future of artificial intelligence with industry experts",
-      image: techImage,
-      date: "2024-12-25",
-      location: "Bangkok, Thailand",
-      category: "conference",
-      price: 2000,
-      currency: "THB",
-      attendees: 234,
-      maxAttendees: 300,
-    },
-    {
-      id: "5",
-      title: "Rock Music Festival",
-      description: "The biggest rock festival in Southeast Asia",
-      image: musicImage,
-      date: "2024-12-30",
-      location: "Pattaya, Thailand",
-      category: "music",
-      price: 1200,
-      currency: "THB",
-      attendees: 1456,
-      maxAttendees: 2000,
-    },
-    {
-      id: "6",
-      title: "Design Thinking Workshop",
-      description: "Learn design thinking methodologies from UX experts",
-      image: workshopImage,
-      date: "2024-12-18",
-      location: "Bangkok, Thailand",
-      category: "workshop",
-      price: 800,
-      currency: "THB",
-      attendees: 32,
-      maxAttendees: 40,
-    },
-  ];
+  // Load events from API
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        setLoading(true);
+        const [eventsData, categoriesData] = await Promise.all([
+          eventService.getAllEvents(),
+          eventService.getCategories()
+        ]);
+        setAllEvents(eventsData);
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('Error loading events:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load events. Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadEvents();
+  }, [toast]);
 
   const filteredEvents = useMemo(() => {
     return allEvents.filter((event) => {
       const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchQuery.toLowerCase());
+        event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchesCategory = selectedCategory === "all" || event.category === selectedCategory;
       const matchesLocation = selectedLocation === "all" || 
-        event.location.toLowerCase().includes(selectedLocation.toLowerCase());
+        (event.location.venue && event.location.venue.toLowerCase().includes(selectedLocation.toLowerCase())) ||
+        (event.location.address && event.location.address.toLowerCase().includes(selectedLocation.toLowerCase()));
       
       return matchesSearch && matchesCategory && matchesLocation;
     });
   }, [allEvents, searchQuery, selectedCategory, selectedLocation]);
 
-  const categories = [
-    { value: "all", label: "All Categories" },
-    { value: "technology", label: t("technology") },
-    { value: "music", label: t("music") },
-    { value: "workshop", label: t("workshop") },
-    { value: "conference", label: t("conference") },
-  ];
+  const categoryOptions = useMemo(() => {
+    const options = [{ value: "all", label: "All Categories" }];
+    categories.forEach(cat => {
+      options.push({ value: cat.id, label: cat.name });
+    });
+    return options;
+  }, [categories]);
 
   const locations = [
     { value: "all", label: "All Locations" },
@@ -184,7 +133,7 @@ export function EventsPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map((category) => (
+                        {categoryOptions.map((category) => (
                           <SelectItem key={category.value} value={category.value}>
                             {category.label}
                           </SelectItem>
@@ -237,7 +186,17 @@ export function EventsPage() {
               </h2>
             </div>
 
-            {filteredEvents.length > 0 ? (
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-muted rounded-lg h-48 mb-4"></div>
+                    <div className="bg-muted rounded h-4 mb-2"></div>
+                    <div className="bg-muted rounded h-4 w-3/4"></div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredEvents.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredEvents.map((event) => (
                   <EventCard key={event.id} event={event} />
