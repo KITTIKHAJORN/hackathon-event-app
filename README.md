@@ -1,13 +1,30 @@
-# React + Vite
+# Event Frontend - Event Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern React-based event management frontend application built with Vite and Tailwind CSS v4.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Event Management**: Create, view, and manage events
+- **Modern UI**: Clean and responsive design with Tailwind CSS v4
+- **React Router**: Client-side routing for seamless navigation
+- **Form Handling**: Robust form validation with React Hook Form
+- **API Integration**: Axios for API communication
+- **Date Management**: Date-fns for date formatting and manipulation
 
-## Expanding the ESLint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-"# hackathon-event-app-" 
+- **React 19** - Latest React version
+- **Vite** - Fast build tool and dev server
+- **Tailwind CSS v4** - Latest utility-first CSS framework
+- **React Router Dom** - Client-side routing
+- **React Hook Form** - Form state management
+- **Axios** - HTTP client
+- **Lucide React** - Beautiful icons
+- **Date-fns** - Date utility library
+
+## 📦 Installation
+
+1. Clone the repository:
+```bash
+git clone <your-repository-url>
+cd event-frontend
