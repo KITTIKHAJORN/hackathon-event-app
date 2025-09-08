@@ -6,56 +6,37 @@ import { EventCard } from "@/components/event/EventCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Search, ArrowRight, Code, Music, Users, Presentation } from "lucide-react";
 import heroImage from "@/assets/hero-banner.jpg";
-import techImage from "@/assets/tech-conference.jpg";
-import musicImage from "@/assets/music-festival.jpg";
-import workshopImage from "@/assets/workshop.jpg";
+import { eventService, EventData } from "@/services/eventService";
+import { useToast } from "@/hooks/use-toast";
 
 export function HomePage() {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
+  const [featuredEvents, setFeaturedEvents] = useState<EventData[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock featured events data
-  const featuredEvents = [
-    {
-      id: "1",
-      title: "Tech Innovation Hackathon 2024",
-      description: "Join the biggest tech hackathon of the year with prizes worth $50,000",
-      image: techImage,
-      date: "2024-12-15",
-      location: "Bangkok, Thailand",
-      category: "technology",
-      price: 0,
-      currency: "THB",
-      attendees: 342,
-      maxAttendees: 500,
-    },
-    {
-      id: "2",
-      title: "Electronic Music Festival",
-      description: "Experience the best electronic music with world-class DJs",
-      image: musicImage,
-      date: "2024-12-20",
-      location: "Phuket, Thailand",
-      category: "music",
-      price: 1500,
-      currency: "THB",
-      attendees: 892,
-      maxAttendees: 1000,
-    },
-    {
-      id: "3",
-      title: "Web Development Workshop",
-      description: "Learn modern web development with React and TypeScript",
-      image: workshopImage,
-      date: "2024-12-10",
-      location: "Chiang Mai, Thailand",
-      category: "workshop",
-      price: 500,
-      currency: "THB",
-      attendees: 45,
-      maxAttendees: 50,
-    },
-  ];
+  // Load featured events from API
+  useEffect(() => {
+    const loadFeaturedEvents = async () => {
+      try {
+        setLoading(true);
+        const events = await eventService.getFeaturedEvents();
+        setFeaturedEvents(events.slice(0, 3)); // Show only first 3 featured events
+      } catch (error) {
+        console.error('Error loading featured events:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load featured events. Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadFeaturedEvents();
+  }, [toast]);
 
   const categories = [
     {
@@ -193,13 +174,23 @@ export function HomePage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredEvents.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                variant="featured"
-              />
-            ))}
+            {loading ? (
+              [...Array(3)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-muted rounded-lg h-48 mb-4"></div>
+                  <div className="bg-muted rounded h-4 mb-2"></div>
+                  <div className="bg-muted rounded h-4 w-3/4"></div>
+                </div>
+              ))
+            ) : (
+              featuredEvents.map((event) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  variant="featured"
+                />
+              ))
+            )}
           </div>
         </div>
       </section>
