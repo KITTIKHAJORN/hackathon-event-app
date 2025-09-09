@@ -1,20 +1,20 @@
-import { useState } from "react";
+import { OTPInput } from "@/components/common/OTPInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { OTPInput } from "@/components/common/OTPInput";
-import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
-import { eventService, EventData, LayoutConfig } from "@/services/eventService";
-import { Lock, Edit, Trash2, Search, Shield, Mail, Send, CheckCircle, Calendar, MapPin, Users, DollarSign, Save, ChevronLeft, ChevronRight, Plus, Ticket, RefreshCw, Layout } from "lucide-react";
 import LayoutEditor from "@/components/layout/LayoutEditor";
 import LayoutToolbar from "@/components/layout/LayoutToolbar";
+import { EventData, eventService, LayoutConfig } from "@/services/eventService";
+import { Calendar, CheckCircle, ChevronLeft, ChevronRight, Clock, DollarSign, Edit, Layout, Lock, Mail, MapPin, Plus, RefreshCw, Save, Search, Send, Shield, Ticket, Trash2 } from "lucide-react";
 
 
 // EventData is imported from eventService
