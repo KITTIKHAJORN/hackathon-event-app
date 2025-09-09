@@ -29,10 +29,12 @@ export function EventsPage() {
           eventService.getAllEvents(),
           eventService.getCategories()
         ]);
-        setAllEvents(eventsData);
-        setCategories(categoriesData);
+        setAllEvents(eventsData || []);
+        setCategories(categoriesData || []);
       } catch (error) {
         console.error('Error loading events:', error);
+        setAllEvents([]);
+        setCategories([]);
         toast({
           title: "Error",
           description: "Failed to load events. Please try again later.",
@@ -47,14 +49,18 @@ export function EventsPage() {
   }, [toast]);
 
   const filteredEvents = useMemo(() => {
+    if (!allEvents || !Array.isArray(allEvents)) {
+      return [];
+    }
+    
     return allEvents.filter((event) => {
-      const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesSearch = event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (event.tags && Array.isArray(event.tags) && event.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())));
       const matchesCategory = selectedCategory === "all" || event.category === selectedCategory;
       const matchesLocation = selectedLocation === "all" || 
-        (event.location.venue && event.location.venue.toLowerCase().includes(selectedLocation.toLowerCase())) ||
-        (event.location.address && event.location.address.toLowerCase().includes(selectedLocation.toLowerCase()));
+        (event.location?.venue && event.location.venue.toLowerCase().includes(selectedLocation.toLowerCase())) ||
+        (event.location?.address && event.location.address.toLowerCase().includes(selectedLocation.toLowerCase()));
       
       return matchesSearch && matchesCategory && matchesLocation;
     });
@@ -62,9 +68,11 @@ export function EventsPage() {
 
   const categoryOptions = useMemo(() => {
     const options = [{ value: "all", label: "All Categories" }];
-    categories.forEach(cat => {
-      options.push({ value: cat.id, label: cat.name });
-    });
+    if (categories && Array.isArray(categories)) {
+      categories.forEach(cat => {
+        options.push({ value: cat.id, label: cat.name });
+      });
+    }
     return options;
   }, [categories]);
 

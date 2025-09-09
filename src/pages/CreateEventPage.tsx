@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, MapPin, Users, DollarSign, ChevronLeft, ChevronRight, Upload, Mail, Lock, CheckCircle } from "lucide-react";
+import { Calendar, MapPin, Users, DollarSign, ChevronLeft, ChevronRight, Upload, Mail, Lock, CheckCircle, FileText, Image, Plus, Trash2, Ticket } from "lucide-react";
 import { eventService, CreateEventRequest } from "@/services/eventService";
 import { useNavigate } from "react-router-dom";
 
@@ -20,37 +20,139 @@ export function CreateEventPage() {
   const [loading, setLoading] = useState(false);
   const [eventCreated, setEventCreated] = useState(false);
   const [eventId, setEventId] = useState("");
-  const totalSteps = 4; // Reduced from 5 to 4
+  const totalSteps = 6; // Updated to 6 steps
 
   const [formData, setFormData] = useState({
-    // Step 1: Creator Information
-    creatorEmail: "",
+    // Step 1: Organizer Information
+    organizer: {
+      name: "",
+      contact: "",
+      phone: ""
+    },
     
     // Step 2: Basic Information
     title: "",
     description: "",
     category: "",
+    type: "",
+    status: "active",
+    featured: false,
     
-    // Step 3: Date & Location
-    date: "",
-    time: "",
-    endTime: "",
-    location: "",
-    address: "",
-    isOnline: false,
+    // Step 3: Schedule
+    schedule: {
+      startDate: "",
+      endDate: "",
+      startTime: "",
+      endTime: "",
+      timezone: "Asia/Bangkok"
+    },
     
-    // Step 4: Pricing & Capacity
-    tickets: [{ type: "General", price: 0, description: "" }],
-    maxAttendees: "",
+    // Step 4: Location
+    location: {
+      type: "onsite" as 'onsite' | 'online' | 'hybrid',
+      venue: "",
+      address: "",
+      coordinates: {
+        lat: 0,
+        lng: 0
+      },
+      onlineLink: ""
+    },
     
-    // Optional fields (no longer in separate step)
-    image: null,
-    tags: [],
+    // Step 5: Pricing & Capacity
+    pricing: {
+      currency: "THB"
+    },
+    tickets: [] as Array<{
+      type: string;
+      name: string;
+      price: number;
+      description?: string;
+    }>,
+    capacity: {
+      max: 0,
+      registered: 0,
+      available: 0
+    },
+    
+    // Step 6: Additional Information
+    images: {
+      banner: "",
+      thumbnail: "",
+      gallery: [] as string[]
+    },
+    tags: [] as string[],
+    requirements: [] as string[],
+    speakers: [] as Array<{
+      name: string;
+      title: string;
+      company: string;
+      bio: string;
+      image: string;
+    }>,
+    tracks: [] as string[],
+    activities: [] as string[],
+    includes: [] as string[],
+    distances: [] as string[],
+    artists: [] as Array<{
+      name: string;
+      instrument: string;
+      country: string;
+    }>,
+    
+    // Form helpers
     newTag: "",
+    newRequirement: "",
+    newSpeaker: {
+      name: "",
+      title: "",
+      company: "",
+      bio: "",
+      image: ""
+    },
+    newTrack: "",
+    newActivity: "",
+    newInclude: "",
+    newDistance: "",
+    newArtist: {
+      name: "",
+      instrument: "",
+      country: ""
+    }
   });
 
   const updateFormData = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Ticket management functions
+  const addTicket = () => {
+    const newTicket = {
+      type: `ticket_${Date.now()}`,
+      name: "",
+      price: 0,
+      description: ""
+    };
+    setFormData(prev => ({
+      ...prev,
+      tickets: [...prev.tickets, newTicket]
+    }));
+  };
+
+  const updateTicket = (index: number, field: string, value: string | number) => {
+    setFormData(prev => ({
+      ...prev,
+      tickets: prev.tickets.map((ticket, i) => 
+        i === index ? { ...ticket, [field]: value } : ticket
+      )
+    }));
+  };
+
+  const removeTicket = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      tickets: prev.tickets.filter((_, i) => i !== index)
+    }));
   };
 
   const nextStep = () => {
@@ -68,10 +170,12 @@ export function CreateEventPage() {
   const progress = (currentStep / totalSteps) * 100;
 
   const stepTitles = [
-    "Creator Information",
+    "Organizer Information",
     "Basic Information",
-    "Date & Location",
-    "Pricing & Capacity"
+    "Schedule",
+    "Location",
+    "Pricing & Capacity",
+    "Additional Information"
   ];
 
   // Category options
@@ -104,34 +208,21 @@ export function CreateEventPage() {
     updateFormData("tags", formData.tags.filter(tag => tag !== tagToRemove));
   };
 
-  const addTicket = () => {
-    updateFormData("tickets", [...formData.tickets, { type: "", price: 0, description: "" }]);
-  };
-
-  const removeTicket = (index: number) => {
-    if (formData.tickets.length > 1) {
-      const newTickets = formData.tickets.filter((_, i) => i !== index);
-      updateFormData("tickets", newTickets);
-    }
-  };
-
-  const updateTicket = (index: number, field: string, value: any) => {
-    const newTickets = formData.tickets.map((ticket, i) => 
-      i === index ? { ...ticket, [field]: value } : ticket
-    );
-    updateFormData("tickets", newTickets);
-  };
 
   const validateCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return formData.creatorEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.creatorEmail);
+        return formData.organizer.name && formData.organizer.contact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.organizer.contact);
       case 2:
-        return formData.title && formData.description && formData.category;
+        return formData.title && formData.description && formData.category && formData.type;
       case 3:
-        return formData.date && formData.time && formData.location;
+        return formData.schedule.startDate && formData.schedule.startTime && formData.schedule.endDate && formData.schedule.endTime;
       case 4:
-        return formData.maxAttendees && parseInt(formData.maxAttendees) > 0;
+        return formData.location.type && (formData.location.venue || formData.location.onlineLink);
+      case 5:
+        return formData.capacity.max > 0 && formData.tickets.length > 0 && formData.tickets.every(ticket => ticket.name && ticket.price >= 0);
+      case 6:
+        return true; // Additional information is optional
       default:
         return false;
     }
@@ -149,21 +240,39 @@ export function CreateEventPage() {
 
     setLoading(true);
     try {
+      // Convert tickets to pricing format
+      const pricingFromTickets = formData.tickets.reduce((acc, ticket) => {
+        if (ticket.name && ticket.price !== undefined) {
+          acc[ticket.name.toLowerCase().replace(/\s+/g, '')] = ticket.price;
+        }
+        return acc;
+      }, { currency: formData.pricing.currency });
+
       const eventData: CreateEventRequest = {
         title: formData.title,
         description: formData.description,
         category: formData.category,
-        date: formData.date,
-        time: formData.time,
-        endTime: formData.endTime,
+        type: formData.type,
+        status: formData.status,
+        featured: formData.featured,
+        organizer: formData.organizer,
+        schedule: formData.schedule,
         location: formData.location,
-        address: formData.address,
-        isOnline: formData.isOnline,
-        maxAttendees: parseInt(formData.maxAttendees),
-        tickets: formData.tickets,
+        pricing: pricingFromTickets,
+        capacity: {
+          max: formData.capacity.max,
+          registered: 0,
+          available: formData.capacity.max
+        },
+        images: formData.images,
         tags: formData.tags,
-        image: formData.image,
-        creatorEmail: formData.creatorEmail
+        requirements: formData.requirements,
+        speakers: formData.speakers,
+        tracks: formData.tracks,
+        activities: formData.activities,
+        includes: formData.includes,
+        distances: formData.distances,
+        artists: formData.artists
       };
 
       const response = await eventService.createEvent(eventData);
@@ -173,7 +282,7 @@ export function CreateEventPage() {
         setEventCreated(true);
         toast({
           title: "Event Created Successfully!",
-          description: `Event ID has been sent to ${formData.creatorEmail}.`,
+          description: `Event ID has been sent to ${formData.organizer.contact}.`,
         });
       }
     } catch (error) {
@@ -194,21 +303,43 @@ export function CreateEventPage() {
         return (
           <div className="space-y-6">
             <div>
-              <Label htmlFor="creatorEmail">Your Email *</Label>
+              <Label htmlFor="organizerName">Organizer Name *</Label>
+              <Input
+                id="organizerName"
+                placeholder="Enter organizer name"
+                value={formData.organizer.name}
+                onChange={(e) => updateFormData("organizer", { ...formData.organizer, name: e.target.value })}
+                className="mt-2"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="organizerEmail">Organizer Email *</Label>
               <div className="relative mt-2">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="creatorEmail"
+                  id="organizerEmail"
                   type="email"
-                  placeholder="your.email@example.com"
-                  value={formData.creatorEmail}
-                  onChange={(e) => updateFormData("creatorEmail", e.target.value)}
+                  placeholder="organizer@example.com"
+                  value={formData.organizer.contact}
+                  onChange={(e) => updateFormData("organizer", { ...formData.organizer, contact: e.target.value })}
                   className="pl-10"
                 />
               </div>
               <p className="text-sm text-muted-foreground mt-1">
                 This email will receive your event ID for management
               </p>
+            </div>
+            
+            <div>
+              <Label htmlFor="organizerPhone">Phone Number</Label>
+              <Input
+                id="organizerPhone"
+                placeholder="+66-2-xxx-xxxx"
+                value={formData.organizer.phone}
+                onChange={(e) => updateFormData("organizer", { ...formData.organizer, phone: e.target.value })}
+                className="mt-2"
+              />
             </div>
             
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
@@ -257,20 +388,65 @@ export function CreateEventPage() {
               />
             </div>
             
-            <div>
-              <Label htmlFor="category">Category *</Label>
-              <Select value={formData.category} onValueChange={(value) => updateFormData("category", value)}>
-                <SelectTrigger className="mt-2">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.value} value={category.value}>
-                      {category.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="category">Category *</Label>
+                <Select value={formData.category} onValueChange={(value) => updateFormData("category", value)}>
+                  <SelectTrigger className="mt-2">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="type">Event Type *</Label>
+                <Select value={formData.type} onValueChange={(value) => updateFormData("type", value)}>
+                  <SelectTrigger className="mt-2">
+                    <SelectValue placeholder="Select event type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="workshop">Workshop</SelectItem>
+                    <SelectItem value="conference">Conference</SelectItem>
+                    <SelectItem value="networking">Networking</SelectItem>
+                    <SelectItem value="concert">Concert</SelectItem>
+                    <SelectItem value="sports">Sports</SelectItem>
+                    <SelectItem value="festival">Festival</SelectItem>
+                    <SelectItem value="seminar">Seminar</SelectItem>
+                    <SelectItem value="exhibition">Exhibition</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="featured"
+                  checked={formData.featured}
+                  onChange={(e) => updateFormData("featured", e.target.checked)}
+                  className="rounded"
+                />
+                <Label htmlFor="featured">Featured Event</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="status"
+                  checked={formData.status === "active"}
+                  onChange={(e) => updateFormData("status", e.target.checked ? "active" : "inactive")}
+                  className="rounded"
+                />
+                <Label htmlFor="status">Active Event</Label>
+              </div>
             </div>
           </div>
         );
@@ -280,93 +456,66 @@ export function CreateEventPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="date">Event Date *</Label>
+                <Label htmlFor="startDate">Start Date *</Label>
                 <Input
-                  id="date"
+                  id="startDate"
                   type="date"
-                  value={formData.date}
-                  onChange={(e) => updateFormData("date", e.target.value)}
+                  value={formData.schedule.startDate}
+                  onChange={(e) => updateFormData("schedule", { ...formData.schedule, startDate: e.target.value })}
                   className="mt-2"
                 />
               </div>
               <div>
-                <Label htmlFor="time">Start Time *</Label>
+                <Label htmlFor="startTime">Start Time *</Label>
                 <Input
-                  id="time"
+                  id="startTime"
                   type="time"
-                  value={formData.time}
-                  onChange={(e) => updateFormData("time", e.target.value)}
+                  value={formData.schedule.startTime}
+                  onChange={(e) => updateFormData("schedule", { ...formData.schedule, startTime: e.target.value })}
                   className="mt-2"
                 />
               </div>
             </div>
             
-            <div>
-              <Label htmlFor="endTime">End Time (Optional)</Label>
-              <Input
-                id="endTime"
-                type="time"
-                value={formData.endTime}
-                onChange={(e) => updateFormData("endTime", e.target.value)}
-                className="mt-2"
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="isOnline"
-                checked={formData.isOnline}
-                onChange={(e) => updateFormData("isOnline", e.target.checked)}
-                className="rounded"
-              />
-              <Label htmlFor="isOnline">This is an online event</Label>
-            </div>
-            
-            <div>
-              <Label htmlFor="location">Location *</Label>
-              <Input
-                id="location"
-                placeholder={formData.isOnline ? "Platform (e.g., Zoom, Google Meet)" : "Venue name"}
-                value={formData.location}
-                onChange={(e) => updateFormData("location", e.target.value)}
-                className="mt-2"
-              />
-              
-              {/* Location suggestions based on category */}
-              {!formData.isOnline && locationSuggestions.length > 0 && (
-                <div className="mt-2">
-                  <p className="text-sm text-muted-foreground mb-2">Suggested locations for {categories.find(c => c.value === formData.category)?.label || "this category"}:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {locationSuggestions.map((location, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => updateFormData("location", location)}
-                        className="text-xs bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary px-2 py-1 rounded cursor-pointer transition-colors"
-                      >
-                        {location}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">Click on a location to select it</p>
-                </div>
-              )}
-            </div>
-            
-            {!formData.isOnline && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="address">Full Address</Label>
-                <Textarea
-                  id="address"
-                  placeholder="Complete address with directions"
-                  value={formData.address}
-                  onChange={(e) => updateFormData("address", e.target.value)}
+                <Label htmlFor="endDate">End Date *</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={formData.schedule.endDate}
+                  onChange={(e) => updateFormData("schedule", { ...formData.schedule, endDate: e.target.value })}
                   className="mt-2"
-                  rows={3}
                 />
               </div>
-            )}
+              <div>
+                <Label htmlFor="endTime">End Time *</Label>
+                <Input
+                  id="endTime"
+                  type="time"
+                  value={formData.schedule.endTime}
+                  onChange={(e) => updateFormData("schedule", { ...formData.schedule, endTime: e.target.value })}
+                  className="mt-2"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="timezone">Timezone</Label>
+              <Select value={formData.schedule.timezone} onValueChange={(value) => updateFormData("schedule", { ...formData.schedule, timezone: value })}>
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Select timezone" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Asia/Bangkok">Asia/Bangkok (GMT+7)</SelectItem>
+                  <SelectItem value="Asia/Singapore">Asia/Singapore (GMT+8)</SelectItem>
+                  <SelectItem value="Asia/Tokyo">Asia/Tokyo (GMT+9)</SelectItem>
+                  <SelectItem value="UTC">UTC (GMT+0)</SelectItem>
+                  <SelectItem value="America/New_York">America/New_York (GMT-5)</SelectItem>
+                  <SelectItem value="Europe/London">Europe/London (GMT+0)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         );
 
@@ -374,76 +523,327 @@ export function CreateEventPage() {
         return (
           <div className="space-y-6">
             <div>
-              <Label htmlFor="maxAttendees">Maximum Attendees *</Label>
+              <Label htmlFor="locationType">Location Type *</Label>
+              <Select value={formData.location.type} onValueChange={(value) => updateFormData("location", { ...formData.location, type: value as 'onsite' | 'online' | 'hybrid' })}>
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Select location type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="onsite">Onsite</SelectItem>
+                  <SelectItem value="online">Online</SelectItem>
+                  <SelectItem value="hybrid">Hybrid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {formData.location.type !== 'online' && (
+              <div>
+                <Label htmlFor="venue">Venue *</Label>
+                <Input
+                  id="venue"
+                  placeholder="Enter venue name"
+                  value={formData.location.venue}
+                  onChange={(e) => updateFormData("location", { ...formData.location, venue: e.target.value })}
+                  className="mt-2"
+                />
+                
+                {/* Location suggestions based on category */}
+                {locationSuggestions.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm text-muted-foreground mb-2">Suggested locations for {categories.find(c => c.value === formData.category)?.label || "this category"}:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {locationSuggestions.map((location, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => updateFormData("location", { ...formData.location, venue: location })}
+                          className="text-xs bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary px-2 py-1 rounded cursor-pointer transition-colors"
+                        >
+                          {location}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">Click on a location to select it</p>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {formData.location.type !== 'online' && (
+              <div>
+                <Label htmlFor="address">Full Address</Label>
+                <Textarea
+                  id="address"
+                  placeholder="Complete address with directions"
+                  value={formData.location.address}
+                  onChange={(e) => updateFormData("location", { ...formData.location, address: e.target.value })}
+                  className="mt-2"
+                  rows={3}
+                />
+              </div>
+            )}
+            
+            {formData.location.type !== 'onsite' && (
+              <div>
+                <Label htmlFor="onlineLink">Online Link *</Label>
+                <Input
+                  id="onlineLink"
+                  placeholder="https://zoom.us/j/example123"
+                  value={formData.location.onlineLink}
+                  onChange={(e) => updateFormData("location", { ...formData.location, onlineLink: e.target.value })}
+                  className="mt-2"
+                />
+              </div>
+            )}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="latitude">Latitude (Optional)</Label>
+                <Input
+                  id="latitude"
+                  type="number"
+                  step="any"
+                  placeholder="13.7205"
+                  value={formData.location.coordinates.lat}
+                  onChange={(e) => updateFormData("location", { 
+                    ...formData.location, 
+                    coordinates: { 
+                      ...formData.location.coordinates, 
+                      lat: parseFloat(e.target.value) || 0 
+                    } 
+                  })}
+                  className="mt-2"
+                />
+              </div>
+              <div>
+                <Label htmlFor="longitude">Longitude (Optional)</Label>
+                <Input
+                  id="longitude"
+                  type="number"
+                  step="any"
+                  placeholder="100.5592"
+                  value={formData.location.coordinates.lng}
+                  onChange={(e) => updateFormData("location", { 
+                    ...formData.location, 
+                    coordinates: { 
+                      ...formData.location.coordinates, 
+                      lng: parseFloat(e.target.value) || 0 
+                    } 
+                  })}
+                  className="mt-2"
+                />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="space-y-6">
+            <div>
+              <Label htmlFor="maxCapacity">Maximum Capacity *</Label>
               <Input
-                id="maxAttendees"
+                id="maxCapacity"
                 type="number"
                 placeholder="Enter maximum number of attendees"
-                value={formData.maxAttendees}
-                onChange={(e) => updateFormData("maxAttendees", e.target.value)}
+                value={formData.capacity.max}
+                onChange={(e) => updateFormData("capacity", { ...formData.capacity, max: parseInt(e.target.value) || 0 })}
+                className="mt-2"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="currency">Currency</Label>
+              <Select value={formData.pricing.currency} onValueChange={(value) => updateFormData("pricing", { ...formData.pricing, currency: value })}>
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="THB">THB (Thai Baht)</SelectItem>
+                  <SelectItem value="USD">USD (US Dollar)</SelectItem>
+                  <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                  <SelectItem value="SGD">SGD (Singapore Dollar)</SelectItem>
+                  <SelectItem value="JPY">JPY (Japanese Yen)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Dynamic Ticket Types */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-lg font-semibold">Ticket Types</Label>
+                <Button
+                  type="button"
+                  onClick={addTicket}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Ticket Type
+                </Button>
+              </div>
+
+              {formData.tickets.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Ticket className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No ticket types added yet</p>
+                  <p className="text-sm">Click "Add Ticket Type" to create your first ticket</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {formData.tickets.map((ticket, index) => (
+                    <Card key={ticket.type} className="p-4">
+                      <div className="flex items-start justify-between mb-4">
+                        <h4 className="font-medium">Ticket #{index + 1}</h4>
+                        <Button
+                          type="button"
+                          onClick={() => removeTicket(index)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor={`ticketName-${index}`}>Ticket Name *</Label>
+                          <Input
+                            id={`ticketName-${index}`}
+                            placeholder="e.g., Early Bird, VIP, Student"
+                            value={ticket.name}
+                            onChange={(e) => updateTicket(index, 'name', e.target.value)}
+                            className="mt-2"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor={`ticketPrice-${index}`}>Price ({formData.pricing.currency}) *</Label>
+                          <Input
+                            id={`ticketPrice-${index}`}
+                            type="number"
+                            placeholder="0 for free"
+                            value={ticket.price}
+                            onChange={(e) => updateTicket(index, 'price', parseFloat(e.target.value) || 0)}
+                            className="mt-2"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4">
+                        <Label htmlFor={`ticketDescription-${index}`}>Description (Optional)</Label>
+                        <Textarea
+                          id={`ticketDescription-${index}`}
+                          placeholder="Describe what's included in this ticket type"
+                          value={ticket.description || ''}
+                          onChange={(e) => updateTicket(index, 'description', e.target.value)}
+                          className="mt-2"
+                          rows={2}
+                        />
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
+      case 6:
+        return (
+          <div className="space-y-6">
+            <div>
+              <Label htmlFor="bannerImage">Banner Image URL</Label>
+              <Input
+                id="bannerImage"
+                placeholder="https://example.com/images/banner.jpg"
+                value={formData.images.banner}
+                onChange={(e) => updateFormData("images", { ...formData.images, banner: e.target.value })}
+                className="mt-2"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="thumbnailImage">Thumbnail Image URL</Label>
+              <Input
+                id="thumbnailImage"
+                placeholder="https://example.com/images/thumbnail.jpg"
+                value={formData.images.thumbnail}
+                onChange={(e) => updateFormData("images", { ...formData.images, thumbnail: e.target.value })}
                 className="mt-2"
               />
             </div>
             
             <div>
               <div className="flex justify-between items-center mb-4">
-                <Label>Ticket Types</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addTicket}>
-                  Add Ticket Type
+                <Label>Tags</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addTag}>
+                  Add Tag
                 </Button>
               </div>
-              
-              <div className="space-y-4">
-                {formData.tickets.map((ticket, index) => (
-                  <div key={index} className="border rounded-lg p-4 space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h4 className="font-medium">Ticket {index + 1}</h4>
-                      {formData.tickets.length > 1 && (
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => removeTicket(index)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          Remove
-                        </Button>
-                      )}
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label>Ticket Type *</Label>
-                        <Input
-                          placeholder="e.g., General, VIP, Early Bird"
-                          value={ticket.type}
-                          onChange={(e) => updateTicket(index, "type", e.target.value)}
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label>Price (THB) *</Label>
-                        <Input
-                          type="number"
-                          placeholder="0 for free"
-                          value={ticket.price}
-                          onChange={(e) => updateTicket(index, "price", parseFloat(e.target.value) || 0)}
-                          className="mt-1"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label>Description (Optional)</Label>
-                      <Textarea
-                        placeholder="What's included in this ticket?"
-                        value={ticket.description}
-                        onChange={(e) => updateTicket(index, "description", e.target.value)}
-                        className="mt-1"
-                        rows={2}
-                      />
-                    </div>
-                  </div>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  placeholder="Enter tag"
+                  value={formData.newTag}
+                  onChange={(e) => updateFormData("newTag", e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && addTag()}
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {formData.tags.map((tag, index) => (
+                  <span key={index} className="bg-primary/10 text-primary px-2 py-1 rounded text-sm flex items-center gap-1">
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag)}
+                      className="text-primary hover:text-primary/70"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <Label>Requirements</Label>
+                <Button type="button" variant="outline" size="sm" onClick={() => {
+                  if (formData.newRequirement.trim()) {
+                    updateFormData("requirements", [...formData.requirements, formData.newRequirement.trim()]);
+                    updateFormData("newRequirement", "");
+                  }
+                }}>
+                  Add Requirement
+                </Button>
+              </div>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  placeholder="Enter requirement"
+                  value={formData.newRequirement}
+                  onChange={(e) => updateFormData("newRequirement", e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (() => {
+                    if (formData.newRequirement.trim()) {
+                      updateFormData("requirements", [...formData.requirements, formData.newRequirement.trim()]);
+                      updateFormData("newRequirement", "");
+                    }
+                  })()}
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {formData.requirements.map((req, index) => (
+                  <span key={index} className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm flex items-center gap-1">
+                    {req}
+                    <button
+                      type="button"
+                      onClick={() => updateFormData("requirements", formData.requirements.filter((_, i) => i !== index))}
+                      className="text-green-800 hover:text-green-600"
+                    >
+                      ×
+                    </button>
+                  </span>
                 ))}
               </div>
             </div>
@@ -463,7 +863,7 @@ export function CreateEventPage() {
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <h1 className="text-3xl font-bold mb-4 text-primary">Event Created Successfully!</h1>
             <p className="text-muted-foreground">
-              Your event has been created and the Event ID has been sent to {formData.creatorEmail}
+              Your event has been created and the Event ID has been sent to {formData.organizer.contact}
             </p>
           </div>
 
@@ -483,8 +883,11 @@ export function CreateEventPage() {
                   <h3 className="font-semibold mb-2">Event Details:</h3>
                   <div className="space-y-1 text-sm text-muted-foreground">
                     <p><strong>Event Title:</strong> {formData.title}</p>
-                    <p><strong>Event Date:</strong> {formData.date} at {formData.time}</p>
-                    <p><strong>Location:</strong> {formData.location}</p>
+                    <p><strong>Event Date:</strong> {formData.schedule.startDate} at {formData.schedule.startTime}</p>
+                    <p><strong>Location:</strong> {formData.location.venue || formData.location.onlineLink || 'TBD'}</p>
+                    <p><strong>Organizer:</strong> {formData.organizer.name}</p>
+                    <p><strong>Category:</strong> {formData.category}</p>
+                    <p><strong>Type:</strong> {formData.type}</p>
                   </div>
                 </div>
                 
@@ -511,21 +914,84 @@ export function CreateEventPage() {
                     setEventId("");
                     setCurrentStep(1);
                     setFormData({
-                      creatorEmail: "",
+                      organizer: {
+                        name: "",
+                        contact: "",
+                        phone: ""
+                      },
                       title: "",
                       description: "",
                       category: "",
-                      date: "",
-                      time: "",
-                      endTime: "",
-                      location: "",
-                      address: "",
-                      isOnline: false,
-                      tickets: [{ type: "General", price: 0, description: "" }],
-                      maxAttendees: "",
-                      image: null,
-                      tags: [],
+                      type: "",
+                      status: "active",
+                      featured: false,
+                      schedule: {
+                        startDate: "",
+                        endDate: "",
+                        startTime: "",
+                        endTime: "",
+                        timezone: "Asia/Bangkok"
+                      },
+                      location: {
+                        type: "onsite" as 'onsite' | 'online' | 'hybrid',
+                        venue: "",
+                        address: "",
+                        coordinates: {
+                          lat: 0,
+                          lng: 0
+                        },
+                        onlineLink: ""
+                      },
+                      pricing: {
+                        currency: "THB"
+                      },
+                      tickets: [],
+                      capacity: {
+                        max: 0,
+                        registered: 0,
+                        available: 0
+                      },
+                      images: {
+                        banner: "",
+                        thumbnail: "",
+                        gallery: [] as string[]
+                      },
+                      tags: [] as string[],
+                      requirements: [] as string[],
+                      speakers: [] as Array<{
+                        name: string;
+                        title: string;
+                        company: string;
+                        bio: string;
+                        image: string;
+                      }>,
+                      tracks: [] as string[],
+                      activities: [] as string[],
+                      includes: [] as string[],
+                      distances: [] as string[],
+                      artists: [] as Array<{
+                        name: string;
+                        instrument: string;
+                        country: string;
+                      }>,
                       newTag: "",
+                      newRequirement: "",
+                      newSpeaker: {
+                        name: "",
+                        title: "",
+                        company: "",
+                        bio: "",
+                        image: ""
+                      },
+                      newTrack: "",
+                      newActivity: "",
+                      newInclude: "",
+                      newDistance: "",
+                      newArtist: {
+                        name: "",
+                        instrument: "",
+                        country: ""
+                      }
                     });
                   }}
                   className="flex-1"
@@ -566,10 +1032,12 @@ export function CreateEventPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              {currentStep === 1 && <Mail className="h-5 w-5" />}
-              {currentStep === 2 && <Calendar className="h-5 w-5" />}
-              {currentStep === 3 && <MapPin className="h-5 w-5" />}
-              {currentStep === 4 && <DollarSign className="h-5 w-5" />}
+              {currentStep === 1 && <Users className="h-5 w-5" />}
+              {currentStep === 2 && <FileText className="h-5 w-5" />}
+              {currentStep === 3 && <Calendar className="h-5 w-5" />}
+              {currentStep === 4 && <MapPin className="h-5 w-5" />}
+              {currentStep === 5 && <DollarSign className="h-5 w-5" />}
+              {currentStep === 6 && <Image className="h-5 w-5" />}
               {stepTitles[currentStep - 1]}
             </CardTitle>
           </CardHeader>
