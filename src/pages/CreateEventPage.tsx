@@ -8,9 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, MapPin, Users, DollarSign, ChevronLeft, ChevronRight, Upload, Mail, Lock } from "lucide-react";
+import { Calendar, MapPin, Users, DollarSign, ChevronLeft, ChevronRight, Upload, Mail, Lock, CheckCircle } from "lucide-react";
 import { eventService, CreateEventRequest } from "@/services/eventService";
-import { OTPDisplay } from "@/components/common/OTPInput";
 import { useNavigate } from "react-router-dom";
 
 export function CreateEventPage() {
@@ -20,7 +19,7 @@ export function CreateEventPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [eventCreated, setEventCreated] = useState(false);
-  const [otpInfo, setOtpInfo] = useState<any>(null);
+  const [eventId, setEventId] = useState("");
   const totalSteps = 4; // Reduced from 5 to 4
 
   const [formData, setFormData] = useState({
@@ -170,11 +169,11 @@ export function CreateEventPage() {
       const response = await eventService.createEvent(eventData);
       
       if (response.success) {
-        setOtpInfo(response.otp);
+        setEventId(response.eventId);
         setEventCreated(true);
         toast({
           title: "Event Created Successfully!",
-          description: "Your event has been created. Save the OTP to manage it later.",
+          description: `Event ID has been sent to ${formData.creatorEmail}.`,
         });
       }
     } catch (error) {
@@ -208,7 +207,7 @@ export function CreateEventPage() {
                 />
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                This email will be used to generate your event management OTP
+                This email will receive your event ID for management
               </p>
             </div>
             
@@ -218,16 +217,14 @@ export function CreateEventPage() {
                 <div className="space-y-2">
                   <h4 className="font-medium text-primary">Secure Event Management</h4>
                   <p className="text-sm text-muted-foreground">
-                    After creating your event, you'll receive a unique 6-digit OTP that allows you to:
+                    After creating your event, you'll receive an Event ID at this email address.
+                    When you want to manage your event, you'll need to:
                   </p>
                   <ul className="text-sm text-muted-foreground space-y-1 ml-4">
-                    <li>• Edit event details</li>
-                    <li>• Delete the event</li>
-                    <li>• Manage event settings</li>
+                    <li>• Enter your Event ID and email</li>
+                    <li>• Request an OTP for verification</li>
+                    <li>• Enter the OTP to access event management</li>
                   </ul>
-                  <p className="text-sm font-medium text-primary">
-                    Keep your OTP safe - it's your key to event management!
-                  </p>
                 </div>
               </div>
             </div>
@@ -458,69 +455,86 @@ export function CreateEventPage() {
     }
   };
 
-  if (eventCreated && otpInfo) {
+  if (eventCreated) {
     return (
       <div className="min-h-screen bg-background py-8">
         <div className="container mx-auto px-4 max-w-2xl">
           <div className="text-center mb-8">
+            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <h1 className="text-3xl font-bold mb-4 text-primary">Event Created Successfully!</h1>
             <p className="text-muted-foreground">
-              Your event has been created. Here's your management OTP:
+              Your event has been created and the Event ID has been sent to {formData.creatorEmail}
             </p>
           </div>
 
-          <OTPDisplay 
-            otp={otpInfo.otp}
-            title="Your Event Management OTP"
-            description="Save this OTP to edit or delete your event later"
-          />
-
-          <div className="mt-8 space-y-4">
-            <div className="bg-muted/30 rounded-lg p-4">
-              <h3 className="font-semibold mb-2">Event Details:</h3>
-              <div className="space-y-1 text-sm text-muted-foreground">
-                <p><strong>Event ID:</strong> {otpInfo.eventId}</p>
-                <p><strong>Title:</strong> {formData.title}</p>
-                <p><strong>Date:</strong> {formData.date} at {formData.time}</p>
-                <p><strong>Location:</strong> {formData.location}</p>
-                <p><strong>Creator:</strong> {formData.creatorEmail}</p>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">Your Event ID</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="bg-primary/5 border-2 border-dashed border-primary rounded-xl p-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-2">Event ID</p>
+                  <p className="text-3xl font-bold tracking-wider text-primary">{eventId}</p>
+                  <p className="text-xs text-muted-foreground mt-2">Save this ID for event management</p>
+                </div>
+                
+                <div className="bg-muted/30 rounded-lg p-4">
+                  <h3 className="font-semibold mb-2">Event Details:</h3>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <p><strong>Event Title:</strong> {formData.title}</p>
+                    <p><strong>Event Date:</strong> {formData.date} at {formData.time}</p>
+                    <p><strong>Location:</strong> {formData.location}</p>
+                  </div>
+                </div>
+                
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                  <h3 className="font-semibold mb-2 text-primary">To Manage Your Event</h3>
+                  <ol className="text-sm text-muted-foreground space-y-2 ml-4 list-decimal">
+                    <li>Navigate to the Event Management page</li>
+                    <li>Enter your Event ID and email address</li>
+                    <li>Request an OTP for verification</li>
+                    <li>Check your email for the OTP</li>
+                    <li>Enter the OTP to access event management</li>
+                  </ol>
+                </div>
               </div>
-            </div>
-            
-            <div className="flex gap-4">
-              <Button onClick={() => navigate('/events')} className="flex-1">
-                View All Events
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setEventCreated(false);
-                  setOtpInfo(null);
-                  setCurrentStep(1);
-                  setFormData({
-                    creatorEmail: "",
-                    title: "",
-                    description: "",
-                    category: "",
-                    date: "",
-                    time: "",
-                    endTime: "",
-                    location: "",
-                    address: "",
-                    isOnline: false,
-                    tickets: [{ type: "General", price: 0, description: "" }],
-                    maxAttendees: "",
-                    image: null,
-                    tags: [],
-                    newTag: "",
-                  });
-                }}
-                className="flex-1"
-              >
-                Create Another Event
-              </Button>
-            </div>
-          </div>
+              
+              <div className="flex gap-4 mt-6">
+                <Button onClick={() => navigate('/events')} className="flex-1">
+                  View All Events
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setEventCreated(false);
+                    setEventId("");
+                    setCurrentStep(1);
+                    setFormData({
+                      creatorEmail: "",
+                      title: "",
+                      description: "",
+                      category: "",
+                      date: "",
+                      time: "",
+                      endTime: "",
+                      location: "",
+                      address: "",
+                      isOnline: false,
+                      tickets: [{ type: "General", price: 0, description: "" }],
+                      maxAttendees: "",
+                      image: null,
+                      tags: [],
+                      newTag: "",
+                    });
+                  }}
+                  className="flex-1"
+                >
+                  Create Another Event
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );

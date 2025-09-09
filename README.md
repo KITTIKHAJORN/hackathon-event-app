@@ -1,73 +1,87 @@
-# Welcome to your Lovable project
+# Hackathon Event App
 
-## Project info
+A modern event management application built with React, TypeScript, and Vite.
 
-**URL**: https://lovable.dev/projects/115d89d0-f239-4852-bb13-0fde58e49c6c
+## Features
+- Create and manage events
+- Event registration system
+- OTP-based event management security
+- Responsive design with Tailwind CSS
+- Dark mode support
 
-## How can I edit this code?
+## Getting Started
 
-There are several ways of editing your application.
+### Prerequisites
+- Node.js (v16 or higher)
+- npm or yarn
 
-**Use Lovable**
+### Installation
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/115d89d0-f239-4852-bb13-0fde58e49c6c) and start prompting.
+### Running the Application
+1. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-Changes made via Lovable will be committed automatically to this repo.
+### Setting up Email Service
+This application requires a backend email service to send Event IDs and OTPs.
 
-**Use your preferred IDE**
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+2. Install backend dependencies:
+   ```bash
+   npm install
+   ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+3. Create a `.env` file based on `.env.example` and configure your email settings:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your email configuration
+   ```
 
-Follow these steps:
+4. Start the email service:
+   ```bash
+   npm start
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Email Configuration
+For Gmail:
+1. Enable 2-factor authentication on your Google account
+2. Generate an App Password in your Google account settings
+3. Use the App Password as `EMAIL_PASS` in your `.env` file
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+For other email providers, update the `SMTP_HOST` and `SMTP_PORT` accordingly.
 
-# Step 3: Install the necessary dependencies.
-npm i
+## Project Structure
+- `src/` - Main source code
+  - `components/` - React components
+  - `pages/` - Page components
+  - `services/` - API services
+  - `contexts/` - React contexts
+  - `hooks/` - Custom hooks
+- `backend/` - Email service backend
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+## Available Scripts
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
 
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
+## Technologies Used
+- React 18
 - TypeScript
-- React
-- shadcn-ui
+- Vite
 - Tailwind CSS
+- shadcn/ui components
+- React Router
+- TanStack Query
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/115d89d0-f239-4852-bb13-0fde58e49c6c) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## License
+MIT

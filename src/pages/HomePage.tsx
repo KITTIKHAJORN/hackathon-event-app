@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EventCard } from "@/components/event/EventCard";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Search, ArrowRight, Code, Music, Users, Presentation } from "lucide-react";
+import { Search, ArrowRight, Code, Music, Users, Presentation, X } from "lucide-react";
 import heroImage from "@/assets/hero-banner.jpg";
 import { eventService, EventData } from "@/services/eventService";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,9 @@ export function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [featuredEvents, setFeaturedEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchResults, setSearchResults] = useState<EventData[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
 
   // Load featured events from API
   useEffect(() => {
@@ -37,6 +40,51 @@ export function HomePage() {
 
     loadFeaturedEvents();
   }, [toast]);
+
+  // Handle search functionality
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) {
+      setShowSearchResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const results = await eventService.searchEvents(searchQuery);
+      setSearchResults(results);
+      setShowSearchResults(true);
+      
+      if (results.length === 0) {
+        toast({
+          title: "No Results",
+          description: `No events found for "${searchQuery}". Please try a different search term.`,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Search Results",
+          description: `Found ${results.length} event(s) matching "${searchQuery}".`,
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      toast({
+        title: "Search Error",
+        description: "Failed to search events. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setShowSearchResults(false);
+  };
 
   // Event categories for homepage
   const categories = [
@@ -93,16 +141,37 @@ export function HomePage() {
           
           {/* Search Bar */}
           <div className="max-w-2xl mx-auto mb-8">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <input
-                type="text"
-                placeholder={t("search")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-            </div>
+            <form onSubmit={handleSearch} className="relative">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    type="text"
+                    placeholder="Search events by name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-12 pr-12 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={clearSearch}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+                <Button 
+                  type="submit" 
+                  size="lg" 
+                  disabled={isSearching}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-4 h-auto rounded-full"
+                >
+                  {isSearching ? "Searching..." : "Search"}
+                </Button>
+              </div>
+            </form>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -110,6 +179,11 @@ export function HomePage() {
               <Link to="/events" className="flex items-center">
                 {t("events")}
                 <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 px-8 py-3">
+              <Link to="/view-tickets">
+                View Your Tickets
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 px-8 py-3">
@@ -155,6 +229,49 @@ export function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Search Results Section */}
+      {showSearchResults && (
+        <section className="py-16 bg-muted/20">
+          <div className="container mx-auto px-4">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold mb-4">
+                  Search Results for "{searchQuery}"
+                </h2>
+                <p className="text-muted-foreground">
+                  Found {searchResults.length} event(s)
+                </p>
+              </div>
+              <Button variant="outline" onClick={clearSearch}>
+                Clear Search
+                <X className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+
+            {searchResults.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {searchResults.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="max-w-md mx-auto">
+                  <Search className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">No Events Found</h3>
+                  <p className="text-muted-foreground mb-4">
+                    We couldn't find any events matching "{searchQuery}". Try searching with different keywords.
+                  </p>
+                  <Button variant="outline" onClick={clearSearch}>
+                    Clear Search
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Featured Events Section */}
       <section className="py-16">
