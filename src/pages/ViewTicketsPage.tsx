@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -86,8 +85,18 @@ export function ViewTicketsPage() {
   };
 
   const getStatusText = (status: string) => {
-    const statusKey = (status || 'pending') as keyof typeof translations.en;
-    return t(statusKey);
+    switch (status) {
+      case 'confirmed':
+        return 'Confirmed';
+      case 'pending':
+        return 'Pending';
+      case 'cancelled':
+        return 'Cancelled';
+      case 'used':
+        return 'Used';
+      default:
+        return 'Pending';
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -149,12 +158,12 @@ export function ViewTicketsPage() {
                 {loading ? (
                   <>
                     <Search className="h-5 w-5 mr-2 animate-spin" />
-                    {t("searching")}
+                    Searching...
                   </>
                 ) : (
                   <>
                     <Search className="h-5 w-5 mr-2" />
-                    {t("searchTickets")}
+                    Search Tickets
                   </>
                 )}
               </Button>
@@ -167,11 +176,11 @@ export function ViewTicketsPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-semibold">
-                {tickets.length > 0 ? `${t("yourTickets")} (${tickets.length})` : t("noTicketsFound")}
+                {tickets.length > 0 ? `Your Tickets (${tickets.length})` : "No Tickets Found"}
               </h2>
               {userName && (
                 <p className="text-muted-foreground">
-                  {t("showingResultsFor")}: <span className="font-medium">{userName}</span>
+                  Showing results for: <span className="font-medium">{userName}</span>
                 </p>
               )}
             </div>
@@ -184,10 +193,10 @@ export function ViewTicketsPage() {
                       <div className="flex justify-between items-start mb-4">
                         <div>
                           <h3 className="text-xl font-semibold mb-2">
-                            {t("ticketNumber")}{ticket.id?.slice(-8) || 'N/A'}
+                            Ticket #{ticket.id?.slice(-8) || 'N/A'}
                           </h3>
                           <p className="text-muted-foreground">
-                            {t("eventId")}: {ticket.eventId || 'N/A'}
+                            Event ID: {ticket.eventId || 'N/A'}
                           </p>
                         </div>
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(ticket.status || 'pending')}`}>
@@ -198,31 +207,31 @@ export function ViewTicketsPage() {
                       <div className="grid md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <div>
-                            <span className="font-medium">{t("name")}:</span> {ticket.userName || 'N/A'}
+                            <span className="font-medium">Name:</span> {ticket.userName || 'N/A'}
                           </div>
                           <div>
-                            <span className="font-medium">{t("email")}:</span> {ticket.userEmail || 'N/A'}
+                            <span className="font-medium">Email:</span> {ticket.userEmail || 'N/A'}
                           </div>
                           <div>
-                            <span className="font-medium">{t("phone")}:</span> {ticket.userPhone || 'N/A'}
+                            <span className="font-medium">Phone:</span> {ticket.userPhone || 'N/A'}
                           </div>
                         </div>
                         <div className="space-y-2">
                           <div>
-                            <span className="font-medium">{t("ticketType")}:</span> {ticket.ticketType || 'N/A'}
+                            <span className="font-medium">Ticket Type:</span> {ticket.ticketType || 'N/A'}
                           </div>
                           <div>
-                            <span className="font-medium">{t("quantity")}:</span> {ticket.quantity || 'N/A'}
+                            <span className="font-medium">Quantity:</span> {ticket.quantity || 'N/A'}
                           </div>
                           <div>
-                            <span className="font-medium">{t("totalAmount")}:</span> {ticket.totalAmount || 0} {ticket.currency || 'THB'}
+                            <span className="font-medium">Total Amount:</span> {ticket.totalAmount || 0} {ticket.currency || 'THB'}
                           </div>
                         </div>
                       </div>
 
                       <div className="mt-4 pt-4 border-t">
                         <div className="text-sm text-muted-foreground">
-                          <span className="font-medium">{t("purchaseDate")}:</span> {ticket.purchaseDate ? new Date(ticket.purchaseDate).toLocaleDateString('en-US', {
+                          <span className="font-medium">Purchase Date:</span> {ticket.purchaseDate ? new Date(ticket.purchaseDate).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
@@ -236,7 +245,7 @@ export function ViewTicketsPage() {
                         <div className="mt-4">
                           <Button variant="outline" className="w-full">
                             <Ticket className="h-4 w-4 mr-2" />
-                            {t("showQRCode")}
+                            Show QR Code
                           </Button>
                         </div>
                       )}
@@ -248,12 +257,12 @@ export function ViewTicketsPage() {
               <Card>
                 <CardContent className="text-center py-12">
                   <Ticket className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">{t("noTicketsFound")}</h3>
+                  <h3 className="text-xl font-semibold mb-2">No Tickets Found</h3>
                   <p className="text-muted-foreground mb-4">
-                    {t("noTicketsAssociated")} "{userName}".
+                    No tickets are associated with the username "{userName}".
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {t("checkUsernameEmail")}
+                    Please check your username or email address and try again.
                   </p>
                 </CardContent>
               </Card>
