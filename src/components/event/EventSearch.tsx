@@ -48,7 +48,7 @@ export function EventSearch({ searchQuery, onSelect, onClose }: EventSearchProps
     setIsSearching(true);
     try {
       const results = await eventService.searchEvents(query);
-      setSearchResults(results.slice(0, 5)); // Limit to 5 results for better UX
+      setSearchResults(results.slice(0, 3)); // Limit to 3 results instead of 5
       setActiveIndex(-1); // Reset active index when new results come in
     } catch (error) {
       console.error('Search error:', error);
@@ -66,7 +66,13 @@ export function EventSearch({ searchQuery, onSelect, onClose }: EventSearchProps
   // Handle selection
   const handleSelect = useCallback((event: EventData) => {
     onSelect(event);
+    setActiveIndex(-1); // Reset active index after selection
   }, [onSelect]);
+
+  // Handle mouse enter for highlighting
+  const handleMouseEnter = useCallback((index: number) => {
+    setActiveIndex(index);
+  }, []);
 
   // Effect to trigger search when debounced query changes
   useEffect(() => {
@@ -76,20 +82,16 @@ export function EventSearch({ searchQuery, onSelect, onClose }: EventSearchProps
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!searchQuery.trim()) return;
+      if (!searchQuery.trim() || searchResults.length === 0) return;
 
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setActiveIndex(prev =>
-            prev < searchResults.length - 1 ? prev + 1 : 0
-          );
+          setActiveIndex(prev => (prev < searchResults.length - 1 ? prev + 1 : 0));
           break;
         case 'ArrowUp':
           e.preventDefault();
-          setActiveIndex(prev =>
-            prev > 0 ? prev - 1 : searchResults.length - 1
-          );
+          setActiveIndex(prev => (prev > 0 ? prev - 1 : searchResults.length - 1));
           break;
         case 'Enter':
           e.preventDefault();
@@ -113,6 +115,7 @@ export function EventSearch({ searchQuery, onSelect, onClose }: EventSearchProps
     const handleClickOutside = (e: MouseEvent) => {
       if (listboxRef.current && !listboxRef.current.contains(e.target as Node)) {
         onClose();
+        setActiveIndex(-1); // Reset selection when clicking outside
       }
     };
 
@@ -153,14 +156,10 @@ export function EventSearch({ searchQuery, onSelect, onClose }: EventSearchProps
         role="listbox"
         aria-label="Event search results"
       >
-        {/* Header */}
-        <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
-          <Search className="h-4 w-4 text-neutral-400" />
-          <span className="font-semibold text-sm text-neutral-400">Event</span>
-        </div>
 
-        <Command className="rounded-none border-0">
-          <CommandList className="max-h-64">
+
+        <Command className="rounded-none border-0 pb-3">
+          <CommandList className="max-h-64 overflow-hidden">
             {isSearching ? (
               <div className="px-3 py-2 text-sm text-muted-foreground">
                 Searching...
@@ -185,9 +184,10 @@ export function EventSearch({ searchQuery, onSelect, onClose }: EventSearchProps
                   aria-selected={activeIndex === index}
                   aria-activedescendant={activeIndex === index ? `event-${event.id}` : undefined}
                   id={`event-${event.id}`}
+                  onMouseEnter={() => handleMouseEnter(index)}
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">{event.title}</div>
+                    <div className="font-medium truncate text-left">{event.title}</div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-3 w-3" />
                       <span>{formatDate(event.schedule.startDate)}</span>
