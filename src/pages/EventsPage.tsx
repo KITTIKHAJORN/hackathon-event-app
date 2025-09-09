@@ -61,7 +61,7 @@ export function EventsPage() {
   }, [allEvents, searchQuery, selectedCategory, selectedLocation]);
 
   const categoryOptions = useMemo(() => {
-    const options = [{ value: "all", label: t("allCategories") }];
+    const options = [{ value: "all", label: "All Categories" }];
     categories.forEach(cat => {
       options.push({ value: cat.id, label: cat.name });
     });
@@ -69,7 +69,7 @@ export function EventsPage() {
   }, [categories]);
 
   const locations = [
-    { value: "all", label: t("allLocations") },
+    { value: "all", label: "All Locations" },
     { value: "bangkok", label: "Bangkok" },
     { value: "phuket", label: "Phuket" },
     { value: "chiang mai", label: "Chiang Mai" },
@@ -115,7 +115,7 @@ export function EventsPage() {
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                       <Input
-                        placeholder={t("search")}
+                        placeholder="Search events..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-10"
@@ -171,7 +171,7 @@ export function EventsPage() {
                       setSelectedLocation("all");
                     }}
                   >
-                    {t("resetFilters")}
+                    Clear Filters
                   </Button>
                 </div>
               </CardContent>
@@ -182,7 +182,7 @@ export function EventsPage() {
           <div className="flex-1">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">
-                {filteredEvents.length} {t("eventsMatching")}
+                {filteredEvents.length} events found
               </h2>
             </div>
 
@@ -205,7 +205,7 @@ export function EventsPage() {
             ) : (
               <div className="text-center py-12">
                 <div className="text-muted-foreground text-lg mb-4">
-                  {t("noEventsFoundMessage")}
+                  No events found matching your criteria
                 </div>
                 <Button
                   variant="outline"
@@ -215,7 +215,7 @@ export function EventsPage() {
                     setSelectedLocation("all");
                   }}
                 >
-                  {t("resetFilters")}
+                  Clear all filters
                 </Button>
               </div>
             )}

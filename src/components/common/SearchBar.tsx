@@ -1,7 +1,6 @@
 import { Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SearchBarProps {
   onSearch?: (query: string) => void;
@@ -13,10 +12,9 @@ interface SearchBarProps {
 const SearchBar = ({ 
   onSearch, 
   onFilterToggle, 
-  placeholder, 
+  placeholder = "ค้นหาอีเวนต์...", 
   showFilter = true 
 }: SearchBarProps) => {
-  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -33,7 +31,7 @@ const SearchBar = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={placeholder || t("search")}
+            placeholder={placeholder}
             className="w-full pl-12 pr-4 py-4 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-300 shadow-card"
           />
         </div>
@@ -51,7 +49,7 @@ const SearchBar = ({
         )}
         
         <Button type="submit" variant="default" size="lg" className="px-6 py-4 h-auto">
-          {t("search")}
+          ค้นหา
         </Button>
       </div>
     </form>

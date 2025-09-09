@@ -237,14 +237,14 @@ export function HomePage() {
             <div className="flex justify-between items-center mb-8">
               <div>
                 <h2 className="text-3xl font-bold mb-4">
-                  {t("searchResultsFor")} "{searchQuery}"
+                  Search Results for "{searchQuery}"
                 </h2>
                 <p className="text-muted-foreground">
-                  {t("found")} {searchResults.length} {t("eventsMatching")}
+                  Found {searchResults.length} event(s)
                 </p>
               </div>
               <Button variant="outline" onClick={clearSearch}>
-                {t("clearSearch")}
+                Clear Search
                 <X className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -259,12 +259,12 @@ export function HomePage() {
               <div className="text-center py-12">
                 <div className="max-w-md mx-auto">
                   <Search className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">{t("noEventsFound")}</h3>
+                  <h3 className="text-xl font-semibold mb-2">No Events Found</h3>
                   <p className="text-muted-foreground mb-4">
                     We couldn't find any events matching "{searchQuery}". Try searching with different keywords.
                   </p>
                   <Button variant="outline" onClick={clearSearch}>
-                    {t("clearSearch")}
+                    Clear Search
                   </Button>
                 </div>
               </div>
@@ -280,12 +280,12 @@ export function HomePage() {
             <div>
               <h2 className="text-3xl font-bold mb-4">{t("featuredEvents")}</h2>
               <p className="text-muted-foreground">
-                {t("discoverHandpicked")}
+                Discover our handpicked selection of amazing events
               </p>
             </div>
             <Button variant="outline" asChild>
               <Link to="/events">
-                {t("viewAllEvents")}
+                View All Events
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -310,7 +310,7 @@ export function HomePage() {
           ) : (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
-                {t("noFeaturedEvents")}
+                No featured events available at the moment.
               </p>
             </div>
           )}

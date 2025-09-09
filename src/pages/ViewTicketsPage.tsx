@@ -84,21 +84,6 @@ export function ViewTicketsPage() {
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return 'Confirmed';
-      case 'pending':
-        return 'Pending';
-      case 'cancelled':
-        return 'Cancelled';
-      case 'used':
-        return 'Used';
-      default:
-        return 'Pending';
-    }
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed':
@@ -176,7 +161,7 @@ export function ViewTicketsPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-semibold">
-                {tickets.length > 0 ? `Your Tickets (${tickets.length})` : "No Tickets Found"}
+                {tickets.length > 0 ? `Your Tickets (${tickets.length})` : 'No Tickets Found'}
               </h2>
               {userName && (
                 <p className="text-muted-foreground">
@@ -200,7 +185,7 @@ export function ViewTicketsPage() {
                           </p>
                         </div>
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(ticket.status || 'pending')}`}>
-                          {getStatusText(ticket.status || 'pending')}
+                          {(ticket.status || 'pending').charAt(0).toUpperCase() + (ticket.status || 'pending').slice(1)}
                         </span>
                       </div>
 
@@ -259,10 +244,10 @@ export function ViewTicketsPage() {
                   <Ticket className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-xl font-semibold mb-2">No Tickets Found</h3>
                   <p className="text-muted-foreground mb-4">
-                    No tickets are associated with the username "{userName}".
+                    We couldn't find any tickets associated with "{userName}".
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Please check your username or email address and try again.
+                    Please check your username or email and try again.
                   </p>
                 </CardContent>
               </Card>
