@@ -182,7 +182,7 @@ export function EventSearch({ searchQuery, onSelect, onClose }: EventSearchProps
                   onSelect={() => handleSelect(event)}
                   onMouseEnter={() => handleMouseEnter(index)}
                   onMouseLeave={handleMouseLeave}
-                  className={`flex items-center gap-3 px-3 py-2 cursor-pointer border-0 rounded-none transition-colors duration-150 ${
+                  className={`flex items-center gap-3 px-3 py-2 cursor-pointer border-0 rounded-none transition-colors duration-150  ${
                     activeIndex === index
                       ? 'bg-accent text-accent-foreground'
                       : ''
@@ -194,7 +194,7 @@ export function EventSearch({ searchQuery, onSelect, onClose }: EventSearchProps
                 >
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate text-left">{event.title}</div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2 text-sm">
                       <Calendar className="h-3 w-3" />
                       <span>{formatDate(event.schedule.startDate)}</span>
                       {event.location.venue && (
