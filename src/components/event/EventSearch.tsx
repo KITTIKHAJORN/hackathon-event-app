@@ -161,9 +161,7 @@ export function EventSearch({ searchQuery, onSelect, onClose }: EventSearchProps
         role="listbox"
         aria-label="Event search results"
       >
-
-
-        <Command className="rounded-none border-0 pb-3" shouldFilter={false}>
+        <Command className="rounded-none border-0" shouldFilter={false}>
           <CommandList className="max-h-64 overflow-hidden">
             {isSearching ? (
               <div className="px-3 py-2 text-sm text-muted-foreground">
