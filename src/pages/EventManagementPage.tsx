@@ -10,8 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OTPInput } from "@/components/common/OTPInput";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { eventService, EventData } from "@/services/eventService";
-import { Lock, Edit, Trash2, Search, Shield, Mail, Send, CheckCircle, Calendar, MapPin, Users, DollarSign, Save, ChevronLeft, ChevronRight, Plus, Ticket, RefreshCw } from "lucide-react";
+import { eventService, EventData, LayoutConfig } from "@/services/eventService";
+import { Lock, Edit, Trash2, Search, Shield, Mail, Send, CheckCircle, Calendar, MapPin, Users, DollarSign, Save, ChevronLeft, ChevronRight, Plus, Ticket, RefreshCw, Layout } from "lucide-react";
+import LayoutEditor from "@/components/layout/LayoutEditor";
+import LayoutToolbar from "@/components/layout/LayoutToolbar";
 
 // EventData is imported from eventService
 
@@ -39,6 +41,17 @@ export function EventManagementPage() {
     price: number;
     description?: string;
   }>>([]);
+  const [layoutConfig, setLayoutConfig] = useState<LayoutConfig | null>(null);
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  
+  // Wrapper function to handle both direct values and functions
+  const handleSetFieldValues = (values: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => {
+    if (typeof values === 'function') {
+      setFieldValues(values);
+    } else {
+      setFieldValues(values);
+    }
+  };
 
   // Request OTP for event management
   const handleRequestOTP = async () => {
@@ -119,6 +132,12 @@ export function EventManagementPage() {
           setEditedEvent({ ...event }); // Create a copy for editing
           setIsVerified(true);
           setActiveTab("manage");
+          
+          // Initialize tickets from pricing
+          initializeTicketsFromPricing(event);
+          
+          // Initialize layout config
+          setLayoutConfig(event.layoutConfig || null);
           toast({
             title: "Verification Successful",
             description: "You can now manage your event",
@@ -1097,69 +1116,396 @@ export function EventManagementPage() {
             </div>
           </div>
         ) : (
-          // View mode
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Event Details */}
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Edit className="h-5 w-5" />
-                    Event Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {renderViewMode()}
-                </CardContent>
-              </Card>
-            </div>
+          // View mode with tabs
+          <Tabs defaultValue="details" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="details">Event Details</TabsTrigger>
+              <TabsTrigger value="layout">Layout Editor</TabsTrigger>
+              <TabsTrigger value="actions">Actions</TabsTrigger>
+            </TabsList>
 
-            {/* Management Actions */}
-            <div>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Lock className="h-5 w-5" />
-                    Management Actions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button 
-                    className="w-full flex items-center gap-2" 
-                    variant="destructive"
-                    onClick={handleDeleteEvent}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete Event
-                  </Button>
+            <TabsContent value="details">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Event Details */}
+                <div className="lg:col-span-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Edit className="h-5 w-5" />
+                        Event Details
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {renderViewMode()}
+                    </CardContent>
+                  </Card>
+                </div>
 
-                  <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                    <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">Important Notes:</h4>
-                    <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-                      <li>• Event changes are saved locally in this demo</li>
-                      <li>• Deleting an event cannot be undone</li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5" />
-                    Event Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <p><strong>ID:</strong> {currentEvent?.id}</p>
-                    <p><strong>Status:</strong> {currentEvent?.status}</p>
-                    <p><strong>Featured:</strong> {currentEvent?.featured ? 'Yes' : 'No'}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+                {/* Event Information */}
+                <div>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5" />
+                        Event Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 text-sm">
+                        <p><strong>ID:</strong> {currentEvent?.id}</p>
+                        <p><strong>Status:</strong> {currentEvent?.status}</p>
+                        <p><strong>Featured:</strong> {currentEvent?.featured ? 'Yes' : 'No'}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="layout" className="h-[calc(100vh-200px)] -mx-24">
+              <div className="h-full flex">
+                {/* Left Toolbar */}
+                <LayoutToolbar
+                  onSave={async () => {
+                    console.log('💾 Save layout clicked');
+                    
+                    if (currentEvent) {
+                      try {
+                        // Get all custom heading fields from fieldValues and merge them into the event
+                        const customHeadingFields = Object.keys(fieldValues).filter(key => 
+                          key.startsWith('customheading_') && !key.endsWith('_name')
+                        );
+                        
+                        let updatedEvent = { ...currentEvent };
+                        
+                        // First, remove all existing custom heading fields from the event
+                        // We need to check both old ID-based fields and new name-based fields
+                        Object.keys(updatedEvent).forEach(key => {
+                          if (key.startsWith('customheading_') || 
+                              (typeof updatedEvent[key] === 'object' && Array.isArray(updatedEvent[key]) && 
+                               !['tags', 'requirements', 'speakers', 'tracks', 'activities'].includes(key))) {
+                            delete updatedEvent[key];
+                            console.log(`🗑️ Removed existing custom heading field: ${key}`);
+                          }
+                        });
+                        
+                        // Then, add only the fields that exist in fieldValues
+                        customHeadingFields.forEach(fieldName => {
+                          const fieldValue = fieldValues[fieldName];
+                          const fieldNameValue = fieldValues[`${fieldName}_name`] || 'Custom Heading';
+                          
+                          if (fieldValue !== undefined && fieldValue.trim() !== '') {
+                            // Convert string to array format
+                            const arrayValue = fieldValue.split('\n').filter(item => item.trim() !== '');
+                            
+                            // Use the user-defined field name as the key instead of the ID
+                            const cleanFieldName = fieldNameValue.toLowerCase().replace(/[^a-z0-9]/g, '');
+                            updatedEvent = {
+                              ...updatedEvent,
+                              [cleanFieldName]: arrayValue
+                            };
+                            console.log(`📝 Added custom heading field: ${cleanFieldName} (${fieldNameValue}) = ${JSON.stringify(arrayValue)}`);
+                          }
+                        });
+                        
+                        // Clean up fieldValues to remove deleted custom heading fields
+                        const cleanedFieldValues = { ...fieldValues };
+                        Object.keys(cleanedFieldValues).forEach(key => {
+                          if (key.startsWith('customheading_') && !customHeadingFields.includes(key) && !key.endsWith('_name')) {
+                            delete cleanedFieldValues[key];
+                            delete cleanedFieldValues[`${key}_name`];
+                            console.log(`🧹 Cleaned up deleted field from fieldValues: ${key}`);
+                          }
+                        });
+                        setFieldValues(cleanedFieldValues);
+                        
+                        // Update the event in the API
+                        await eventService.updateEventInAPI(currentEvent.id, updatedEvent);
+                        setCurrentEvent(updatedEvent);
+                        
+                        // Show success message
+                        alert('Layout saved successfully!');
+                        console.log('✅ Layout saved to API');
+                      } catch (error) {
+                        console.error('❌ Error saving layout:', error);
+                        alert('Error saving layout. Please try again.');
+                      }
+                    }
+                  }}
+                  onReset={() => {
+                    console.log('Reset layout');
+                  }}
+                  onAddHeading={async () => {
+                    console.log('🔍 onAddHeading clicked');
+                    console.log('currentEvent:', currentEvent);
+                    
+                    if (currentEvent) {
+                      try {
+                        // Generate unique ID for the custom textfield
+                        const fieldId = `customheading_${Date.now()}`;
+                        const fieldName = 'Custom Heading';
+                        const cleanFieldName = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        
+                        // Add to currentEvent as an array field with clean name
+                        const updatedEvent = {
+                          ...currentEvent,
+                          [cleanFieldName]: [''] // Start with empty array
+                        };
+                        
+                        // Update the event in the API immediately
+                        await eventService.updateEventInAPI(currentEvent.id, updatedEvent);
+                        setCurrentEvent(updatedEvent);
+                        
+                        // Add to fieldValues for editing
+                        setFieldValues(prev => ({
+                          ...prev,
+                          [fieldId]: '',
+                          [`${fieldId}_name`]: fieldName
+                        }));
+                        
+                        console.log('✅ Added new heading field to API:', cleanFieldName);
+                      } catch (error) {
+                        console.error('❌ Error adding heading field:', error);
+                        alert('Error adding heading field. Please try again.');
+                      }
+                    } else {
+                      console.log('❌ Missing currentEvent');
+                    }
+                  }}
+                  onAddTags={() => {
+                    console.log('🔍 onAddTags clicked');
+                    if (currentEvent) {
+                      // Check if tags field exists in event object
+                      const hasTagsField = 'tags' in currentEvent;
+                      
+                      if (hasTagsField) {
+                        // Update existing tags in event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          tags: [...(currentEvent.tags || []), 'new tag']
+                        });
+                        
+                        // Update the event in the current state
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Updated existing tags field in event object');
+                      } else {
+                        // Add new tags field to event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          tags: ['tag1', 'tag2', 'tag3']
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Added new tags field to event object');
+                      }
+                    }
+                  }}
+                  onAddRequirements={() => {
+                    console.log('🔍 onAddRequirements clicked');
+                    if (currentEvent) {
+                      // Check if requirements field exists in event object
+                      const hasRequirementsField = 'requirements' in currentEvent;
+                      
+                      if (hasRequirementsField) {
+                        // Update existing requirements in event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          requirements: [...(currentEvent.requirements || []), 'new requirement']
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Updated existing requirements field in event object');
+                      } else {
+                        // Add new requirements field to event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          requirements: ['requirement1', 'requirement2', 'requirement3']
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Added new requirements field to event object');
+                      }
+                    }
+                  }}
+                  onAddSpeakers={() => {
+                    console.log('🔍 onAddSpeakers clicked');
+                    if (currentEvent) {
+                      // Check if speakers field exists in event object
+                      const hasSpeakersField = 'speakers' in currentEvent;
+                      
+                      if (hasSpeakersField) {
+                        // Update existing speakers in event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          speakers: [...(currentEvent.speakers || []), {
+                            name: 'Speaker Name',
+                            title: 'Speaker Title',
+                            company: 'Company Name',
+                            bio: 'Speaker bio information',
+                            image: ''
+                          }]
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Updated existing speakers field in event object');
+                      } else {
+                        // Add new speakers field to event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          speakers: [{
+                            name: 'Speaker Name',
+                            title: 'Speaker Title',
+                            company: 'Company Name',
+                            bio: 'Speaker bio information',
+                            image: ''
+                          }]
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Added new speakers field to event object');
+                      }
+                    }
+                  }}
+                  onAddTracks={() => {
+                    console.log('🔍 onAddTracks clicked');
+                    if (currentEvent) {
+                      // Check if tracks field exists in event object
+                      const hasTracksField = 'tracks' in currentEvent;
+                      
+                      if (hasTracksField) {
+                        // Update existing tracks in event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          tracks: [...(currentEvent.tracks || []), 'new track']
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Updated existing tracks field in event object');
+                      } else {
+                        // Add new tracks field to event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          tracks: ['track1', 'track2', 'track3']
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Added new tracks field to event object');
+                      }
+                    }
+                  }}
+                  onAddActivities={() => {
+                    console.log('🔍 onAddActivities clicked');
+                    if (currentEvent) {
+                      // Check if activities field exists in event object
+                      const hasActivitiesField = 'activities' in currentEvent;
+                      
+                      if (hasActivitiesField) {
+                        // Update existing activities in event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          activities: [...(currentEvent.activities || []), 'new activity']
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Updated existing activities field in event object');
+                      } else {
+                        // Add new activities field to event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          activities: ['activity1', 'activity2', 'activity3']
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Added new activities field to event object');
+                      }
+                    }
+                  }}
+                />
+                
+                {/* Main Content */}
+                <Card className="h-full flex-1">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Layout className="h-5 w-5" />
+                      Layout Editor
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="h-full p-0 overflow-y-auto">
+                    <LayoutEditor
+                      eventId={eventId}
+                      currentEvent={currentEvent || undefined}
+                      currentLayout={layoutConfig || undefined}
+                      fieldValues={fieldValues}
+                      setFieldValues={handleSetFieldValues}
+                      onLayoutChange={(layout) => {
+                        setLayoutConfig(layout);
+                      }}
+                      onUpdateEvent={async (updatedEvent) => {
+                        setCurrentEvent(updatedEvent);
+                        
+                        // Update the event in the API immediately for custom heading fields
+                        try {
+                          await eventService.updateEventInAPI(eventId, updatedEvent);
+                          console.log('✅ Event updated in API:', updatedEvent);
+                        } catch (error) {
+                          console.error('❌ Failed to update event in API:', error);
+                        }
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="actions">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Management Actions */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Lock className="h-5 w-5" />
+                      Management Actions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Button 
+                      className="w-full flex items-center gap-2" 
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <Edit className="h-4 w-4" />
+                      Edit Event
+                    </Button>
+                    
+                    <Button 
+                      className="w-full flex items-center gap-2" 
+                      variant="destructive"
+                      onClick={handleDeleteEvent}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete Event
+                    </Button>
+
+                    <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                      <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">Important Notes:</h4>
+                      <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                        <li>• Event changes are saved via API</li>
+                        <li>• Deleting an event cannot be undone</li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Event Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5" />
+                      Event Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm">
+                      <p><strong>ID:</strong> {currentEvent?.id}</p>
+                      <p><strong>Status:</strong> {currentEvent?.status}</p>
+                      <p><strong>Featured:</strong> {currentEvent?.featured ? 'Yes' : 'No'}</p>
+                      <p><strong>Layout Config:</strong> {layoutConfig ? 'Enabled' : 'Default'}</p>
+                      <p><strong>Custom Fields:</strong> {layoutConfig?.customFields?.length || 0}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
         )}
 
         <div className="mt-8 text-center">

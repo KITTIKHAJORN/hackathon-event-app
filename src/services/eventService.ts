@@ -68,6 +68,67 @@ export interface EventData {
   }>;
   tracks?: string[];
   activities?: string[];
+  layoutConfig?: LayoutConfig;
+  customFields?: CustomField[];
+}
+
+export interface LayoutConfig {
+  template: 'grid' | 'list' | 'card' | 'timeline' | 'custom';
+  sections: {
+    hero: SectionConfig;
+    pricing: SectionConfig;
+    schedule: SectionConfig;
+    organizer: SectionConfig;
+    gallery: SectionConfig;
+    speakers: SectionConfig;
+    location: SectionConfig;
+    capacity: SectionConfig;
+  };
+  colors: {
+    primary: string;
+    secondary: string;
+    background: string;
+    text: string;
+  };
+  spacing: 'compact' | 'normal' | 'spacious';
+  customFields?: CustomField[];
+}
+
+export interface SectionConfig {
+  enabled: boolean;
+  position: { x: number; y: number };
+  size: { width: number; height: number };
+  order: number;
+  customStyle?: {
+    backgroundColor?: string;
+    textColor?: string;
+    borderColor?: string;
+    borderRadius?: number;
+    padding?: number;
+    margin?: number;
+  };
+}
+
+export interface CustomField {
+  id: string;
+  name: string;
+  type: 'text' | 'number' | 'boolean' | 'date' | 'url' | 'image' | 'select' | 'textarea';
+  value: any;
+  required: boolean;
+  enabled: boolean;
+  options?: string[]; // สำหรับ select type
+  placeholder?: string;
+  description?: string;
+  position: { x: number; y: number };
+  size: { width: number; height: number };
+  style?: {
+    fontSize?: number;
+    fontWeight?: string;
+    color?: string;
+    backgroundColor?: string;
+    borderColor?: string;
+    borderRadius?: number;
+  };
 }
 
 export interface EventSystemResponse {
@@ -896,7 +957,7 @@ class EventService {
   }
 
   // Update event in external API
-  private async updateEventInAPI(eventId: string, eventData: EventData): Promise<void> {
+  public async updateEventInAPI(eventId: string, eventData: EventData): Promise<void> {
     try {
       console.log('🌐 Updating event in API:', eventId);
       
@@ -1109,6 +1170,230 @@ class EventService {
       console.error('❌ Error sending OTP email:', error);
       return false;
     }
+  }
+}
+
+// Layout Configuration Management Functions
+export async function updateEventLayoutConfig(eventId: string, layoutConfig: LayoutConfig): Promise<void> {
+  try {
+    console.log('🎨 Updating layout configuration for event:', eventId);
+    console.log('📋 Layout config:', layoutConfig);
+
+    // Get current event data
+    const currentEvent = await eventService.getEventById(eventId);
+    if (!currentEvent) {
+      throw new Error('Event not found');
+    }
+
+    // Update the event with new layout configuration
+    const updatedEvent = {
+      ...currentEvent,
+      layoutConfig: layoutConfig
+    };
+
+    // Send to API - Note: Layout updates don't require email/OTP in this context
+    const result = await eventService.updateEventInAPI(eventId, updatedEvent);
+    
+    console.log('✅ Layout configuration updated successfully');
+  } catch (error) {
+    console.error('❌ Error updating layout configuration:', error);
+    throw error;
+  }
+}
+
+export async function addCustomFieldToEvent(eventId: string, customField: CustomField): Promise<void> {
+  try {
+    console.log('➕ Adding custom field to event:', eventId);
+    console.log('📝 Custom field:', customField);
+
+    // Get current event data
+    const currentEvent = await eventService.getEventById(eventId);
+    if (!currentEvent) {
+      throw new Error('Event not found');
+    }
+
+    // Initialize layoutConfig if it doesn't exist
+    const layoutConfig = currentEvent.layoutConfig || {
+      template: 'custom',
+      sections: {
+        hero: { enabled: true, position: { x: 0, y: 0 }, size: { width: 100, height: 20 }, order: 1 },
+        pricing: { enabled: true, position: { x: 0, y: 20 }, size: { width: 50, height: 20 }, order: 2 },
+        schedule: { enabled: true, position: { x: 50, y: 20 }, size: { width: 50, height: 20 }, order: 3 },
+        organizer: { enabled: true, position: { x: 0, y: 40 }, size: { width: 50, height: 20 }, order: 4 },
+        gallery: { enabled: true, position: { x: 50, y: 40 }, size: { width: 50, height: 20 }, order: 5 },
+        speakers: { enabled: true, position: { x: 0, y: 60 }, size: { width: 50, height: 20 }, order: 6 },
+        location: { enabled: true, position: { x: 50, y: 60 }, size: { width: 50, height: 20 }, order: 7 },
+        capacity: { enabled: true, position: { x: 0, y: 80 }, size: { width: 50, height: 20 }, order: 8 }
+      },
+      colors: {
+        primary: '#3b82f6',
+        secondary: '#64748b',
+        background: '#ffffff',
+        text: '#1e293b'
+      },
+      spacing: 'normal',
+      customFields: []
+    };
+
+    // Add the new custom field
+    const updatedCustomFields = [...(layoutConfig.customFields || []), customField];
+    
+    const updatedLayoutConfig = {
+      ...layoutConfig,
+      customFields: updatedCustomFields
+    };
+
+    // Update the event
+    const updatedEvent = {
+      ...currentEvent,
+      layoutConfig: updatedLayoutConfig
+    };
+
+    // Send to API - Note: Custom field updates don't require email/OTP in this context
+    await eventService.updateEventInAPI(eventId, updatedEvent);
+    
+    console.log('✅ Custom field added successfully');
+  } catch (error) {
+    console.error('❌ Error adding custom field:', error);
+    throw error;
+  }
+}
+
+export async function updateCustomFieldInEvent(eventId: string, fieldId: string, updatedField: Partial<CustomField>): Promise<void> {
+  try {
+    console.log('✏️ Updating custom field in event:', eventId, 'field:', fieldId);
+
+    // Get current event data
+    const currentEvent = await eventService.getEventById(eventId);
+    if (!currentEvent || !currentEvent.layoutConfig) {
+      throw new Error('Event or layout config not found');
+    }
+
+    // Update the custom field
+    const updatedCustomFields = currentEvent.layoutConfig.customFields?.map(field => 
+      field.id === fieldId ? { ...field, ...updatedField } : field
+    ) || [];
+
+    const updatedLayoutConfig = {
+      ...currentEvent.layoutConfig,
+      customFields: updatedCustomFields
+    };
+
+    // Update the event
+    const updatedEvent = {
+      ...currentEvent,
+      layoutConfig: updatedLayoutConfig
+    };
+
+    // Send to API - Note: Custom field updates don't require email/OTP in this context
+    await eventService.updateEventInAPI(eventId, updatedEvent);
+    
+    console.log('✅ Custom field updated successfully');
+  } catch (error) {
+    console.error('❌ Error updating custom field:', error);
+    throw error;
+  }
+}
+
+export async function removeCustomFieldFromEvent(eventId: string, fieldId: string): Promise<void> {
+  try {
+    console.log('🗑️ Removing custom field from event:', eventId, 'field:', fieldId);
+
+    // Get current event data
+    const currentEvent = await eventService.getEventById(eventId);
+    if (!currentEvent || !currentEvent.layoutConfig) {
+      throw new Error('Event or layout config not found');
+    }
+
+    // Remove the custom field
+    const updatedCustomFields = currentEvent.layoutConfig.customFields?.filter(field => field.id !== fieldId) || [];
+
+    const updatedLayoutConfig = {
+      ...currentEvent.layoutConfig,
+      customFields: updatedCustomFields
+    };
+
+    // Update the event
+    const updatedEvent = {
+      ...currentEvent,
+      layoutConfig: updatedLayoutConfig
+    };
+
+    // Send to API - Note: Custom field updates don't require email/OTP in this context
+    await eventService.updateEventInAPI(eventId, updatedEvent);
+    
+    console.log('✅ Custom field removed successfully');
+  } catch (error) {
+    console.error('❌ Error removing custom field:', error);
+    throw error;
+  }
+}
+
+export async function reorderCustomFields(eventId: string, fieldIds: string[]): Promise<void> {
+  try {
+    console.log('🔄 Reordering custom fields for event:', eventId);
+
+    // Get current event data
+    const currentEvent = await eventService.getEventById(eventId);
+    if (!currentEvent || !currentEvent.layoutConfig) {
+      throw new Error('Event or layout config not found');
+    }
+
+    // Reorder custom fields based on the provided order
+    const reorderedFields = fieldIds.map(id => 
+      currentEvent.layoutConfig!.customFields?.find(field => field.id === id)
+    ).filter(Boolean) as CustomField[];
+
+    const updatedLayoutConfig = {
+      ...currentEvent.layoutConfig,
+      customFields: reorderedFields
+    };
+
+    // Update the event
+    const updatedEvent = {
+      ...currentEvent,
+      layoutConfig: updatedLayoutConfig
+    };
+
+    // Send to API - Note: Custom field updates don't require email/OTP in this context
+    await eventService.updateEventInAPI(eventId, updatedEvent);
+    
+    console.log('✅ Custom fields reordered successfully');
+  } catch (error) {
+    console.error('❌ Error reordering custom fields:', error);
+    throw error;
+  }
+}
+
+// Function to clean up custom heading fields from an event
+export async function cleanupCustomHeadingFields(eventId: string): Promise<void> {
+  try {
+    console.log('🧹 Cleaning up custom heading fields for event:', eventId);
+    
+    // Get current event data
+    const currentEvent = await eventService.getEventById(eventId);
+    if (!currentEvent) {
+      throw new Error('Event not found');
+    }
+    
+    // Create a clean event object without custom heading fields
+    const cleanEvent = { ...currentEvent };
+    
+    // Remove all custom heading fields
+    Object.keys(cleanEvent).forEach(key => {
+      if (key.startsWith('customheading_')) {
+        delete cleanEvent[key];
+        console.log('🗑️ Removed field:', key);
+      }
+    });
+    
+    // Update the event in API
+    await eventService.updateEventInAPI(eventId, cleanEvent);
+    
+    console.log('✅ Custom heading fields cleaned up successfully');
+  } catch (error) {
+    console.error('❌ Error cleaning up custom heading fields:', error);
+    throw error;
   }
 }
 
