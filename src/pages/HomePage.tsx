@@ -56,8 +56,8 @@ export function HomePage() {
       } catch (error) {
         console.error('Error loading dashboard data:', error);
         toast({
-          title: "Error",
-          description: "Failed to load dashboard data. Please try again later.",
+          title: t("error"),
+          description: t("failedToLoad"),
           variant: "destructive",
         });
       } finally {
@@ -84,22 +84,22 @@ export function HomePage() {
       
       if (results.length === 0) {
         toast({
-          title: "No Results",
-          description: `No events found for "${searchQuery}". Please try a different search term.`,
+          title: t("noEventsFound"),
+          description: t("noEventsFound"),
           variant: "default",
         });
       } else {
         toast({
-          title: "Search Results",
-          description: `Found ${results.length} event(s) matching "${searchQuery}".`,
+          title: t("search"),
+          description: `${t("eventsFound")}: ${results.length}`,
           variant: "default",
         });
       }
     } catch (error) {
       console.error('Search error:', error);
       toast({
-        title: "Search Error",
-        description: "Failed to search events. Please try again.",
+        title: t("error"),
+        description: t("failedToLoad"),
         variant: "destructive",
       });
     } finally {
@@ -142,7 +142,7 @@ export function HomePage() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search events by name..."
+                placeholder={t("search")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-6 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -185,7 +185,7 @@ export function HomePage() {
             </Button>
             <Button size="lg" variant="outline" className="border-transparent text-primary hover:bg-primary/90 hover:text-black px-8 py-3">
               <Link to="/view-tickets">
-                View Your Tickets
+                {t("viewTickets")}
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="border-transparent text-primary hover:bg-primary/90 hover:text-black px-8 py-3">
@@ -202,10 +202,10 @@ export function HomePage() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Event
+              {t("events")}
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Get insights into our event platform and explore categories
+              {t("platformStats")}
             </p>
           </div>
           
@@ -214,13 +214,13 @@ export function HomePage() {
             {/* Combined Total Events and Event Categories card */}
             <Card className="lg:col-span-1 hover:shadow-lg transition-all duration-300">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Platform Stats</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("platformStats")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg">
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Events</p>
+                      <p className="text-sm text-muted-foreground">{t("totalEvents")}</p>
                       <h3 className="text-2xl font-bold text-primary">{dashboardData.totalEvents}</h3>
                     </div>
                     <div className="p-2 rounded-full bg-primary/10">
@@ -229,7 +229,7 @@ export function HomePage() {
                   </div>
                   <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg">
                     <div>
-                      <p className="text-sm text-muted-foreground">Categories</p>
+                      <p className="text-sm text-muted-foreground">{t("exploreCategories")}</p>
                       <h3 className="text-2xl font-bold text-primary">{categoryData.length}</h3>
                     </div>
                     <div className="p-2 rounded-full bg-primary/10">
@@ -243,8 +243,8 @@ export function HomePage() {
             {/* Event Categories Distribution Chart */}
             <Card className="lg:col-span-2 hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <CardTitle className="text-xl text-primary">Categories Distribution</CardTitle>
-                <p className="text-sm text-muted-foreground">Distribution of events by category</p>
+                <CardTitle className="text-xl text-primary">{t("categoryDistribution")}</CardTitle>
+                <p className="text-sm text-muted-foreground">{t("categoryDistributionDesc")}</p>
               </CardHeader>
               <CardContent className="flex items-center justify-center pb-0" style={{ height: '300px' }}>
                 <ChartContainer
@@ -298,8 +298,8 @@ export function HomePage() {
           {/* Event Categories Section - Similar to Categories Section */}
           <Card className="hover:shadow-lg transition-all duration-300">
             <CardHeader>
-              <CardTitle className="text-xl text-primary">Event Categories</CardTitle>
-              <p className="text-sm text-muted-foreground">Explore events by category</p>
+              <CardTitle className="text-xl text-primary">{t("categories")}</CardTitle>
+              <p className="text-sm text-muted-foreground">{t("categories")}</p>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -312,7 +312,7 @@ export function HomePage() {
                       <Calendar className="h-6 w-6 text-primary" />
                     </div>
                     <h3 className="font-semibold text-primary text-sm">{category.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">{category.value} events</p>
+                    <p className="text-xs text-muted-foreground mt-1">{category.value} {t("eventsLabel")}</p>
                   </div>
                 ))}
               </div>
@@ -328,12 +328,12 @@ export function HomePage() {
             <div>
               <h2 className="text-3xl font-bold mb-4">{t("featuredEvents")}</h2>
               <p className="text-muted-foreground">
-                Discover our handpicked selection of amazing events
+                {t("featuredEventsDesc")}
               </p>
             </div>
             <Button variant="outline" asChild>
               <Link to="/events">
-                View All Events
+                {t("viewAllEvents")}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -358,7 +358,7 @@ export function HomePage() {
           ) : (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
-                No featured events available at the moment.
+                {t("noEventsFound")}
               </p>
             </div>
           )}
