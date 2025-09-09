@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Ticket, Search, User } from "lucide-react";
 import { eventService, TicketData, EventData } from "@/services/eventService";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function ViewTicketsPage() {
+  const { t } = useLanguage();
   const [userName, setUserName] = useState("");
   const [tickets, setTickets] = useState<TicketData[]>([]);
   const [events, setEvents] = useState<{[key: string]: EventData}>({});
@@ -20,8 +22,8 @@ export function ViewTicketsPage() {
     
     if (!userName.trim()) {
       toast({
-        title: "Username Required",
-        description: "Please enter your Username Or Email to search for tickets.",
+        title: t("usernameRequired"),
+        description: t("enterUsernameEmail"),
         variant: "destructive",
       });
       return;
@@ -79,22 +81,22 @@ export function ViewTicketsPage() {
       
       if (userTickets.length === 0) {
         toast({
-          title: "No Tickets Found",
-          description: `No tickets found for username "${userName}". Please check your username and try again.`,
+          title: t("noTicketsFound"),
+          description: `${t("noTicketsForUser")} "${userName}". ${t("checkUsernameRetry")}.`,
           variant: "default",
         });
       } else {
         toast({
-          title: "Tickets Found",
-          description: `Found ${userTickets.length} ticket(s) for "${userName}".`,
+          title: t("ticketsFound"),
+          description: `${t("foundTicketsFor")} "${userName}".`,
           variant: "default",
         });
       }
     } catch (error) {
       console.error('Error fetching tickets from API:', error);
       toast({
-        title: "Search Error",
-        description: "Failed to fetch tickets from server. Please try again.",
+        title: t("searchError"),
+        description: t("failedToFetchTickets"),
         variant: "destructive",
       });
     } finally {
@@ -145,17 +147,17 @@ export function ViewTicketsPage() {
           <CardHeader>
             <CardTitle className="flex items-center">
               <User className="h-5 w-5 mr-2" />
-              Search for Your Tickets
+              ค้นหาตั๋วของคุณ
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSearch} className="space-y-6">
               <div>
-                <Label htmlFor="username">Username or Email</Label>
+                <Label htmlFor="username">ชื่อผู้ใช้หรืออีเมล</Label>
                 <Input
                   id="username"
                   type="text"
-                  placeholder="Enter your username or email address"
+                  placeholder="ป้อนชื่อผู้ใช้หรือที่อยู่อีเมลของคุณ"
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
                   className="mt-2"
@@ -169,12 +171,12 @@ export function ViewTicketsPage() {
                 {loading ? (
                   <>
                     <Search className="h-4 w-4 animate-spin" />
-                    Searching...
+                    กำลังค้นหา...
                   </>
                 ) : (
                   <>
                     <Search className="h-4 w-4" />
-                    Search Tickets
+                    ค้นหาตั๋ว
                   </>
                 )}
               </Button>
@@ -187,11 +189,11 @@ export function ViewTicketsPage() {
           <div className="space-y-6 mt-8">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">
-                {tickets.length > 0 ? `Your Tickets (${tickets.length})` : 'No Tickets Found'}
+                {tickets.length > 0 ? `ตั๋วของคุณ (${tickets.length})` : 'ไม่พบตั๋ว'}
               </h2>
               {userName && (
                 <p className="text-muted-foreground text-sm">
-                  Showing results for: <span className="font-medium">{userName}</span>
+                  แสดงผลลัพธ์สำหรับ: <span className="font-medium">{userName}</span>
                 </p>
               )}
             </div>
@@ -206,10 +208,10 @@ export function ViewTicketsPage() {
                         <div className="flex justify-between items-start mb-4">
                           <div>
                             <h3 className="text-lg font-semibold mb-1">
-                              Ticket #{ticket.id?.slice(-8) || 'N/A'}
+                              ตั๋ว #{ticket.id?.slice(-8) || 'N/A'}
                             </h3>
                             <p className="text-muted-foreground text-sm">
-                              Event ID: {ticket.eventId || 'N/A'}
+                              รหัสกิจกรรม: {ticket.eventId || 'N/A'}
                             </p>
                           </div>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status || 'pending')}`}>
@@ -222,7 +224,7 @@ export function ViewTicketsPage() {
                           <div className="mb-6 p-4 bg-muted/50 rounded-lg">
                             <h4 className="font-medium mb-3 flex items-center">
                               <Ticket className="h-4 w-4 mr-2 text-primary" />
-                              Event Details
+                              รายละเอียดกิจกรรม
                             </h4>
                             
                             {/* Event Image */}
@@ -242,26 +244,26 @@ export function ViewTicketsPage() {
                             
                             <div className="grid gap-2">
                               <div className="text-sm">
-                                <span className="font-medium">Event Name:</span> {eventData.title}
+                                <span className="font-medium">ชื่อกิจกรรม:</span> {eventData.title}
                               </div>
                               <div className="text-sm">
-                                <span className="font-medium">Category:</span> {eventData.category}
+                                <span className="font-medium">หมวดหมู่:</span> {eventData.category}
                               </div>
                               <div className="text-sm">
-                                <span className="font-medium">Location:</span> {eventData.location.venue || eventData.location.type}
+                                <span className="font-medium">สถานที่:</span> {eventData.location.venue || eventData.location.type}
                               </div>
                               <div className="text-sm">
-                                <span className="font-medium">Date:</span> {new Date(eventData.schedule.startDate).toLocaleDateString('en-US', {
+                                <span className="font-medium">วันที่:</span> {new Date(eventData.schedule.startDate).toLocaleDateString('en-US', {
                                   year: 'numeric',
                                   month: 'long',
                                   day: 'numeric'
                                 })}
                               </div>
                               <div className="text-sm">
-                                <span className="font-medium">Time:</span> {eventData.schedule.startTime} - {eventData.schedule.endTime}
+                                <span className="font-medium">เวลา:</span> {eventData.schedule.startTime} - {eventData.schedule.endTime}
                               </div>
                               <div className="text-sm">
-                                <span className="font-medium">Organizer:</span> {eventData.organizer.name}
+                                <span className="font-medium">ผู้จัดงาน:</span> {eventData.organizer.name}
                               </div>
                             </div>
                           </div>
@@ -271,33 +273,33 @@ export function ViewTicketsPage() {
                         <div className="mb-4">
                           <h4 className="font-medium mb-3 flex items-center">
                             <Ticket className="h-4 w-4 mr-2 text-primary" />
-                            Ticket Information
+                            ข้อมูลตั๋ว
                           </h4>
                           <div className="grid gap-2">
                             <div className="text-sm">
-                              <span className="font-medium">Name:</span> {ticket.userName || 'N/A'}
+                              <span className="font-medium">ชื่อ:</span> {ticket.userName || 'N/A'}
                             </div>
                             <div className="text-sm">
-                              <span className="font-medium">Email:</span> {ticket.userEmail || 'N/A'}
+                              <span className="font-medium">อีเมล:</span> {ticket.userEmail || 'N/A'}
                             </div>
                             <div className="text-sm">
-                              <span className="font-medium">Phone:</span> {ticket.userPhone || 'N/A'}
+                              <span className="font-medium">โทรศัพท์:</span> {ticket.userPhone || 'N/A'}
                             </div>
                             <div className="text-sm">
-                              <span className="font-medium">Ticket Type:</span> {ticket.ticketType || 'N/A'}
+                              <span className="font-medium">ประเภทตั๋ว:</span> {ticket.ticketType || 'N/A'}
                             </div>
                             <div className="text-sm">
-                              <span className="font-medium">Quantity:</span> {ticket.quantity || 'N/A'}
+                              <span className="font-medium">จำนวน:</span> {ticket.quantity || 'N/A'}
                             </div>
                             <div className="text-sm">
-                              <span className="font-medium">Total Amount:</span> {ticket.totalAmount || 0} {ticket.currency || 'THB'}
+                              <span className="font-medium">จำนวนเงินรวม:</span> {ticket.totalAmount || 0} {ticket.currency || 'THB'}
                             </div>
                           </div>
                         </div>
 
                         <div className="pt-4 border-t">
                           <div className="text-xs text-muted-foreground">
-                            <span className="font-medium">Purchase Date:</span> {ticket.purchaseDate ? new Date(ticket.purchaseDate).toLocaleDateString('en-US', {
+                            <span className="font-medium">วันที่ซื้อ:</span> {ticket.purchaseDate ? new Date(ticket.purchaseDate).toLocaleDateString('en-US', {
                               year: 'numeric',
                               month: 'long',
                               day: 'numeric',
@@ -311,7 +313,7 @@ export function ViewTicketsPage() {
                           <div className="mt-4">
                             <Button variant="outline" className="w-full">
                               <Ticket className="h-4 w-4 mr-2" />
-                              Show QR Code
+                              แสดงรหัส QR
                             </Button>
                           </div>
                         )}
@@ -324,12 +326,12 @@ export function ViewTicketsPage() {
               <Card>
                 <CardContent className="text-center py-12">
                   <Ticket className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Tickets Found</h3>
+                  <h3 className="text-lg font-semibold mb-2">ไม่พบตั๋ว</h3>
                   <p className="text-muted-foreground mb-4">
-                    No tickets are associated with the username "{userName}".
+                    ไม่มีตั๋วที่เกี่ยวข้องกับชื่อผู้ใช้ "{userName}".
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Please check your username or email and try again.
+                    กรุณาตรวจสอบชื่อผู้ใช้หรืออีเมลและลองใหม่อีกครั้ง.
                   </p>
                 </CardContent>
               </Card>

@@ -170,23 +170,23 @@ export function CreateEventPage() {
   const progress = (currentStep / totalSteps) * 100;
 
   const stepTitles = [
-    "Organizer Information",
-    "Basic Information",
-    "Schedule",
-    "Location",
-    "Pricing & Capacity",
-    "Additional Information"
+    t("organizerInfo"),
+    t("basicInfo"),
+    t("schedule"),
+    t("location"),
+    t("pricingCapacity"),
+    t("additionalInfo")
   ];
 
   // Category options
   const categories = [
-    { value: "conference", label: "Conference" },
-    { value: "workshop", label: "Workshop" },
-    { value: "networking", label: "Networking" },
-    { value: "entertainment", label: "Entertainment" },
-    { value: "sports", label: "Sports & Fitness" },
-    { value: "cultural", label: "Cultural Event" },
-    { value: "other", label: "Other" }
+    { value: "conference", label: t("conference") },
+    { value: "workshop", label: t("workshop") },
+    { value: "networking", label: t("networking") },
+    { value: "entertainment", label: t("entertainment") },
+    { value: "sports", label: t("sportsFitness") },
+    { value: "cultural", label: t("culturalEvent") },
+    { value: "other", label: t("other") }
   ];
 
   // Get location suggestions based on selected category
@@ -275,8 +275,8 @@ export function CreateEventPage() {
   const handleCreateEvent = async () => {
     if (!validateCurrentStep()) {
       toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
+        title: t("error"),
+        description: t("requiredField"),
         variant: "destructive",
       });
       return;
@@ -325,15 +325,15 @@ export function CreateEventPage() {
         setEventId(response.eventId);
         setEventCreated(true);
         toast({
-          title: "Event Created Successfully!",
-          description: `Event ID has been sent to ${formData.organizer.contact}.`,
+          title: t("eventCreated"),
+          description: `${t("eventId")} ${t("sentTo")} ${formData.organizer.contact}.`,
         });
       }
     } catch (error) {
       console.error('Error creating event:', error);
       toast({
-        title: "Error",
-        description: "Failed to create event. Please try again.",
+        title: t("error"),
+        description: t("failedToCreate"),
         variant: "destructive",
       });
     } finally {
@@ -347,18 +347,18 @@ export function CreateEventPage() {
         return (
           <div className="space-y-6">
             <div>
-              <Label htmlFor="organizerName">Organizer Name *</Label>
+              <Label htmlFor="organizerName">{t("organizerName")} *</Label>
               <Input
                 id="organizerName"
-                placeholder="Enter organizer name"
+                placeholder={t("enterOrganizerName")}
                 value={formData.organizer.name}
                 onChange={(e) => updateFormData("organizer", { ...formData.organizer, name: e.target.value })}
                 className="mt-2"
               />
             </div>
-            
+
             <div>
-              <Label htmlFor="organizerEmail">Organizer Email *</Label>
+              <Label htmlFor="organizerEmail">{t("organizerEmail")} *</Label>
               <div className="relative mt-2">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -371,12 +371,12 @@ export function CreateEventPage() {
                 />
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                This email will receive your event ID for management
+                {t("emailForEventId")}
               </p>
             </div>
-            
+
             <div>
-              <Label htmlFor="organizerPhone">Phone Number</Label>
+              <Label htmlFor="organizerPhone">{t("phoneNumber")}</Label>
               <Input
                 id="organizerPhone"
                 placeholder="+66-2-xxx-xxxx"
@@ -390,15 +390,14 @@ export function CreateEventPage() {
               <div className="flex items-start gap-3">
                 <Lock className="h-5 w-5 text-primary mt-0.5" />
                 <div className="space-y-2">
-                  <h4 className="font-medium text-primary">Secure Event Management</h4>
+                  <h4 className="font-medium text-primary">{t("secureEventManagement")}</h4>
                   <p className="text-sm text-muted-foreground">
-                    After creating your event, you'll receive an Event ID at this email address.
-                    When you want to manage your event, you'll need to:
+                    {t("secureEventManagementDesc")}
                   </p>
                   <ul className="text-sm text-muted-foreground space-y-1 ml-4">
-                    <li>• Enter your Event ID and email</li>
-                    <li>• Request an OTP for verification</li>
-                    <li>• Enter the OTP to access event management</li>
+                    <li>• {t("enterEventIdEmail")}</li>
+                    <li>• {t("requestOTP")}</li>
+                    <li>• {t("enterOTP")}</li>
                   </ul>
                 </div>
               </div>
@@ -410,21 +409,21 @@ export function CreateEventPage() {
         return (
           <div className="space-y-6">
             <div>
-              <Label htmlFor="title">Event Title *</Label>
+              <Label htmlFor="title">{t("eventTitle")} *</Label>
               <Input
                 id="title"
-                placeholder="Enter your event title"
+                placeholder={t("enterEventTitle")}
                 value={formData.title}
                 onChange={(e) => updateFormData("title", e.target.value)}
                 className="mt-2"
               />
             </div>
-            
+
             <div>
-              <Label htmlFor="description">Description *</Label>
+              <Label htmlFor="description">{t("description")} *</Label>
               <Textarea
                 id="description"
-                placeholder="Describe your event"
+                placeholder={t("describeEvent")}
                 value={formData.description}
                 onChange={(e) => updateFormData("description", e.target.value)}
                 className="mt-2"
@@ -434,10 +433,10 @@ export function CreateEventPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="category">Category *</Label>
+                <Label htmlFor="category">{t("category")} *</Label>
                 <Select value={formData.category} onValueChange={(value) => updateFormData("category", value)}>
                   <SelectTrigger className="mt-2">
-                    <SelectValue placeholder="Select a category" />
+                    <SelectValue placeholder={t("selectCategory")} />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
@@ -448,17 +447,17 @@ export function CreateEventPage() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div>
-                <Label htmlFor="type">Event Type *</Label>
+                <Label htmlFor="type">{t("eventType")} *</Label>
                 <Select value={formData.type} onValueChange={(value) => updateFormData("type", value)}>
                   <SelectTrigger className="mt-2">
-                    <SelectValue placeholder="Select event type" />
+                    <SelectValue placeholder={t("selectEventType")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="workshop">Workshop</SelectItem>
-                    <SelectItem value="conference">Conference</SelectItem>
-                    <SelectItem value="networking">Networking</SelectItem>
+                    <SelectItem value="workshop">{t("workshop")}</SelectItem>
+                    <SelectItem value="conference">{t("conference")}</SelectItem>
+                    <SelectItem value="networking">{t("networking")}</SelectItem>
                     <SelectItem value="concert">Concert</SelectItem>
                     <SelectItem value="sports">Sports</SelectItem>
                     <SelectItem value="festival">Festival</SelectItem>
@@ -478,9 +477,9 @@ export function CreateEventPage() {
                   onChange={(e) => updateFormData("featured", e.target.checked)}
                   className="rounded"
                 />
-                <Label htmlFor="featured">Featured Event</Label>
+                <Label htmlFor="featured">{t("featuredEvent")}</Label>
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -489,7 +488,7 @@ export function CreateEventPage() {
                   onChange={(e) => updateFormData("status", e.target.checked ? "active" : "inactive")}
                   className="rounded"
                 />
-                <Label htmlFor="status">Active Event</Label>
+                <Label htmlFor="status">{t("activeEvent")}</Label>
               </div>
             </div>
           </div>
@@ -500,7 +499,7 @@ export function CreateEventPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="startDate">Start Date *</Label>
+                <Label htmlFor="startDate">{t("startDate")} *</Label>
                 <div className="relative mt-2">
                   <Input
                     id="startDate"
@@ -533,7 +532,7 @@ export function CreateEventPage() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="startTime">Start Time *</Label>
+                <Label htmlFor="startTime">{t("startTime")} *</Label>
                 <div className="relative mt-2">
                   <Input
                     id="startTime"
@@ -579,7 +578,7 @@ export function CreateEventPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="endDate">End Date *</Label>
+                <Label htmlFor="endDate">{t("endDate")} *</Label>
                 <div className="relative mt-2">
                   <Input
                     id="endDate"
@@ -612,7 +611,7 @@ export function CreateEventPage() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="endTime">End Time *</Label>
+                <Label htmlFor="endTime">{t("endTime")} *</Label>
                 <div className="relative mt-2">
                   <Input
                     id="endTime"
@@ -657,7 +656,7 @@ export function CreateEventPage() {
             </div>
             
             <div>
-              <Label htmlFor="timezone">Timezone</Label>
+              <Label htmlFor="timezone">{t("timezone")}</Label>
               <Select value={formData.schedule.timezone} onValueChange={(value) => updateFormData("schedule", { ...formData.schedule, timezone: value })}>
                 <SelectTrigger className="mt-2">
                   <SelectValue placeholder="Select timezone" />
@@ -679,26 +678,26 @@ export function CreateEventPage() {
         return (
           <div className="space-y-6">
             <div>
-              <Label htmlFor="locationType">Location Type *</Label>
+              <Label htmlFor="locationType">{t("locationType")} *</Label>
               <Select value={formData.location.type} onValueChange={(value) => updateFormData("location", { ...formData.location, type: value as 'onsite' | 'online' | 'hybrid' })}>
                 <SelectTrigger className="mt-2">
-                  <SelectValue placeholder="Select location type" />
+                  <SelectValue placeholder={t("selectLocationType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="onsite">Onsite</SelectItem>
-                  <SelectItem value="online">Online</SelectItem>
-                  <SelectItem value="hybrid">Hybrid</SelectItem>
+                  <SelectItem value="onsite">{t("onsite")}</SelectItem>
+                  <SelectItem value="online">{t("online")}</SelectItem>
+                  <SelectItem value="hybrid">{t("hybrid")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             {formData.location.type !== 'online' && (
               <div>
-                <Label htmlFor="venue">Venue *</Label>
+                <Label htmlFor="venue">{t("venue")} *</Label>
                 <div className="relative mt-2">
                   <Input
                     id="venue"
-                    placeholder="Enter venue name"
+                    placeholder={t("enterVenueName")}
                     value={formData.location.venue}
                     onChange={(e) => updateFormData("location", { ...formData.location, venue: e.target.value })}
                     className="w-full cursor-text"
@@ -729,11 +728,11 @@ export function CreateEventPage() {
             
             {formData.location.type !== 'online' && (
               <div>
-                <Label htmlFor="address">Full Address</Label>
+                <Label htmlFor="address">{t("fullAddress")}</Label>
                 <div className="relative mt-2">
                   <Textarea
                     id="address"
-                    placeholder="Complete address with directions"
+                    placeholder={t("completeAddress")}
                     value={formData.location.address}
                     onChange={(e) => updateFormData("location", { ...formData.location, address: e.target.value })}
                     className="w-full cursor-text resize-none"
@@ -745,7 +744,7 @@ export function CreateEventPage() {
             
             {formData.location.type !== 'onsite' && (
               <div>
-                <Label htmlFor="onlineLink">Online Link *</Label>
+                <Label htmlFor="onlineLink">{t("onlineLink")} *</Label>
                 <div className="relative mt-2">
                   <Input
                     id="onlineLink"
@@ -760,7 +759,7 @@ export function CreateEventPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="latitude">Latitude</Label>
+                <Label htmlFor="latitude">{t("latitude")}</Label>
                 <div className="relative mt-2">
                   <Input
                     id="latitude"
@@ -780,7 +779,7 @@ export function CreateEventPage() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="longitude">Longitude</Label>
+                <Label htmlFor="longitude">{t("longitude")}</Label>
                 <div className="relative mt-2">
                   <Input
                     id="longitude"
@@ -807,11 +806,11 @@ export function CreateEventPage() {
         return (
           <div className="space-y-6">
             <div>
-              <Label htmlFor="maxCapacity">Maximum Capacity *</Label>
+              <Label htmlFor="maxCapacity">{t("maximumCapacity")} *</Label>
               <Input
                 id="maxCapacity"
                 type="number"
-                placeholder="Enter maximum number of attendees"
+                placeholder={t("enterMaxAttendees")}
                 value={formData.capacity.max}
                 onChange={(e) => updateFormData("capacity", { ...formData.capacity, max: parseInt(e.target.value) || 0 })}
                 className="mt-2"
@@ -819,10 +818,10 @@ export function CreateEventPage() {
             </div>
             
             <div>
-              <Label htmlFor="currency">Currency</Label>
+              <Label htmlFor="currency">{t("currency")}</Label>
               <Select value={formData.pricing.currency} onValueChange={(value) => updateFormData("pricing", { ...formData.pricing, currency: value })}>
                 <SelectTrigger className="mt-2">
-                  <SelectValue placeholder="Select currency" />
+                  <SelectValue placeholder={t("selectCurrency")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="THB">THB (Thai Baht)</SelectItem>
@@ -846,22 +845,22 @@ export function CreateEventPage() {
                   className="flex items-center gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  Add Ticket Type
+                  {t("addTicketType")}
                 </Button>
               </div>
 
               {formData.tickets.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Ticket className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No ticket types added yet</p>
-                  <p className="text-sm">Click "Add Ticket Type" to create your first ticket</p>
+                  <p>{t("noTicketTypes")}</p>
+                  <p className="text-sm">{t("clickAddTicket")}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {formData.tickets.map((ticket, index) => (
                     <Card key={ticket.type} className="p-4">
                       <div className="flex items-start justify-between mb-4">
-                        <h4 className="font-medium">Ticket #{index + 1}</h4>
+                        <h4 className="font-medium">{t("ticket")} #{index + 1}</h4>
                         <Button
                           type="button"
                           onClick={() => removeTicket(index)}
@@ -870,12 +869,13 @@ export function CreateEventPage() {
                           className="text-destructive hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4" />
+                          {t("remove")}
                         </Button>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor={`ticketName-${index}`}>Ticket Name *</Label>
+                          <Label htmlFor={`ticketName-${index}`}>{t("ticketName")} *</Label>
                           <Input
                             id={`ticketName-${index}`}
                             placeholder="e.g., Early Bird, VIP, Student"
@@ -884,13 +884,13 @@ export function CreateEventPage() {
                             className="mt-2"
                           />
                         </div>
-                        
+
                         <div>
-                          <Label htmlFor={`ticketPrice-${index}`}>Price ({formData.pricing.currency}) *</Label>
+                          <Label htmlFor={`ticketPrice-${index}`}>{t("price")} ({formData.pricing.currency}) *</Label>
                           <Input
                             id={`ticketPrice-${index}`}
                             type="number"
-                            placeholder="0 for free"
+                            placeholder={t("forFree")}
                             value={ticket.price}
                             onChange={(e) => updateTicket(index, 'price', parseFloat(e.target.value) || 0)}
                             className="mt-2"
@@ -899,10 +899,10 @@ export function CreateEventPage() {
                       </div>
                       
                       <div className="mt-4">
-                        <Label htmlFor={`ticketDescription-${index}`}>Description (Optional)</Label>
+                        <Label htmlFor={`ticketDescription-${index}`}>{t("describeTicket")}</Label>
                         <Textarea
                           id={`ticketDescription-${index}`}
-                          placeholder="Describe what's included in this ticket type"
+                          placeholder={t("describeTicket")}
                           value={ticket.description || ''}
                           onChange={(e) => updateTicket(index, 'description', e.target.value)}
                           className="mt-2"
@@ -921,7 +921,7 @@ export function CreateEventPage() {
         return (
           <div className="space-y-6">
             <div>
-              <Label htmlFor="bannerImage">Banner Image URL</Label>
+              <Label htmlFor="bannerImage">{t("bannerImageUrl")}</Label>
               <Input
                 id="bannerImage"
                 placeholder="https://example.com/images/banner.jpg"
@@ -930,9 +930,9 @@ export function CreateEventPage() {
                 className="mt-2"
               />
             </div>
-            
+
             <div>
-              <Label htmlFor="thumbnailImage">Thumbnail Image URL</Label>
+              <Label htmlFor="thumbnailImage">{t("thumbnailImageUrl")}</Label>
               <Input
                 id="thumbnailImage"
                 placeholder="https://example.com/images/thumbnail.jpg"
@@ -944,14 +944,14 @@ export function CreateEventPage() {
             
             <div>
               <div className="flex justify-between items-center mb-4">
-                <Label>Tags</Label>
+                <Label>{t("tags")}</Label>
                 <Button type="button" variant="outline" size="sm" onClick={addTag}>
-                  Add Tag
+                  {t("addTag")}
                 </Button>
               </div>
               <div className="flex gap-2 mb-2">
                 <Input
-                  placeholder="Enter tag"
+                  placeholder={t("enterTag")}
                   value={formData.newTag}
                   onChange={(e) => updateFormData("newTag", e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && addTag()}
@@ -975,19 +975,19 @@ export function CreateEventPage() {
             
             <div>
               <div className="flex justify-between items-center mb-4">
-                <Label>Requirements</Label>
+                <Label>{t("requirements")}</Label>
                 <Button type="button" variant="outline" size="sm" onClick={() => {
                   if (formData.newRequirement.trim()) {
                     updateFormData("requirements", [...formData.requirements, formData.newRequirement.trim()]);
                     updateFormData("newRequirement", "");
                   }
                 }}>
-                  Add Requirement
+                  {t("addRequirement")}
                 </Button>
               </div>
               <div className="flex gap-2 mb-2">
                 <Input
-                  placeholder="Enter requirement"
+                  placeholder={t("enterRequirement")}
                   value={formData.newRequirement}
                   onChange={(e) => updateFormData("newRequirement", e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (() => {
@@ -1026,55 +1026,55 @@ export function CreateEventPage() {
       <div className="min-h-screen bg-background py-8">
         <div className="container mx-auto px-4 max-w-2xl">
           <div className="text-center mb-8">
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold mb-4 text-primary">Event Created Successfully!</h1>
-            <p className="text-muted-foreground">
-              Your event has been created and the Event ID has been sent to {formData.organizer.contact}
-            </p>
-          </div>
+             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+             <h1 className="text-3xl font-bold mb-4 text-primary">{t("eventCreated")}</h1>
+             <p className="text-muted-foreground">
+               {t("eventCreatedDesc")} {t("sentTo")} {formData.organizer.contact}
+             </p>
+           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-center">Your Event ID</CardTitle>
+              <CardTitle className="text-center">{t("yourEventId")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 <div className="bg-primary/5 border-2 border-dashed border-primary rounded-xl p-6 text-center">
-                  <p className="text-sm text-muted-foreground mb-2">Event ID</p>
+                  <p className="text-sm text-muted-foreground mb-2">{t("eventId")}</p>
                   <p className="text-3xl font-bold tracking-wider text-primary">{eventId}</p>
-                  <p className="text-xs text-muted-foreground mt-2">Save this ID for event management</p>
+                  <p className="text-xs text-muted-foreground mt-2">{t("saveEventId")}</p>
                 </div>
                 
                 <div className="bg-muted/30 rounded-lg p-4">
-                  <h3 className="font-semibold mb-2">Event Details:</h3>
+                  <h3 className="font-semibold mb-2">{t("eventDetails")}:</h3>
                   <div className="space-y-1 text-sm text-muted-foreground">
-                    <p><strong>Event Title:</strong> {formData.title}</p>
-                    <p><strong>Event Date:</strong> {formData.schedule.startDate} at {formData.schedule.startTime}</p>
-                    <p><strong>Location:</strong> {formData.location.venue || formData.location.onlineLink || 'TBD'}</p>
-                    <p><strong>Organizer:</strong> {formData.organizer.name}</p>
-                    <p><strong>Category:</strong> {formData.category}</p>
-                    <p><strong>Type:</strong> {formData.type}</p>
+                    <p><strong>{t("eventTitle")}:</strong> {formData.title}</p>
+                    <p><strong>{t("startDate")}:</strong> {formData.schedule.startDate} {t("at")} {formData.schedule.startTime}</p>
+                    <p><strong>{t("location")}:</strong> {formData.location.venue || formData.location.onlineLink || 'TBD'}</p>
+                    <p><strong>{t("organizer")}:</strong> {formData.organizer.name}</p>
+                    <p><strong>{t("category")}:</strong> {formData.category}</p>
+                    <p><strong>{t("eventType")}:</strong> {formData.type}</p>
                   </div>
                 </div>
                 
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-                  <h3 className="font-semibold mb-2 text-primary">To Manage Your Event</h3>
+                  <h3 className="font-semibold mb-2 text-primary">{t("manageEventInstructions")}</h3>
                   <ol className="text-sm text-muted-foreground space-y-2 ml-4 list-decimal">
-                    <li>Navigate to the Event Management page</li>
-                    <li>Enter your Event ID and email address</li>
-                    <li>Request an OTP for verification</li>
-                    <li>Check your email for the OTP</li>
-                    <li>Enter the OTP to access event management</li>
+                    <li>{t("goToManageEvent")}</li>
+                    <li>{t("enterEventIdEmail")}</li>
+                    <li>{t("requestOTP")}</li>
+                    <li>{t("checkEmailOTP")}</li>
+                    <li>{t("enterOTP")}</li>
                   </ol>
                 </div>
               </div>
               
               <div className="flex gap-4 mt-6">
                 <Button onClick={() => navigate('/events')} className="flex-1">
-                  View All Events
+                  {t("viewAllEvents")}
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setEventCreated(false);
                     setEventId("");
@@ -1162,7 +1162,7 @@ export function CreateEventPage() {
                   }}
                   className="flex-1"
                 >
-                  Create Another Event
+                  {t("createAnotherEvent")}
                 </Button>
               </div>
             </CardContent>
@@ -1178,7 +1178,7 @@ export function CreateEventPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4">{t("createEvent")}</h1>
           <p className="text-muted-foreground">
-            Create your event in a few simple steps
+            {t("createEventSubtitle")}
           </p>
         </div>
 
@@ -1186,10 +1186,10 @@ export function CreateEventPage() {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium">
-              Step {currentStep} of {totalSteps}
+              {t("step")} {currentStep} {t("of")} {totalSteps}
             </span>
             <span className="text-sm text-muted-foreground">
-              {Math.round(progress)}% complete
+              {Math.round(progress)}% {t("completed")}
             </span>
           </div>
           <Progress value={progress} className="h-2" />
@@ -1218,16 +1218,16 @@ export function CreateEventPage() {
                 className="flex items-center gap-2"
               >
                 <ChevronLeft className="h-4 w-4" />
-                Previous
+                {t("previous")}
               </Button>
               
               {currentStep === totalSteps ? (
-                <Button 
+                <Button
                   onClick={handleCreateEvent}
                   disabled={!validateCurrentStep() || loading}
                   className="flex items-center gap-2 bg-primary hover:bg-primary/90"
                 >
-                  {loading ? "Creating..." : "Create Event"}
+                  {loading ? t("creating") : t("createEvent")}
                   <Upload className="h-4 w-4" />
                 </Button>
               ) : (
@@ -1236,7 +1236,7 @@ export function CreateEventPage() {
                   disabled={!validateCurrentStep() || loading}
                   className="flex items-center gap-2"
                 >
-                  Next
+                  {t("next")}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               )}
