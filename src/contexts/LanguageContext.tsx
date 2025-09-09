@@ -15,6 +15,7 @@ const translations = {
     events: "Events",
     createEvent: "Create Event",
     manageEvent: "Manage Event",
+    viewTickets: "View Your Tickets",
     
     // Common
     search: "Search",
@@ -52,6 +53,7 @@ const translations = {
     events: "อีเวนต์",
     createEvent: "สร้างอีเวนต์",
     manageEvent: "จัดการอีเวนต์",
+    viewTickets: "ดูตั๋วของคุณ",
     
     // Common
     search: "ค้นหา",
