@@ -10,43 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OTPInput } from "@/components/common/OTPInput";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { eventService } from "@/services/eventService";
-import { Lock, Edit, Trash2, Search, Shield, Mail, Send, CheckCircle, Calendar, MapPin, Users, DollarSign, Save, ChevronLeft, ChevronRight } from "lucide-react";
+import { eventService, EventData } from "@/services/eventService";
+import { Lock, Edit, Trash2, Search, Shield, Mail, Send, CheckCircle, Calendar, MapPin, Users, DollarSign, Save, ChevronLeft, ChevronRight, Plus, Ticket, RefreshCw } from "lucide-react";
 
-// Define types for our event data
-interface EventData {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  status: string;
-  featured: boolean;
-  organizer: {
-    name: string;
-    email: string;
-  };
-  schedule: {
-    startDate: string;
-    startTime: string;
-    endDate: string;
-    endTime: string;
-  };
-  location: {
-    type: string;
-    venue?: string;
-    address?: string;
-    onlineLink?: string;
-  };
-  capacity: {
-    max: number;
-    registered: number;
-    available: number;
-  };
-  pricing: {
-    currency: string;
-    [key: string]: string | number;
-  };
-}
+// EventData is imported from eventService
 
 export function EventManagementPage() {
   const { t } = useLanguage();
@@ -61,10 +28,17 @@ export function EventManagementPage() {
   const [isVerified, setIsVerified] = useState(false);
   const [currentEvent, setCurrentEvent] = useState<EventData | null>(null);
   const [otpRequested, setOtpRequested] = useState(false);
+  const [otp, setOtp] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editedEvent, setEditedEvent] = useState<EventData | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
+  const [tickets, setTickets] = useState<Array<{
+    type: string;
+    name: string;
+    price: number;
+    description?: string;
+  }>>([]);
 
   // Request OTP for event management
   const handleRequestOTP = async () => {
@@ -136,6 +110,9 @@ export function EventManagementPage() {
       const isValid = await eventService.verifyEventOTP(eventId, inputOtp, email);
       
       if (isValid) {
+        // Store OTP for later use in update
+        setOtp(inputOtp);
+        
         const event = await eventService.getEventById(eventId);
         if (event) {
           setCurrentEvent(event);
@@ -221,29 +198,189 @@ export function EventManagementPage() {
       return {
         ...prev,
         [parent]: {
-          ...prev[parent as keyof EventData],
+          ...(prev[parent as keyof EventData] as any),
           [field]: value
         }
       };
     });
   };
 
+  // Ticket management functions
+  const addTicket = () => {
+    const newTicket = {
+      type: `ticket_${Date.now()}`,
+      name: "",
+      price: 0,
+      description: ""
+    };
+    setTickets(prev => [...prev, newTicket]);
+  };
+
+  const updateTicket = (index: number, field: string, value: string | number) => {
+    setTickets(prev => 
+      prev.map((ticket, i) => 
+        i === index ? { ...ticket, [field]: value } : ticket
+      )
+    );
+  };
+
+  const removeTicket = (index: number) => {
+    setTickets(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Clear all tickets (useful for resetting pricing)
+  const clearAllTickets = () => {
+    setTickets([]);
+  };
+
+  // Format pricing field name for display
+  const formatPricingFieldName = (key: string): string => {
+    return key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
+  };
+
+  // Get pricing fields that have values
+  const getPricingFields = (pricing: any) => {
+    return Object.entries(pricing)
+      .filter(([key, value]) => key !== 'currency' && value !== undefined && value !== 0)
+      .map(([key, value]) => ({
+        name: formatPricingFieldName(key),
+        value: value,
+        key: key
+      }));
+  };
+
+  // Reset pricing to original state
+  const resetPricing = () => {
+    if (currentEvent) {
+      initializeTicketsFromPricing(currentEvent);
+    }
+  };
+
+  // Duplicate a ticket
+  const duplicateTicket = (index: number) => {
+    const ticketToDuplicate = tickets[index];
+    const newTicket = {
+      ...ticketToDuplicate,
+      type: `ticket_${Date.now()}`,
+      name: `${ticketToDuplicate.name} (Copy)`,
+      price: ticketToDuplicate.price
+    };
+    setTickets(prev => [...prev, newTicket]);
+  };
+
+  // Initialize tickets from event pricing when editing starts
+  const initializeTicketsFromPricing = (event: EventData) => {
+    const ticketTypes = [];
+    const pricing = event.pricing as any;
+    
+    // Convert ALL pricing fields to tickets (including 0 values for editing)
+    Object.keys(pricing).forEach(key => {
+      if (key !== 'currency' && pricing[key] !== undefined) {
+        ticketTypes.push({
+          type: key,
+          name: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
+          price: pricing[key],
+          description: ''
+        });
+      }
+    });
+    
+    // If no pricing fields found, add a default empty ticket for editing
+    if (ticketTypes.length === 0) {
+      ticketTypes.push({
+        type: 'ticket',
+        name: 'Ticket',
+        price: 0,
+        description: ''
+      });
+    }
+    
+    setTickets(ticketTypes);
+  };
+
   // Save edited event
   const handleSaveEvent = async () => {
-    if (!editedEvent) return;
+    if (!editedEvent || !currentEvent) return;
     
     try {
-      // In a real implementation, you would call an API to save the changes
-      // For now, we'll just update the local state
-      setCurrentEvent(editedEvent);
-      setIsEditing(false);
-      setCurrentStep(1); // Reset step when saving
-      toast({
-        title: "Event Updated",
-        description: "Your event has been successfully updated",
+      console.log('🔄 Starting to save event changes...');
+      console.log('📝 Event ID:', currentEvent.id);
+      console.log('📝 Edited data:', editedEvent);
+      
+      // Convert tickets to pricing format - only include tickets with names and prices
+      const pricingFromTickets = tickets.reduce((acc, ticket) => {
+        if (ticket.name && ticket.name.trim() !== '' && ticket.price !== undefined) {
+          acc[ticket.name.toLowerCase().replace(/\s+/g, '')] = ticket.price;
+        }
+        return acc;
+      }, { 
+        currency: editedEvent.pricing.currency
       });
+      
+      console.log('🎫 Tickets to pricing conversion:', {
+        tickets: tickets,
+        pricingFromTickets: pricingFromTickets,
+        originalPricing: editedEvent.pricing
+      });
+
+      // Convert editedEvent to the format expected by updateEvent
+      const updateData = {
+        title: editedEvent.title,
+        description: editedEvent.description,
+        category: editedEvent.category,
+        type: editedEvent.category, // Use category as type if not specified
+        status: editedEvent.status,
+        featured: editedEvent.featured,
+        organizer: {
+          name: editedEvent.organizer.name,
+          contact: editedEvent.organizer.contact,
+          phone: editedEvent.organizer.phone || ''
+        },
+        schedule: {
+          startDate: editedEvent.schedule.startDate,
+          endDate: editedEvent.schedule.endDate,
+          startTime: editedEvent.schedule.startTime,
+          endTime: editedEvent.schedule.endTime,
+          timezone: 'Asia/Bangkok'
+        },
+        location: {
+          type: editedEvent.location.type,
+          venue: editedEvent.location.venue,
+          address: editedEvent.location.address,
+          onlineLink: editedEvent.location.onlineLink
+        },
+        pricing: pricingFromTickets,
+        capacity: {
+          max: editedEvent.capacity.max,
+          registered: editedEvent.capacity.registered,
+          available: editedEvent.capacity.available
+        }
+      };
+      
+      console.log('📤 Sending update data:', updateData);
+      
+      // Call the actual API update function
+      const success = await eventService.updateEvent(
+        currentEvent.id,
+        updateData,
+        otp, // You need to get the OTP from somewhere
+        email
+      );
+      
+      if (success) {
+        console.log('✅ Event updated successfully');
+        setCurrentEvent(editedEvent);
+        setIsEditing(false);
+        setCurrentStep(1);
+        toast({
+          title: "Event Updated",
+          description: "Your event has been successfully updated",
+        });
+      } else {
+        throw new Error('Update failed');
+      }
     } catch (error) {
-      console.error('Save error:', error);
+      console.error('❌ Save error:', error);
       toast({
         title: "Error",
         description: "Failed to save event changes",
@@ -449,7 +586,7 @@ export function EventManagementPage() {
 
       case 4:
         return (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="maxCapacity">Max Capacity</Label>
@@ -494,20 +631,127 @@ export function EventManagementPage() {
                 className="mt-1"
               />
             </div>
-            
-            <div>
-              {Object.entries(editedEvent.pricing)
-                .filter(([key]) => key !== 'currency')
-                .map(([key, value]) => (
-                  <div key={key} className="mb-3">
-                    <Label>{key.charAt(0).toUpperCase() + key.slice(1)}</Label>
-                    <Input
-                      value={value?.toString() || ''}
-                      onChange={(e) => handleNestedChange('pricing', key, e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                ))}
+
+            {/* Dynamic Ticket Types */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-lg font-semibold">Ticket Types</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={addTicket}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Ticket Type
+                  </Button>
+                  {tickets.length > 0 && (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={resetPricing}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                        title="Reset to original pricing"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                        Reset
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={clearAllTickets}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2 text-destructive hover:text-destructive"
+                        title="Clear all tickets"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Clear All
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {tickets.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Ticket className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No ticket types added yet</p>
+                  <p className="text-sm">Click "Add Ticket Type" to create your first ticket</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {tickets.map((ticket, index) => (
+                    <Card key={ticket.type} className="p-4">
+                      <div className="flex items-start justify-between mb-4">
+                        <h4 className="font-medium">Ticket #{index + 1}</h4>
+                        <div className="flex gap-1">
+                          <Button
+                            type="button"
+                            onClick={() => duplicateTicket(index)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-blue-600 hover:text-blue-700"
+                            title="Duplicate ticket"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => removeTicket(index)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            title="Remove ticket"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor={`ticketName-${index}`}>Ticket Name *</Label>
+                          <Input
+                            id={`ticketName-${index}`}
+                            placeholder="e.g., Early Bird, VIP, Student"
+                            value={ticket.name}
+                            onChange={(e) => updateTicket(index, 'name', e.target.value)}
+                            className="mt-2"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor={`ticketPrice-${index}`}>Price ({editedEvent.pricing.currency}) *</Label>
+                          <Input
+                            id={`ticketPrice-${index}`}
+                            type="number"
+                            placeholder="0 for free"
+                            value={ticket.price}
+                            onChange={(e) => updateTicket(index, 'price', parseFloat(e.target.value) || 0)}
+                            className="mt-2"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4">
+                        <Label htmlFor={`ticketDescription-${index}`}>Description (Optional)</Label>
+                        <Textarea
+                          id={`ticketDescription-${index}`}
+                          placeholder="Describe what's included in this ticket type"
+                          value={ticket.description || ''}
+                          onChange={(e) => updateTicket(index, 'description', e.target.value)}
+                          className="mt-2"
+                          rows={2}
+                        />
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         );
@@ -624,22 +868,34 @@ export function EventManagementPage() {
             <div className="grid grid-cols-1 gap-2 mt-1">
               <div className="flex justify-between">
                 <span className="text-sm">Currency</span>
-                <span className="text-sm">{currentEvent.pricing.currency}</span>
+                <span className="text-sm font-medium">{currentEvent.pricing.currency}</span>
               </div>
-              {Object.entries(currentEvent.pricing)
-                .filter(([key]) => key !== 'currency')
-                .map(([key, value]) => (
-                  <div key={key} className="flex justify-between">
-                    <span className="text-sm capitalize">{key}</span>
-                    <span className="text-sm">{value}</span>
-                  </div>
-                ))}
+              {getPricingFields(currentEvent.pricing).map((field) => (
+                <div key={field.key} className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">{field.name}</span>
+                  <span className="text-sm font-medium text-primary">
+                    {field.value.toLocaleString()} {currentEvent.pricing.currency}
+                  </span>
+                </div>
+              ))}
+              {getPricingFields(currentEvent.pricing).length === 0 && (
+                <div className="text-sm text-muted-foreground text-center py-4 border border-dashed rounded-lg">
+                  <DollarSign className="h-6 w-6 mx-auto mb-2 opacity-50" />
+                  <p>No pricing information available</p>
+                  <p className="text-xs">Add ticket types to set pricing</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         <Button
-          onClick={() => setIsEditing(true)}
+          onClick={() => {
+            if (currentEvent) {
+              initializeTicketsFromPricing(currentEvent);
+              setIsEditing(true);
+            }
+          }}
           className="w-full mt-4"
         >
           <Edit className="h-4 w-4 mr-2" />
