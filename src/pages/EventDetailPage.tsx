@@ -120,8 +120,8 @@ export function EventDetailPage() {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/50" />
-        <div className="absolute top-4 left-4">
-          <Button variant="secondary" asChild>
+        <div className="absolute top-14 left-4">
+          <Button asChild>
             <Link to="/events">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Events
