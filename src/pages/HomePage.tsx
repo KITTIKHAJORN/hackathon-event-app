@@ -1,13 +1,19 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EventCard } from "@/components/event/EventCard";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Search, ArrowRight, Code, Music, Users, Presentation, X } from "lucide-react";
+import { Search, ArrowRight, Code, Music, Users, Presentation, X, Calendar, MapPin, User, Ticket } from "lucide-react";
 import heroImage from "@/assets/hero-banner.jpg";
 import { eventService, EventData } from "@/services/eventService";
 import { useToast } from "@/hooks/use-toast";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 export function HomePage() {
   const { t } = useLanguage();
@@ -18,19 +24,39 @@ export function HomePage() {
   const [searchResults, setSearchResults] = useState<EventData[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [dashboardData, setDashboardData] = useState({
+    totalEvents: 0,
+    upcomingEvents: 0,
+    registeredUsers: 0,
+    totalTickets: 0,
+  });
+  const [categoryData, setCategoryData] = useState<any[]>([]);
+  const [eventTrendData, setEventTrendData] = useState<any[]>([]);
 
-  // Load featured events from API
+  // Load featured events and dashboard data from API
   useEffect(() => {
-    const loadFeaturedEvents = async () => {
+    const loadDashboardData = async () => {
       try {
         setLoading(true);
         const events = await eventService.getFeaturedEvents();
         setFeaturedEvents(events.slice(0, 3)); // Show only first 3 featured events
+        
+        // Get real dashboard statistics
+        const stats = await eventService.getDashboardStats();
+        setDashboardData(stats);
+        
+        // Get real category distribution data
+        const categories = await eventService.getCategoryDistribution();
+        setCategoryData(categories);
+        
+        // Get real event trend data
+        const trendData = await eventService.getEventTrendData();
+        setEventTrendData(trendData);
       } catch (error) {
-        console.error('Error loading featured events:', error);
+        console.error('Error loading dashboard data:', error);
         toast({
           title: "Error",
-          description: "Failed to load featured events. Please try again later.",
+          description: "Failed to load dashboard data. Please try again later.",
           variant: "destructive",
         });
       } finally {
@@ -38,7 +64,7 @@ export function HomePage() {
       }
     };
 
-    loadFeaturedEvents();
+    loadDashboardData();
   }, [toast]);
 
   // Handle search functionality
@@ -118,6 +144,9 @@ export function HomePage() {
     }
   ];
 
+  // Colors for charts
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82ca9d'];
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -192,6 +221,138 @@ export function HomePage() {
                 {t("createEvent")}
               </Link>
             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Dashboard Section */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Event Dashboard</h2>
+            <p className="text-muted-foreground text-lg">
+              Get insights into our event platform
+            </p>
+          </div>
+          
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Events</CardTitle>
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{dashboardData.totalEvents}</div>
+                <p className="text-xs text-muted-foreground">All events in our system</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{dashboardData.upcomingEvents}</div>
+                <p className="text-xs text-muted-foreground">Events happening soon</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Registered Users</CardTitle>
+                <User className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{dashboardData.registeredUsers.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">Active community members</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Tickets Sold</CardTitle>
+                <Ticket className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{dashboardData.totalTickets.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">Tickets purchased</p>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Event Trend Chart */}
+            <Card className="col-span-1">
+              <CardHeader>
+                <CardTitle>Event Trends</CardTitle>
+                <p className="text-sm text-muted-foreground">Events created per month</p>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={{
+                    events: {
+                      label: "Events",
+                      color: "hsl(var(--chart-1))",
+                    },
+                  }}
+                  className="h-[300px]"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={eventTrendData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="events" fill="var(--color-events)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+            
+            {/* Category Distribution Chart */}
+            <Card className="col-span-1">
+              <CardHeader>
+                <CardTitle>Event Categories</CardTitle>
+                <p className="text-sm text-muted-foreground">Distribution of events by category</p>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={categoryData.reduce((acc, category, index) => {
+                    acc[category.name] = {
+                      label: category.name,
+                      color: COLORS[index % COLORS.length],
+                    };
+                    return acc;
+                  }, {} as Record<string, { label: string; color: string }>)}
+                  className="h-[300px]"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={categoryData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {categoryData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
