@@ -20,6 +20,7 @@ export function Header() {
   const navigation = [
     { name: t("home"), href: "/" },
     { name: t("events"), href: "/events" },
+    { name: t("viewTickets"), href: "/view-tickets" },
     { name: t("createEvent"), href: "/create-event" },
     { name: t("manageEvent"), href: "/manage-event" },
   ];
@@ -33,9 +34,6 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group">
-            <div className="p-2 rounded-lg bg-gradient-primary group-hover:shadow-glow transition-all duration-300">
-              <Calendar className="h-6 w-6 text-primary-foreground" />
-            </div>
             <span className="font-bold text-xl bg-gradient-primary bg-clip-text text-transparent">
               EventHub
             </span>

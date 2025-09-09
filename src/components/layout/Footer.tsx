@@ -6,12 +6,6 @@ export function Footer() {
   const { t } = useLanguage();
 
   const footerLinks = {
-    events: [
-      { name: t("technology"), href: "/events?category=technology" },
-      { name: t("music"), href: "/events?category=music" },
-      { name: t("workshop"), href: "/events?category=workshop" },
-      { name: t("conference"), href: "/events?category=conference" },
-    ],
     company: [
       { name: "About", href: "/about" },
       { name: "Contact", href: "/contact" },
@@ -28,16 +22,13 @@ export function Footer() {
   ];
 
   return (
-    // Updated footer with rounded-full styling similar to header but without sticky positioning
-    <footer className="border border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 rounded-full ring-2 ring-border/40 my-4 mx-auto w-[calc(100%-5rem)]">
+    // Updated footer with consistent styling similar to header
+    <footer className="border border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 rounded-2xl ring-2 ring-border/40 mx-auto w-[calc(100%-10rem)]">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center space-x-2">
-              <div className="p-2 rounded-lg bg-gradient-primary">
-                <Calendar className="h-6 w-6 text-primary-foreground" />
-              </div>
               <span className="font-bold text-xl bg-gradient-primary bg-clip-text text-transparent">
                 EventHub
               </span>
@@ -45,25 +36,6 @@ export function Footer() {
             <p className="text-muted-foreground text-sm">
               {t("heroSubtitle")}
             </p>
-          </div>
-
-          {/* Event Categories */}
-          <div>
-            <h3 className="font-semibold text-sm text-foreground mb-4">
-              {t("categories")}
-            </h3>
-            <ul className="space-y-2">
-              {footerLinks.events.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
           </div>
 
           {/* Company */}
@@ -109,7 +81,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div>
+          <div className="border-t border-border/40 pt-4 mt-4">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-muted-foreground">
               © 2024 EventHub. All rights reserved.

@@ -144,21 +144,71 @@ export interface CreateEventRequest {
   title: string;
   description: string;
   category: string;
-  date: string;
-  time: string;
-  endTime?: string;
-  location: string;
-  address?: string;
-  isOnline?: boolean;
-  maxAttendees: number;
-  tickets: Array<{
     type: string;
-    price: number;
-    description?: string;
-  }>;
+  status?: string;
+  featured?: boolean;
+  organizer: {
+    name: string;
+    contact: string;
+    phone: string;
+  };
+  schedule: {
+    startDate: string;
+    endDate: string;
+    startTime: string;
+    endTime: string;
+    timezone: string;
+  };
+  location: {
+    type: 'onsite' | 'online' | 'hybrid';
+    venue?: string;
+    address?: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
+    onlineLink?: string;
+  };
+  pricing: {
+    currency: string;
+    earlyBird?: number;
+    regular?: number;
+    student?: number;
+    group?: number;
+    vip?: number;
+    adult?: number;
+    child?: number;
+    senior?: number;
+    free?: number;
+  };
+  capacity: {
+    max: number;
+    registered?: number;
+    available?: number;
+  };
+  images: {
+    banner?: string;
+    thumbnail?: string;
+    gallery?: string[];
+  };
   tags: string[];
-  image?: string;
-  creatorEmail: string;
+  requirements?: string[];
+  speakers?: Array<{
+    name: string;
+    title: string;
+    company: string;
+    bio: string;
+    image: string;
+  }>;
+  tracks?: string[];
+  activities?: string[];
+  includes?: string[];
+  distances?: string[];
+  artists?: Array<{
+    name: string;
+    instrument: string;
+    country: string;
+  }>;
 }
 
 export interface CreateEventResponse {
@@ -173,6 +223,8 @@ interface LocationByCategory {
 }
 
 class EventService {
+  private eventSystemId: string | null = null;
+
   private async fetchApi<T>(endpoint: string): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     console.log('🌐 Making API request to:', url);
@@ -190,6 +242,26 @@ class EventService {
     } catch (error) {
       console.error('❌ API Error:', error);
       throw error;
+    }
+  }
+
+  // Get the event system ID from API
+  private async getEventSystemId(): Promise<string> {
+    if (this.eventSystemId) {
+      return this.eventSystemId;
+    }
+
+    try {
+      const response = await this.fetchApi<ApiResponse>('/events/');
+      if (Array.isArray(response) && response.length > 0) {
+        this.eventSystemId = response[0].id;
+        console.log('🎯 Found event system ID:', this.eventSystemId);
+        return this.eventSystemId;
+      }
+      throw new Error('No event system found');
+    } catch (error) {
+      console.error('❌ Error getting event system ID:', error);
+      throw new Error('Failed to get event system ID');
     }
   }
 
@@ -261,8 +333,12 @@ class EventService {
   }
 
   async getEventById(id: string): Promise<EventData | null> {
+    console.log('🔍 Looking for event with ID:', id);
     const events = await this.getAllEvents();
-    return events.find(event => event.id === id) || null;
+    console.log('📋 Available event IDs:', events.map(e => e.id));
+    const foundEvent = events.find(event => event.id === id);
+    console.log('🎯 Found event:', foundEvent ? foundEvent.title : 'NOT FOUND');
+    return foundEvent || null;
   }
 
   async getFeaturedEvents(): Promise<EventData[]> {
@@ -402,63 +478,88 @@ class EventService {
   // Event Management with OTP
   async createEvent(eventData: CreateEventRequest): Promise<CreateEventResponse> {
     try {
-      // Generate a unique event ID
-      const eventId = `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // Generate a unique event ID in the format evt_XXX
+      const eventId = `evt_${String(Date.now()).slice(-3)}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
       
-      // Store event data locally (in production, this would be sent to backend)
-      const localEvents = this.getLocalEvents();
+      // Create event data in API format
       const newEvent: EventData = {
         id: eventId,
         title: eventData.title,
         description: eventData.description,
         category: eventData.category,
-        type: 'public',
-        status: 'active',
-        featured: false,
+        type: eventData.type || eventData.category,
+        status: eventData.status || 'active',
+        featured: eventData.featured || false,
         organizer: {
-          name: eventData.creatorEmail.split('@')[0],
-          contact: eventData.creatorEmail,
-          phone: ''
+          name: eventData.organizer.name,
+          contact: eventData.organizer.contact,
+          phone: eventData.organizer.phone
         },
         schedule: {
-          startDate: eventData.date,
-          endDate: eventData.date,
-          startTime: eventData.time,
-          endTime: eventData.endTime || eventData.time,
-          timezone: 'Asia/Bangkok'
+          startDate: eventData.schedule.startDate,
+          endDate: eventData.schedule.endDate,
+          startTime: eventData.schedule.startTime,
+          endTime: eventData.schedule.endTime,
+          timezone: eventData.schedule.timezone || 'Asia/Bangkok'
         },
         location: {
-          type: eventData.isOnline ? 'online' : 'onsite',
-          venue: eventData.location,
-          address: eventData.address
+          type: eventData.location.type,
+          venue: eventData.location.venue,
+          address: eventData.location.address,
+          coordinates: eventData.location.coordinates,
+          onlineLink: eventData.location.onlineLink
         },
         pricing: {
-          currency: 'THB',
-          regular: eventData.tickets[0]?.price || 0
+          currency: eventData.pricing.currency || 'THB',
+          // Include all pricing fields dynamically from user input
+          ...Object.keys(eventData.pricing).reduce((acc, key) => {
+            if (key !== 'currency' && eventData.pricing[key] !== undefined) {
+              acc[key] = eventData.pricing[key];
+            }
+            return acc;
+          }, {} as any)
         },
         capacity: {
-          max: eventData.maxAttendees,
-          registered: 0,
-          available: eventData.maxAttendees
+          max: eventData.capacity.max,
+          registered: eventData.capacity.registered || 0,
+          available: eventData.capacity.available || eventData.capacity.max
         },
         images: {
-          banner: eventData.image || '/placeholder.svg',
-          thumbnail: eventData.image || '/placeholder.svg',
-          gallery: []
+          banner: eventData.images.banner || '/placeholder.svg',
+          thumbnail: eventData.images.thumbnail || '/placeholder.svg',
+          gallery: eventData.images.gallery || []
         },
-        tags: eventData.tags
+        tags: eventData.tags,
+        requirements: eventData.requirements,
+        speakers: eventData.speakers,
+        tracks: eventData.tracks,
+        activities: eventData.activities
       };
       
-      localEvents.push(newEvent);
-      this.saveLocalEvents(localEvents);
+      // Log pricing information
+      console.log('💰 Event pricing details:', {
+        eventId,
+        pricing: newEvent.pricing,
+        pricingKeys: Object.keys(newEvent.pricing),
+        pricingValues: Object.values(newEvent.pricing)
+      });
+      
+      // Send to external API
+      try {
+        await this.sendEventToAPI(newEvent);
+        console.log('✅ Event sent to external API successfully');
+      } catch (apiError) {
+        console.warn('⚠️ Failed to send to external API, but event creation continues:', apiError);
+        // Continue with event creation even if API fails
+      }
       
       // Send email with Event ID (non-critical - don't fail event creation if email fails)
       await this.sendEventIdEmail(
         eventId, 
-        eventData.creatorEmail, 
+        eventData.organizer.contact, 
         eventData.title,
-        eventData.date,
-        eventData.location
+        eventData.schedule.startDate,
+        eventData.location.venue || eventData.location.address || 'Online'
       );
       
       return {
@@ -468,7 +569,11 @@ class EventService {
       };
     } catch (error) {
       console.error('❌ Error creating event:', error);
-      throw new Error('Failed to create event');
+      if (error instanceof Error) {
+        throw new Error(`Failed to create event: ${error.message}`);
+      } else {
+        throw new Error('Failed to create event: Unknown error occurred');
+      }
     }
   }
 
@@ -523,29 +628,138 @@ class EventService {
 
   async updateEvent(eventId: string, eventData: Partial<CreateEventRequest>, otp: string, email: string): Promise<boolean> {
     try {
+      console.log('🔄 Starting event update process...');
+      console.log('📝 Event ID:', eventId);
+      console.log('📝 Update data:', eventData);
+      console.log('📝 OTP:', otp);
+      console.log('📝 Email:', email);
+      
       // Verify OTP first
       if (!this.verifyEventOTP(eventId, otp, email)) {
+        console.error('❌ OTP verification failed');
         throw new Error('Invalid OTP or unauthorized access');
       }
+      console.log('✅ OTP verification passed');
 
-      const localEvents = this.getLocalEvents();
-      const eventIndex = localEvents.findIndex(event => event.id === eventId);
-      
-      if (eventIndex === -1) {
+      // Get current event data from API
+      const currentEvent = await this.getEventById(eventId);
+      if (!currentEvent) {
         throw new Error('Event not found');
       }
 
-      // Update event data
-      const updatedEvent = {
-        ...localEvents[eventIndex],
-        title: eventData.title || localEvents[eventIndex].title,
-        description: eventData.description || localEvents[eventIndex].description,
-        category: eventData.category || localEvents[eventIndex].category,
-        // Update other fields as needed
+      // Update event data - only update fields that are provided
+      console.log('🔄 Updating event with data:', eventData);
+      console.log('📋 Current event:', currentEvent.title);
+      
+      const updatedEvent: EventData = {
+        ...currentEvent,
+        // Only update if the field is provided in eventData
+        ...(eventData.title && { title: eventData.title }),
+        ...(eventData.description && { description: eventData.description }),
+        ...(eventData.category && { category: eventData.category }),
+        ...(eventData.type && { type: eventData.type }),
+        ...(eventData.status && { status: eventData.status }),
+        ...(eventData.featured !== undefined && { featured: eventData.featured }),
+        
+        // Update organizer only if provided
+        ...(eventData.organizer && {
+          organizer: {
+            ...currentEvent.organizer,
+            ...(eventData.organizer.name && { name: eventData.organizer.name }),
+            ...(eventData.organizer.contact && { contact: eventData.organizer.contact }),
+            ...(eventData.organizer.phone && { phone: eventData.organizer.phone })
+          }
+        }),
+        
+        // Update schedule only if provided
+        ...(eventData.schedule && {
+          schedule: {
+            ...currentEvent.schedule,
+            ...(eventData.schedule.startDate && { startDate: eventData.schedule.startDate }),
+            ...(eventData.schedule.endDate && { endDate: eventData.schedule.endDate }),
+            ...(eventData.schedule.startTime && { startTime: eventData.schedule.startTime }),
+            ...(eventData.schedule.endTime && { endTime: eventData.schedule.endTime }),
+            ...(eventData.schedule.timezone && { timezone: eventData.schedule.timezone })
+          }
+        }),
+        
+        // Update location only if provided
+        ...(eventData.location && {
+          location: {
+            ...currentEvent.location,
+            ...(eventData.location.type && { type: eventData.location.type }),
+            ...(eventData.location.venue !== undefined && { venue: eventData.location.venue }),
+            ...(eventData.location.address !== undefined && { address: eventData.location.address }),
+            ...(eventData.location.coordinates && { coordinates: eventData.location.coordinates }),
+            ...(eventData.location.onlineLink !== undefined && { onlineLink: eventData.location.onlineLink })
+          }
+        }),
+        
+        // Update pricing only if provided
+        ...(eventData.pricing && {
+          pricing: {
+            // Start with only currency from current event
+            currency: eventData.pricing.currency || currentEvent.pricing.currency,
+            // Add only the pricing fields that user provided
+            ...Object.keys(eventData.pricing).reduce((acc, key) => {
+              if (key !== 'currency' && eventData.pricing[key] !== undefined) {
+                acc[key] = eventData.pricing[key];
+              }
+              return acc;
+            }, {} as any)
+          }
+        }),
+        
+        // Update capacity only if provided
+        ...(eventData.capacity && {
+          capacity: {
+            ...currentEvent.capacity,
+            ...(eventData.capacity.max !== undefined && { max: eventData.capacity.max }),
+            ...(eventData.capacity.registered !== undefined && { registered: eventData.capacity.registered }),
+            ...(eventData.capacity.available !== undefined && { available: eventData.capacity.available })
+          }
+        }),
+        
+        // Update images only if provided
+        ...(eventData.images && {
+          images: {
+            ...currentEvent.images,
+            ...(eventData.images.banner && { banner: eventData.images.banner }),
+            ...(eventData.images.thumbnail && { thumbnail: eventData.images.thumbnail }),
+            ...(eventData.images.gallery && { gallery: eventData.images.gallery })
+          }
+        }),
+        
+        // Update arrays only if provided
+        ...(eventData.tags && { tags: eventData.tags }),
+        ...(eventData.requirements && { requirements: eventData.requirements }),
+        ...(eventData.speakers && { speakers: eventData.speakers }),
+        ...(eventData.tracks && { tracks: eventData.tracks }),
+        ...(eventData.activities && { activities: eventData.activities })
       };
 
-      localEvents[eventIndex] = updatedEvent;
-      this.saveLocalEvents(localEvents);
+      console.log('✅ Updated event data:', {
+        title: updatedEvent.title,
+        description: updatedEvent.description,
+        category: updatedEvent.category,
+        pricing: updatedEvent.pricing
+      });
+      
+      console.log('💰 Pricing update details:', {
+        originalPricing: currentEvent.pricing,
+        newPricing: eventData.pricing,
+        finalPricing: updatedEvent.pricing,
+        pricingFieldsRemoved: Object.keys(currentEvent.pricing).filter(key => 
+          key !== 'currency' && !(key in eventData.pricing)
+        ),
+        pricingFieldsAdded: Object.keys(eventData.pricing).filter(key => 
+          key !== 'currency' && !(key in currentEvent.pricing)
+        )
+      });
+
+      // Update in external API
+      await this.updateEventInAPI(eventId, updatedEvent);
+      console.log('✅ Event updated in external API successfully');
 
       return true;
     } catch (error) {
@@ -561,10 +775,10 @@ class EventService {
         throw new Error('Invalid OTP or unauthorized access');
       }
 
-      const localEvents = this.getLocalEvents();
-      const filteredEvents = localEvents.filter(event => event.id !== eventId);
+      // Delete from external API
+      await this.deleteEventFromAPI(eventId);
+      console.log('✅ Event deleted from external API successfully');
       
-      this.saveLocalEvents(filteredEvents);
       return true;
     } catch (error) {
       console.error('❌ Error deleting event:', error);
@@ -572,49 +786,268 @@ class EventService {
     }
   }
 
-  // Local storage helpers for demo purposes
-  private getLocalEvents(): EventData[] {
-    try {
-      const stored = localStorage.getItem('local_events');
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error('Error reading local events:', error);
-      return [];
-    }
-  }
 
-  private saveLocalEvents(events: EventData[]): void {
-    try {
-      localStorage.setItem('local_events', JSON.stringify(events));
-    } catch (error) {
-      console.error('Error saving local events:', error);
-    }
-  }
-
-  // Override getAllEvents to include local events
+  // Get all events from API only
   async getAllEvents(): Promise<EventData[]> {
-    console.log('🔄 Fetching events from API and local storage...');
+    console.log('🔄 Fetching events from API...');
     
     try {
       // Get events from API
       const response = await this.fetchApi<ApiResponse>('/events/');
       let apiEvents: EventData[] = [];
       
+      
       if (Array.isArray(response) && response.length > 0) {
-        apiEvents = response[0].eventSystem.events;
+        // Only get events from the main event system (eventSystem.events)
+        if (response[0].eventSystem && response[0].eventSystem.events) {
+          apiEvents = response[0].eventSystem.events;
+        }
       }
       
-      // Get local events
-      const localEvents = this.getLocalEvents();
+      console.log('📊 Total events loaded from eventSystem.events:', apiEvents.length);
+      console.log('📋 Events:', apiEvents.map(e => e.id));
       
-      // Combine both sources
-      const allEvents = [...apiEvents, ...localEvents];
-      console.log('📊 Total events loaded:', allEvents.length, '(API:', apiEvents.length, ', Local:', localEvents.length, ')');
-      
-      return allEvents;
+      return apiEvents;
     } catch (error) {
-      console.error('❌ Error loading events, falling back to local events only:', error);
-      return this.getLocalEvents();
+      console.error('❌ Error loading events from API:', error);
+      throw error; // Don't fallback to local storage
+    }
+  }
+
+  // Send event to external API
+  private async sendEventToAPI(eventData: EventData): Promise<void> {
+    try {
+      // Get the event system ID dynamically
+      const eventSystemId = await this.getEventSystemId();
+      
+      // Create the event data in the format expected by the API
+      const apiEventData = {
+        id: eventData.id,
+        title: eventData.title,
+        description: eventData.description,
+        category: eventData.category,
+        type: eventData.type,
+        status: eventData.status,
+        featured: eventData.featured,
+        organizer: eventData.organizer,
+        schedule: eventData.schedule,
+        location: eventData.location,
+        pricing: eventData.pricing,
+        capacity: eventData.capacity,
+        images: eventData.images,
+        tags: eventData.tags,
+        requirements: eventData.requirements,
+        speakers: eventData.speakers,
+        tracks: eventData.tracks,
+        activities: eventData.activities
+      };
+
+      console.log('🌐 Sending event to API:', apiEventData.id);
+      console.log('💰 Pricing data being sent:', {
+        pricing: apiEventData.pricing,
+        pricingKeys: Object.keys(apiEventData.pricing),
+        pricingValues: Object.values(apiEventData.pricing)
+      });
+      console.log('📤 Full event data:', JSON.stringify(apiEventData, null, 2));
+      
+      // Get current event system data first
+      const currentResponse = await fetch(`${API_BASE_URL}/events/${eventSystemId}`);
+      const currentData = await currentResponse.json();
+      
+      // Add new event to the existing events array
+      const updatedEventSystem = {
+        ...currentData,
+        eventSystem: {
+          ...currentData.eventSystem,
+          events: [...currentData.eventSystem.events, apiEventData],
+          systemInfo: {
+            ...currentData.eventSystem.systemInfo,
+            totalEvents: currentData.eventSystem.systemInfo.totalEvents + 1,
+            lastUpdated: new Date().toISOString().split('T')[0]
+          }
+        }
+      };
+
+      // Send PUT request to update the event system
+      const response = await fetch(`${API_BASE_URL}/events/${eventSystemId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedEventSystem)
+      });
+
+      console.log('📡 API Response Status:', response.status);
+      console.log('📡 API Response Headers:', response.headers);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API Error Response:', errorText);
+        throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ API Response:', result);
+      
+    } catch (error) {
+      console.error('❌ Error sending event to API:', error);
+      throw error;
+    }
+  }
+
+  // Update event in external API
+  private async updateEventInAPI(eventId: string, eventData: EventData): Promise<void> {
+    try {
+      console.log('🌐 Updating event in API:', eventId);
+      
+      // Get the event system ID dynamically
+      const eventSystemId = await this.getEventSystemId();
+      
+      // Get current event system data
+      const currentResponse = await fetch(`${API_BASE_URL}/events/${eventSystemId}`);
+      const currentData = await currentResponse.json();
+      
+      // Update the specific event in the events array
+      const updatedEvents = currentData.eventSystem.events.map((event: EventData) => 
+        event.id === eventId ? eventData : event
+      );
+      
+      console.log('🔄 Event update in API:', {
+        eventId,
+        originalEvent: currentData.eventSystem.events.find((e: EventData) => e.id === eventId),
+        updatedEvent: eventData,
+        pricingComparison: {
+          original: currentData.eventSystem.events.find((e: EventData) => e.id === eventId)?.pricing,
+          new: eventData.pricing
+        },
+        pricingFieldsRemoved: Object.keys(currentData.eventSystem.events.find((e: EventData) => e.id === eventId)?.pricing || {}).filter(key => 
+          key !== 'currency' && !(key in eventData.pricing)
+        ),
+        pricingFieldsAdded: Object.keys(eventData.pricing).filter(key => 
+          key !== 'currency' && !(key in currentData.eventSystem.events.find((e: EventData) => e.id === eventId)?.pricing || {})
+        )
+      });
+      
+      const updatedEventSystem = {
+        ...currentData,
+        eventSystem: {
+          ...currentData.eventSystem,
+          events: updatedEvents,
+          systemInfo: {
+            ...currentData.eventSystem.systemInfo,
+            lastUpdated: new Date().toISOString().split('T')[0]
+          }
+        }
+      };
+
+      const response = await fetch(`${API_BASE_URL}/events/${eventSystemId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedEventSystem)
+      });
+
+      if (!response.ok) {
+        throw new Error(`API update failed: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ API Update Response:', result);
+      
+    } catch (error) {
+      console.error('❌ Error updating event in API:', error);
+      throw error;
+    }
+  }
+
+  // Delete event from external API
+  private async deleteEventFromAPI(eventId: string): Promise<void> {
+    try {
+      console.log('🌐 Deleting event from API:', eventId);
+      
+      // Get the event system ID dynamically
+      const eventSystemId = await this.getEventSystemId();
+      
+      // Get current event system data
+      const currentResponse = await fetch(`${API_BASE_URL}/events/${eventSystemId}`);
+      const currentData = await currentResponse.json();
+      
+      // Remove the specific event from the events array
+      const updatedEvents = currentData.eventSystem.events.filter((event: EventData) => 
+        event.id !== eventId
+      );
+      
+      const updatedEventSystem = {
+        ...currentData,
+        eventSystem: {
+          ...currentData.eventSystem,
+          events: updatedEvents,
+          systemInfo: {
+            ...currentData.eventSystem.systemInfo,
+            totalEvents: currentData.eventSystem.systemInfo.totalEvents - 1,
+            lastUpdated: new Date().toISOString().split('T')[0]
+          }
+        }
+      };
+
+      const response = await fetch(`${API_BASE_URL}/events/${eventSystemId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedEventSystem)
+      });
+
+      if (!response.ok) {
+        throw new Error(`API delete failed: ${response.status} ${response.statusText}`);
+      }
+
+      console.log('✅ Event deleted from API successfully');
+      
+    } catch (error) {
+      console.error('❌ Error deleting event from API:', error);
+      throw error;
+    }
+  }
+
+  // Test function to update event directly
+  async testUpdateEvent(eventId: string, updateData: Partial<CreateEventRequest>): Promise<boolean> {
+    try {
+      console.log('🧪 Testing event update...');
+      console.log('📝 Event ID:', eventId);
+      console.log('📝 Update data:', updateData);
+      
+      // Get current event
+      const currentEvent = await this.getEventById(eventId);
+      if (!currentEvent) {
+        console.error('❌ Event not found');
+        return false;
+      }
+      
+      console.log('📋 Current event:', currentEvent.title);
+      
+      // Create updated event
+      const updatedEvent: EventData = {
+        ...currentEvent,
+        ...(updateData.title && { title: updateData.title }),
+        ...(updateData.description && { description: updateData.description }),
+        ...(updateData.category && { category: updateData.category }),
+        ...(updateData.type && { type: updateData.type }),
+        ...(updateData.status && { status: updateData.status }),
+        ...(updateData.featured !== undefined && { featured: updateData.featured })
+      };
+      
+      console.log('✅ Updated event:', updatedEvent.title);
+      
+      // Update in API
+      await this.updateEventInAPI(eventId, updatedEvent);
+      console.log('✅ Event updated in API successfully');
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Test update failed:', error);
+      return false;
     }
   }
 

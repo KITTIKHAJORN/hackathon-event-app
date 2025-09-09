@@ -3,13 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Ticket, Search, User } from "lucide-react";
-import { eventService, TicketData } from "@/services/eventService";
+import { Ticket, Search, User, Calendar, MapPin, Clock } from "lucide-react";
+import { eventService, TicketData, EventData } from "@/services/eventService";
 import { useToast } from "@/hooks/use-toast";
 
 export function ViewTicketsPage() {
   const [userName, setUserName] = useState("");
   const [tickets, setTickets] = useState<TicketData[]>([]);
+  const [events, setEvents] = useState<{[key: string]: EventData}>({});
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const { toast } = useToast();
@@ -20,7 +21,7 @@ export function ViewTicketsPage() {
     if (!userName.trim()) {
       toast({
         title: "Username Required",
-        description: "Please enter your username to search for tickets.",
+        description: "Please enter your Username Or Email to search for tickets.",
         variant: "destructive",
       });
       return;
@@ -59,6 +60,23 @@ export function ViewTicketsPage() {
       
       setTickets(userTickets);
       
+      // Fetch event details for each ticket
+      const eventDetailsMap: {[key: string]: EventData} = {};
+      const uniqueEventIds = [...new Set(userTickets.map(ticket => ticket.eventId).filter(Boolean))];
+      
+      for (const eventId of uniqueEventIds) {
+        try {
+          const eventData = await eventService.getEventById(eventId);
+          if (eventData) {
+            eventDetailsMap[eventId] = eventData;
+          }
+        } catch (error) {
+          console.error(`Error fetching event ${eventId}:`, error);
+        }
+      }
+      
+      setEvents(eventDetailsMap);
+      
       if (userTickets.length === 0) {
         toast({
           title: "No Tickets Found",
@@ -82,6 +100,17 @@ export function ViewTicketsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to get event image URL
+  const getEventImageUrl = (eventData: EventData) => {
+    // Special case for evt_001
+    if (eventData.id === 'evt_001') {
+      return 'https://jama.com.sa/event-management-en';
+    }
+    
+    // Use banner image if available, otherwise thumbnail
+    return eventData.images?.banner || eventData.images?.thumbnail || null;
   };
 
   const getStatusColor = (status: string) => {
@@ -171,72 +200,144 @@ export function ViewTicketsPage() {
             </div>
 
             {tickets.length > 0 ? (
-              <div className="grid gap-4">
-                {tickets.map((ticket) => (
-                  <Card key={ticket.id} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-xl font-semibold mb-2">
-                            Ticket #{ticket.id?.slice(-8) || 'N/A'}
-                          </h3>
-                          <p className="text-muted-foreground">
-                            Event ID: {ticket.eventId || 'N/A'}
-                          </p>
+              <div className="grid gap-6">
+                {tickets.map((ticket) => {
+                  const eventData = events[ticket.eventId];
+                  return (
+                    <Card key={ticket.id} className="hover:shadow-lg transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-xl font-semibold mb-2">
+                              Ticket #{ticket.id?.slice(-8) || 'N/A'}
+                            </h3>
+                            <p className="text-muted-foreground">
+                              Event ID: {ticket.eventId || 'N/A'}
+                            </p>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(ticket.status || 'pending')}`}>
+                            {(ticket.status || 'pending').charAt(0).toUpperCase() + (ticket.status || 'pending').slice(1)}
+                          </span>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(ticket.status || 'pending')}`}>
-                          {(ticket.status || 'pending').charAt(0).toUpperCase() + (ticket.status || 'pending').slice(1)}
-                        </span>
-                      </div>
 
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <div>
-                            <span className="font-medium">Name:</span> {ticket.userName || 'N/A'}
+                        {/* Event Details Section */}
+                        {eventData && (
+                          <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+                            <h4 className="text-lg font-semibold mb-3 flex items-center">
+                              <Calendar className="h-5 w-5 mr-2 text-primary" />
+                              Event Details
+                            </h4>
+                            
+                            {/* Event Image */}
+                            {getEventImageUrl(eventData) && (
+                              <div className="mb-4">
+                                <img 
+                                  src={getEventImageUrl(eventData)} 
+                                  alt={eventData.title}
+                                  className="w-full h-48 object-cover rounded-lg shadow-sm"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                            )}
+                            
+                            <div className="grid md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <div>
+                                  <span className="font-medium">Event Name:</span> {eventData.title}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Category:</span> {eventData.category}
+                                </div>
+                                <div className="flex items-center">
+                                  <MapPin className="h-4 w-4 mr-1 text-muted-foreground" />
+                                  <span className="font-medium">Location:</span> {eventData.location.venue || eventData.location.type}
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <div className="flex items-center">
+                                  <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
+                                  <span className="font-medium">Date:</span> {new Date(eventData.schedule.startDate).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                  })}
+                                </div>
+                                <div className="flex items-center">
+                                  <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
+                                  <span className="font-medium">Time:</span> {eventData.schedule.startTime} - {eventData.schedule.endTime}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Organizer:</span> {eventData.organizer.name}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="mt-3">
+                              <p className="text-sm text-muted-foreground">
+                                <span className="font-medium">Description:</span> {eventData.description}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <span className="font-medium">Email:</span> {ticket.userEmail || 'N/A'}
-                          </div>
-                          <div>
-                            <span className="font-medium">Phone:</span> {ticket.userPhone || 'N/A'}
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <div>
-                            <span className="font-medium">Ticket Type:</span> {ticket.ticketType || 'N/A'}
-                          </div>
-                          <div>
-                            <span className="font-medium">Quantity:</span> {ticket.quantity || 'N/A'}
-                          </div>
-                          <div>
-                            <span className="font-medium">Total Amount:</span> {ticket.totalAmount || 0} {ticket.currency || 'THB'}
-                          </div>
-                        </div>
-                      </div>
+                        )}
 
-                      <div className="mt-4 pt-4 border-t">
-                        <div className="text-sm text-muted-foreground">
-                          <span className="font-medium">Purchase Date:</span> {ticket.purchaseDate ? new Date(ticket.purchaseDate).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          }) : 'N/A'}
+                        {/* Ticket Details Section */}
+                        <div className="mb-4">
+                          <h4 className="text-lg font-semibold mb-3 flex items-center">
+                            <Ticket className="h-5 w-5 mr-2 text-primary" />
+                            Ticket Information
+                          </h4>
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <div>
+                                <span className="font-medium">Name:</span> {ticket.userName || 'N/A'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Email:</span> {ticket.userEmail || 'N/A'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Phone:</span> {ticket.userPhone || 'N/A'}
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <div>
+                                <span className="font-medium">Ticket Type:</span> {ticket.ticketType || 'N/A'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Quantity:</span> {ticket.quantity || 'N/A'}
+                              </div>
+                              <div>
+                                <span className="font-medium">Total Amount:</span> {ticket.totalAmount || 0} {ticket.currency || 'THB'}
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
 
-                      {ticket.qrCode && (
-                        <div className="mt-4">
-                          <Button variant="outline" className="w-full">
-                            <Ticket className="h-4 w-4 mr-2" />
-                            Show QR Code
-                          </Button>
+                        <div className="pt-4 border-t">
+                          <div className="text-sm text-muted-foreground">
+                            <span className="font-medium">Purchase Date:</span> {ticket.purchaseDate ? new Date(ticket.purchaseDate).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            }) : 'N/A'}
+                          </div>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+
+                        {ticket.qrCode && (
+                          <div className="mt-4">
+                            <Button variant="outline" className="w-full">
+                              <Ticket className="h-4 w-4 mr-2" />
+                              Show QR Code
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             ) : hasSearched && (
               <Card>
@@ -244,7 +345,7 @@ export function ViewTicketsPage() {
                   <Ticket className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-xl font-semibold mb-2">No Tickets Found</h3>
                   <p className="text-muted-foreground mb-4">
-                    We couldn't find any tickets associated with "{userName}".
+                    No tickets are associated with the username "{userName}".
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Please check your username or email and try again.
