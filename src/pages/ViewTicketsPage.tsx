@@ -136,10 +136,10 @@ export function ViewTicketsPage() {
         <div className="mb-8">
           <div className="flex items-center mb-4">
             <Ticket className="h-8 w-8 text-primary mr-3" />
-            <h1 className="text-3xl font-bold">View Your Tickets</h1>
+            <h1 className="text-3xl font-bold">{t("viewTicketsTitle")}</h1>
           </div>
           <p className="text-muted-foreground">
-            Enter your username to view all your event tickets
+            {t("enterUsername")}
           </p>
         </div>
 
@@ -147,17 +147,17 @@ export function ViewTicketsPage() {
           <CardHeader>
             <CardTitle className="flex items-center">
               <User className="h-5 w-5 mr-2" />
-              ค้นหาตั๋วของคุณ
+              {t("searchYourTickets")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSearch} className="space-y-6">
               <div>
-                <Label htmlFor="username">ชื่อผู้ใช้หรืออีเมล</Label>
+                <Label htmlFor="username">{t("enterUsername")}</Label>
                 <Input
                   id="username"
                   type="text"
-                  placeholder="ป้อนชื่อผู้ใช้หรือที่อยู่อีเมลของคุณ"
+                  placeholder={t("enterYourUsername")}
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
                   className="mt-2"
@@ -171,12 +171,12 @@ export function ViewTicketsPage() {
                 {loading ? (
                   <>
                     <Search className="h-4 w-4 animate-spin" />
-                    กำลังค้นหา...
+                    {t("searching")}
                   </>
                 ) : (
                   <>
                     <Search className="h-4 w-4" />
-                    ค้นหาตั๋ว
+                    {t("searchTicketsButton")}
                   </>
                 )}
               </Button>
@@ -189,11 +189,11 @@ export function ViewTicketsPage() {
           <div className="space-y-6 mt-8">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">
-                {tickets.length > 0 ? `ตั๋วของคุณ (${tickets.length})` : 'ไม่พบตั๋ว'}
+                {tickets.length > 0 ? `${t("yourTicketsCount")} (${tickets.length})` : t("noTicketsFound")}
               </h2>
               {userName && (
                 <p className="text-muted-foreground text-sm">
-                  แสดงผลลัพธ์สำหรับ: <span className="font-medium">{userName}</span>
+                  {t("showingResultsFor")}: <span className="font-medium">{userName}</span>
                 </p>
               )}
             </div>
@@ -208,10 +208,10 @@ export function ViewTicketsPage() {
                         <div className="flex justify-between items-start mb-4">
                           <div>
                             <h3 className="text-lg font-semibold mb-1">
-                              ตั๋ว #{ticket.id?.slice(-8) || 'N/A'}
+                              {t("ticketId")} #{ticket.id?.slice(-8) || 'N/A'}
                             </h3>
                             <p className="text-muted-foreground text-sm">
-                              รหัสกิจกรรม: {ticket.eventId || 'N/A'}
+                              {t("eventId")}: {ticket.eventId || 'N/A'}
                             </p>
                           </div>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status || 'pending')}`}>
@@ -224,7 +224,7 @@ export function ViewTicketsPage() {
                           <div className="mb-6 p-4 bg-muted/50 rounded-lg">
                             <h4 className="font-medium mb-3 flex items-center">
                               <Ticket className="h-4 w-4 mr-2 text-primary" />
-                              รายละเอียดกิจกรรม
+                              {t("eventDetailsSection")}
                             </h4>
                             
                             {/* Event Image */}
@@ -244,26 +244,26 @@ export function ViewTicketsPage() {
                             
                             <div className="grid gap-2">
                               <div className="text-sm">
-                                <span className="font-medium">ชื่อกิจกรรม:</span> {eventData.title}
+                                <span className="font-medium">{t("eventTitle")}:</span> {eventData.title}
                               </div>
                               <div className="text-sm">
-                                <span className="font-medium">หมวดหมู่:</span> {eventData.category}
+                                <span className="font-medium">{t("category")}:</span> {eventData.category}
                               </div>
                               <div className="text-sm">
-                                <span className="font-medium">สถานที่:</span> {eventData.location.venue || eventData.location.type}
+                                <span className="font-medium">{t("location")}:</span> {eventData.location.venue || eventData.location.type}
                               </div>
                               <div className="text-sm">
-                                <span className="font-medium">วันที่:</span> {new Date(eventData.schedule.startDate).toLocaleDateString('en-US', {
+                                <span className="font-medium">{t("date")}:</span> {new Date(eventData.schedule.startDate).toLocaleDateString('en-US', {
                                   year: 'numeric',
                                   month: 'long',
                                   day: 'numeric'
                                 })}
                               </div>
                               <div className="text-sm">
-                                <span className="font-medium">เวลา:</span> {eventData.schedule.startTime} - {eventData.schedule.endTime}
+                                <span className="font-medium">{t("time")}:</span> {eventData.schedule.startTime} - {eventData.schedule.endTime}
                               </div>
                               <div className="text-sm">
-                                <span className="font-medium">ผู้จัดงาน:</span> {eventData.organizer.name}
+                                <span className="font-medium">{t("organizer")}:</span> {eventData.organizer.name}
                               </div>
                             </div>
                           </div>
@@ -273,33 +273,33 @@ export function ViewTicketsPage() {
                         <div className="mb-4">
                           <h4 className="font-medium mb-3 flex items-center">
                             <Ticket className="h-4 w-4 mr-2 text-primary" />
-                            ข้อมูลตั๋ว
+                            {t("ticketDetailsSection")}
                           </h4>
                           <div className="grid gap-2">
                             <div className="text-sm">
-                              <span className="font-medium">ชื่อ:</span> {ticket.userName || 'N/A'}
+                              <span className="font-medium">{t("name")}:</span> {ticket.userName || 'N/A'}
                             </div>
                             <div className="text-sm">
-                              <span className="font-medium">อีเมล:</span> {ticket.userEmail || 'N/A'}
+                              <span className="font-medium">{t("email")}:</span> {ticket.userEmail || 'N/A'}
                             </div>
                             <div className="text-sm">
-                              <span className="font-medium">โทรศัพท์:</span> {ticket.userPhone || 'N/A'}
+                              <span className="font-medium">{t("phoneNumber")}:</span> {ticket.userPhone || 'N/A'}
                             </div>
                             <div className="text-sm">
-                              <span className="font-medium">ประเภทตั๋ว:</span> {ticket.ticketType || 'N/A'}
+                              <span className="font-medium">{t("ticketType")}:</span> {ticket.ticketType || 'N/A'}
                             </div>
                             <div className="text-sm">
-                              <span className="font-medium">จำนวน:</span> {ticket.quantity || 'N/A'}
+                              <span className="font-medium">{t("ticketQuantity")}:</span> {ticket.quantity || 'N/A'}
                             </div>
                             <div className="text-sm">
-                              <span className="font-medium">จำนวนเงินรวม:</span> {ticket.totalAmount || 0} {ticket.currency || 'THB'}
+                              <span className="font-medium">{t("totalAmountLabel")}:</span> {ticket.totalAmount || 0} {ticket.currency || 'THB'}
                             </div>
                           </div>
                         </div>
 
                         <div className="pt-4 border-t">
                           <div className="text-xs text-muted-foreground">
-                            <span className="font-medium">วันที่ซื้อ:</span> {ticket.purchaseDate ? new Date(ticket.purchaseDate).toLocaleDateString('en-US', {
+                            <span className="font-medium">{t("purchaseDateLabel")}:</span> {ticket.purchaseDate ? new Date(ticket.purchaseDate).toLocaleDateString('en-US', {
                               year: 'numeric',
                               month: 'long',
                               day: 'numeric',
@@ -313,7 +313,7 @@ export function ViewTicketsPage() {
                           <div className="mt-4">
                             <Button variant="outline" className="w-full">
                               <Ticket className="h-4 w-4 mr-2" />
-                              แสดงรหัส QR
+                              {t("showQRCode")}
                             </Button>
                           </div>
                         )}
@@ -326,12 +326,12 @@ export function ViewTicketsPage() {
               <Card>
                 <CardContent className="text-center py-12">
                   <Ticket className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">ไม่พบตั๋ว</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t("noTicketsFound")}</h3>
                   <p className="text-muted-foreground mb-4">
-                    ไม่มีตั๋วที่เกี่ยวข้องกับชื่อผู้ใช้ "{userName}".
+                    {t("noTicketsFoundMessage")} "{userName}".
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    กรุณาตรวจสอบชื่อผู้ใช้หรืออีเมลและลองใหม่อีกครั้ง.
+                    {t("pleaseCheckUsername")}
                   </p>
                 </CardContent>
               </Card>

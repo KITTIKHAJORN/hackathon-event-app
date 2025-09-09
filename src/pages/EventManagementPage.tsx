@@ -457,10 +457,10 @@ export function EventManagementPage() {
 
   // Step titles
   const stepTitles = [
-    "ข้อมูลพื้นฐาน",
-    "กำหนดการ",
-    "สถานที่",
-    "ความจุและราคา"
+    t("basicInformation"),
+    t("schedule"),
+    t("location"),
+    t("capacityAndPricing")
   ];
 
   // Render step content for editing
@@ -472,7 +472,7 @@ export function EventManagementPage() {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="title">ชื่อกิจกรรม</Label>
+              <Label htmlFor="title">{t("eventTitle")}</Label>
               <Input
                 id="title"
                 value={editedEvent.title || ''}
@@ -482,7 +482,7 @@ export function EventManagementPage() {
             </div>
             
             <div>
-              <Label htmlFor="description">คำอธิบาย</Label>
+              <Label htmlFor="description">{t("description")}</Label>
               <Textarea
                 id="description"
                 value={editedEvent.description || ''}
@@ -494,7 +494,7 @@ export function EventManagementPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="category">หมวดหมู่</Label>
+                <Label htmlFor="category">{t("category")}</Label>
                 <Input
                   id="category"
                   value={editedEvent.category || ''}
@@ -504,7 +504,7 @@ export function EventManagementPage() {
               </div>
               
               <div>
-                <Label htmlFor="organizer">ผู้จัดงาน</Label>
+                <Label htmlFor="organizer">{t("organizer")}</Label>
                 <Input
                   id="organizer"
                   value={editedEvent.organizer.name || ''}
@@ -521,7 +521,7 @@ export function EventManagementPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="startDate">วันที่เริ่มต้น</Label>
+                <Label htmlFor="startDate">{t("startDate")}</Label>
                 <div className="relative mt-1">
                   <Input
                     id="startDate"
@@ -542,7 +542,7 @@ export function EventManagementPage() {
               </div>
               
               <div>
-                <Label htmlFor="startTime">เวลาเริ่มต้น</Label>
+                <Label htmlFor="startTime">{t("startTime")}</Label>
                 <div className="relative mt-1">
                   <Input
                     id="startTime"
@@ -597,7 +597,7 @@ export function EventManagementPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="endDate">วันที่สิ้นสุด</Label>
+                <Label htmlFor="endDate">{t("endDate")}</Label>
                 <div className="relative mt-1">
                   <Input
                     id="endDate"
@@ -618,7 +618,7 @@ export function EventManagementPage() {
               </div>
               
               <div>
-                <Label htmlFor="endTime">เวลาสิ้นสุด</Label>
+                <Label htmlFor="endTime">{t("endTime")}</Label>
                 <div className="relative mt-1">
                   <Input
                     id="endTime"
@@ -677,55 +677,58 @@ export function EventManagementPage() {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="locationType">ประเภทสถานที่</Label>
+              <Label htmlFor="locationType">{t("locationType")}</Label>
               <Select
                 value={editedEvent.location.type || ''}
                 onValueChange={(value) => handleNestedChange('location', 'type', value)}
               >
                 <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="เลือกประเภทสถานที่" />
+                  <SelectValue placeholder={t("selectLocationType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="onsite">ในสถานที่</SelectItem>
-                  <SelectItem value="online">ออนไลน์</SelectItem>
-                  <SelectItem value="hybrid">ผสม</SelectItem>
+                  <SelectItem value="onsite">{t("onsite")}</SelectItem>
+                  <SelectItem value="online">{t("online")}</SelectItem>
+                  <SelectItem value="hybrid">{t("hybrid")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             {editedEvent.location.type !== 'online' && (
               <div>
-                <Label htmlFor="venue">สถานที่</Label>
+                <Label htmlFor="venue">{t("venue")}</Label>
                 <Input
                   id="venue"
                   value={editedEvent.location.venue || ''}
                   onChange={(e) => handleNestedChange('location', 'venue', e.target.value)}
                   className="mt-1"
+                  placeholder={t("enterVenueName")}
                 />
               </div>
             )}
             
             {editedEvent.location.type !== 'online' && (
               <div>
-                <Label htmlFor="address">ที่อยู่</Label>
+                <Label htmlFor="address">{t("address")}</Label>
                 <Textarea
                   id="address"
                   value={editedEvent.location.address || ''}
                   onChange={(e) => handleNestedChange('location', 'address', e.target.value)}
                   className="w-full min-h-[80px] mt-1"
                   rows={2}
+                  placeholder={t("enterFullAddress")}
                 />
               </div>
             )}
             
             {editedEvent.location.type !== 'onsite' && (
               <div>
-                <Label htmlFor="onlineLink">ลิงก์ออนไลน์</Label>
+                <Label htmlFor="onlineLink">{t("onlineLink")}</Label>
                 <Input
                   id="onlineLink"
                   value={editedEvent.location.onlineLink || ''}
                   onChange={(e) => handleNestedChange('location', 'onlineLink', e.target.value)}
                   className="mt-1"
+                  placeholder={t("enterOnlineLink")}
                 />
               </div>
             )}
@@ -737,7 +740,7 @@ export function EventManagementPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="maxCapacity">ความจุสูงสุด</Label>
+                <Label htmlFor="maxCapacity">{t("maxCapacity")}</Label>
                 <Input
                   id="maxCapacity"
                   type="number"
@@ -748,7 +751,7 @@ export function EventManagementPage() {
               </div>
               
               <div>
-                <Label htmlFor="registered">ลงทะเบียนแล้ว</Label>
+                <Label htmlFor="registered">{t("registered")}</Label>
                 <Input
                   id="registered"
                   type="number"
@@ -759,7 +762,7 @@ export function EventManagementPage() {
               </div>
               
               <div>
-                <Label htmlFor="available">ว่าง</Label>
+                <Label htmlFor="available">{t("available")}</Label>
                 <Input
                   id="available"
                   type="number"
@@ -771,7 +774,7 @@ export function EventManagementPage() {
             </div>
             
             <div>
-              <Label htmlFor="currency">สกุลเงิน</Label>
+              <Label htmlFor="currency">{t("currency")}</Label>
               <Input
                 id="currency"
                 value={editedEvent.pricing.currency || ''}
@@ -783,7 +786,7 @@ export function EventManagementPage() {
             {/* Dynamic Ticket Types */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label className="text-lg font-semibold">ประเภทตั๋ว</Label>
+                <Label className="text-lg font-semibold">{t("ticketTypes")}</Label>
                 <div className="flex gap-2">
                   <Button
                     type="button"
@@ -793,7 +796,7 @@ export function EventManagementPage() {
                     className="flex items-center gap-2"
                   >
                     <Plus className="h-4 w-4" />
-                    เพิ่มประเภทตั๋ว
+                    {t("addTicketType")}
                   </Button>
                   {tickets.length > 0 && (
                     <>
@@ -803,10 +806,10 @@ export function EventManagementPage() {
                         variant="outline"
                         size="sm"
                         className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
-                        title="รีเซ็ตเป็นราคาเดิม"
+                        title={t("resetToOriginal")}
                       >
                         <RefreshCw className="h-4 w-4" />
-                        รีเซ็ต
+                        {t("reset")}
                       </Button>
                       <Button
                         type="button"
@@ -814,10 +817,10 @@ export function EventManagementPage() {
                         variant="outline"
                         size="sm"
                         className="flex items-center gap-2 text-destructive hover:text-destructive"
-                        title="ล้างตั๋วทั้งหมด"
+                        title={t("clearAllTickets")}
                       >
                         <Trash2 className="h-4 w-4" />
-                        ล้างทั้งหมด
+                        {t("clear")}
                       </Button>
                     </>
                   )}
@@ -827,15 +830,15 @@ export function EventManagementPage() {
               {tickets.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Ticket className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No ticket types added yet</p>
-                  <p className="text-sm">Click "Add Ticket Type" to create your first ticket</p>
+                  <p>{t("noTicketsFound")}</p>
+                  <p className="text-sm">{t("addTicketTypeToSet")}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {tickets.map((ticket, index) => (
                     <Card key={ticket.type} className="p-4">
                       <div className="flex items-start justify-between mb-4">
-                        <h4 className="font-medium">ตั๋ว #{index + 1}</h4>
+                        <h4 className="font-medium">{t("ticket")} #{index + 1}</h4>
                         <div className="flex gap-1">
                           <Button
                             type="button"
@@ -843,7 +846,7 @@ export function EventManagementPage() {
                             variant="ghost"
                             size="sm"
                             className="text-blue-600 hover:text-blue-700"
-                            title="ทำซ้ำตั๋ว"
+                            title={t("copy")}
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -853,7 +856,7 @@ export function EventManagementPage() {
                             variant="ghost"
                             size="sm"
                             className="text-destructive hover:text-destructive"
-                            title="ลบตั๋ว"
+                            title={t("delete")}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -862,10 +865,10 @@ export function EventManagementPage() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor={`ticketName-${index}`}>ชื่อตั๋ว *</Label>
+                          <Label htmlFor={`ticketName-${index}`}>{t("ticketName")} *</Label>
                           <Input
                             id={`ticketName-${index}`}
-                            placeholder="เช่น Early Bird, VIP, Student"
+                            placeholder={t("egEarlyBird")}
                             value={ticket.name}
                             onChange={(e) => updateTicket(index, 'name', e.target.value)}
                             className="mt-2"
@@ -873,11 +876,11 @@ export function EventManagementPage() {
                         </div>
                         
                         <div>
-                          <Label htmlFor={`ticketPrice-${index}`}>ราคา ({editedEvent.pricing.currency}) *</Label>
+                          <Label htmlFor={`ticketPrice-${index}`}>{t("price")} ({editedEvent.pricing.currency}) *</Label>
                           <Input
                             id={`ticketPrice-${index}`}
                             type="number"
-                            placeholder="0 สำหรับฟรี"
+                            placeholder={t("forFree")}
                             value={ticket.price}
                             onChange={(e) => updateTicket(index, 'price', parseFloat(e.target.value) || 0)}
                             className="mt-2"
@@ -886,10 +889,10 @@ export function EventManagementPage() {
                       </div>
                       
                       <div className="mt-4">
-                        <Label htmlFor={`ticketDescription-${index}`}>คำอธิบาย (ไม่บังคับ)</Label>
+                        <Label htmlFor={`ticketDescription-${index}`}>{t("description")} ({t("optional")})</Label>
                         <Textarea
                           id={`ticketDescription-${index}`}
-                          placeholder="อธิบายสิ่งที่รวมอยู่ในประเภทตั๋วนี้"
+                          placeholder={t("explainWhatsIncluded")}
                           value={ticket.description || ''}
                           onChange={(e) => updateTicket(index, 'description', e.target.value)}
                           className="mt-2"
@@ -917,26 +920,26 @@ export function EventManagementPage() {
       <div className="space-y-5">
         {/* Basic Information */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">ข้อมูลพื้นฐาน</h3>
+          <h3 className="text-lg font-semibold">{t("basicInfo")}</h3>
           <div className="grid grid-cols-1 gap-3">
             <div>
-              <Label className="text-sm font-medium">ชื่อ</Label>
+              <Label className="text-sm font-medium">{t("name")}</Label>
               <p className="text-sm">{currentEvent.title}</p>
             </div>
 
             <div>
-              <Label className="text-sm font-medium">คำอธิบาย</Label>
+              <Label className="text-sm font-medium">{t("description")}</Label>
               <p className="text-sm text-muted-foreground">{currentEvent.description}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <Label className="text-sm font-medium">หมวดหมู่</Label>
+                <Label className="text-sm font-medium">{t("category")}</Label>
                 <p className="text-sm">{currentEvent.category}</p>
               </div>
 
               <div>
-                <Label className="text-sm font-medium">ผู้จัดงาน</Label>
+                <Label className="text-sm font-medium">{t("organizer")}</Label>
                 <p className="text-sm">{currentEvent.organizer.name}</p>
               </div>
             </div>
@@ -945,46 +948,46 @@ export function EventManagementPage() {
 
         {/* Schedule */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">กำหนดการ</h3>
+          <h3 className="text-lg font-semibold">{t("schedule")}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <Label className="text-sm font-medium">เริ่ม</Label>
-              <p className="text-sm">{currentEvent.schedule.startDate} เวลา {currentEvent.schedule.startTime}</p>
+              <Label className="text-sm font-medium">{t("start")}</Label>
+              <p className="text-sm">{currentEvent.schedule.startDate} {t("at")} {currentEvent.schedule.startTime}</p>
             </div>
 
             <div>
-              <Label className="text-sm font-medium">สิ้นสุด</Label>
-              <p className="text-sm">{currentEvent.schedule.endDate} เวลา {currentEvent.schedule.endTime}</p>
+              <Label className="text-sm font-medium">{t("end")}</Label>
+              <p className="text-sm">{currentEvent.schedule.endDate} {t("at")} {currentEvent.schedule.endTime}</p>
             </div>
           </div>
         </div>
 
         {/* Location */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">สถานที่</h3>
+          <h3 className="text-lg font-semibold">{t("location")}</h3>
           <div className="space-y-2">
             <div>
-              <Label className="text-sm font-medium">ประเภท</Label>
+              <Label className="text-sm font-medium">{t("type")}</Label>
               <p className="text-sm capitalize">{currentEvent.location.type}</p>
             </div>
 
             {currentEvent.location.venue && (
               <div>
-                <Label className="text-sm font-medium">สถานที่</Label>
+                <Label className="text-sm font-medium">{t("venue")}</Label>
                 <p className="text-sm">{currentEvent.location.venue}</p>
               </div>
             )}
 
             {currentEvent.location.address && (
               <div>
-                <Label className="text-sm font-medium">ที่อยู่</Label>
+                <Label className="text-sm font-medium">{t("address")}</Label>
                 <p className="text-sm text-muted-foreground">{currentEvent.location.address}</p>
               </div>
             )}
 
             {currentEvent.location.onlineLink && (
               <div>
-                <Label className="text-sm font-medium">ลิงก์ออนไลน์</Label>
+                <Label className="text-sm font-medium">{t("onlineLink")}</Label>
                 <p className="text-sm text-muted-foreground">{currentEvent.location.onlineLink}</p>
               </div>
             )}
@@ -993,29 +996,29 @@ export function EventManagementPage() {
 
         {/* Capacity & Pricing */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">ความจุและราคา</h3>
+          <h3 className="text-lg font-semibold">{t("capacityAndPricing")}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <Label className="text-sm font-medium">ความจุสูงสุด</Label>
+              <Label className="text-sm font-medium">{t("maxCapacity")}</Label>
               <p className="text-sm">{currentEvent.capacity.max}</p>
             </div>
 
             <div>
-              <Label className="text-sm font-medium">ลงทะเบียนแล้ว</Label>
+              <Label className="text-sm font-medium">{t("registered")}</Label>
               <p className="text-sm">{currentEvent.capacity.registered}</p>
             </div>
 
             <div>
-              <Label className="text-sm font-medium">ว่าง</Label>
+              <Label className="text-sm font-medium">{t("available")}</Label>
               <p className="text-sm">{currentEvent.capacity.available}</p>
             </div>
           </div>
 
           <div className="pt-2">
-            <Label className="text-sm font-medium">ราคา</Label>
+            <Label className="text-sm font-medium">{t("price")}</Label>
             <div className="grid grid-cols-1 gap-2 mt-1">
               <div className="flex justify-between">
-                <span className="text-sm">สกุลเงิน</span>
+                <span className="text-sm">{t("currency")}</span>
                 <span className="text-sm font-medium">{currentEvent.pricing.currency}</span>
               </div>
               {getPricingFields(currentEvent.pricing).map((field) => (
@@ -1029,8 +1032,8 @@ export function EventManagementPage() {
               {getPricingFields(currentEvent.pricing).length === 0 && (
                 <div className="text-sm text-muted-foreground text-center py-4 border border-dashed rounded-lg">
                   <DollarSign className="h-6 w-6 mx-auto mb-2 opacity-50" />
-                  <p>ไม่มีข้อมูลราคา</p>
-                  <p className="text-xs">เพิ่มประเภทตั๋วเพื่อกำหนดราคา</p>
+                  <p>{t("noPricingInfo")}</p>
+                  <p className="text-xs">{t("addTicketTypeToSet")}</p>
                 </div>
               )}
             </div>
@@ -1047,7 +1050,7 @@ export function EventManagementPage() {
           className="w-full mt-4"
         >
           <Edit className="h-4 w-4 mr-2" />
-          แก้ไขรายละเอียดกิจกรรม
+          {t("editEvent")}
         </Button>
       </div>
     );
@@ -1058,16 +1061,16 @@ export function EventManagementPage() {
       <div className="min-h-screen bg-background py-8">
         <div className="container mx-auto px-4 max-w-2xl">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-4">การจัดการกิจกรรม</h1>
+            <h1 className="text-3xl font-bold mb-4">{t("eventManagement")}</h1>
             <p className="text-muted-foreground">
-              ป้อนรายละเอียดกิจกรรมของคุณเพื่อจัดการกิจกรรม
+              {t("enterEventDetails")}
             </p>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="request">ขอ OTP</TabsTrigger>
-              <TabsTrigger value="verify" disabled={!otpRequested}>ป้อน OTP</TabsTrigger>
+              <TabsTrigger value="request">{t("requestOTP")}</TabsTrigger>
+              <TabsTrigger value="verify" disabled={!otpRequested}>{t("enterOTP")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="request" className="space-y-6">
@@ -1075,17 +1078,17 @@ export function EventManagementPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Mail className="h-5 w-5" />
-                    ขอสิทธิ์การจัดการ
+                    {t("requestAccess")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="eventId">รหัสกิจกรรม *</Label>
+                    <Label htmlFor="eventId">{t("enterEventId")} *</Label>
                     <div className="relative mt-2">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="eventId"
-                        placeholder="ป้อนรหัสกิจกรรมของคุณ"
+                        placeholder={t("enterYourEventId")}
                         value={eventId}
                         onChange={(e) => setEventId(e.target.value)}
                         className="pl-10"
@@ -1094,13 +1097,13 @@ export function EventManagementPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="email">อีเมลผู้สร้าง *</Label>
+                    <Label htmlFor="email">{t("enterCreatorEmail")} *</Label>
                     <div className="relative mt-2">
                       <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="email"
                         type="email"
-                        placeholder="ป้อนอีเมลที่ใช้ในการสร้างกิจกรรม"
+                        placeholder={t("enterEmailUsed")}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-10"
@@ -1113,15 +1116,13 @@ export function EventManagementPage() {
                     className="w-full flex items-center gap-2"
                     disabled={!eventId || !email || requestLoading}
                   >
-                    {requestLoading ? "กำลังส่ง OTP..." : "ขอ OTP"}
+                    {requestLoading ? t("sending") : t("requestOTP")}
                     <Send className="h-4 w-4" />
                   </Button>
 
                   <div className="bg-muted/30 rounded-lg p-4">
                     <p className="text-sm text-muted-foreground">
-                      <strong>วิธีการทำงาน:</strong> หลังจากส่งรหัสกิจกรรมและอีเมลของคุณแล้ว
-                      เราจะส่ง OTP 6 หลักไปยังที่อยู่อีเมลของคุณ
-                      ป้อน OTP นั้นในขั้นตอนต่อไปเพื่อเข้าถึงการจัดการกิจกรรม
+                      <strong>{t("howItWorks")}</strong> {t("afterSubmitting")}
                     </p>
                   </div>
                 </CardContent>
@@ -1133,14 +1134,14 @@ export function EventManagementPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5" />
-                    ยืนยันการเข้าถึงของคุณ
+                    {t("verifyYourAccess")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                     <p className="text-sm text-muted-foreground">
-                      OTP ถูกส่งไปยัง <strong>{email}</strong>.
-                      กรุณาตรวจสอบอีเมลของคุณและป้อนรหัส 6 หลักด้านล่าง
+                      {t("otpSentTo")} <strong>{email}</strong>.
+                      {t("checkYourEmail")}
                     </p>
                   </div>
 
@@ -1149,8 +1150,8 @@ export function EventManagementPage() {
                       onComplete={handleOTPVerification}
                       loading={verificationLoading}
                       error={verificationError}
-                      title="Enter Your OTP"
-                      description="Enter the 6-digit OTP sent to your email"
+                      title={t("enterYourOTP")}
+                      description={t("enter6DigitOTP")}
                       showResend={false}
                     />
                   </div>
@@ -1167,9 +1168,9 @@ export function EventManagementPage() {
     <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-4 text-primary">จัดการกิจกรรมของคุณ</h1>
+          <h1 className="text-3xl font-bold mb-4 text-primary">{t("manageEventTitle")}</h1>
           <p className="text-muted-foreground">
-            คุณกำลังจัดการ: <strong>{currentEvent?.title}</strong>
+            {t("managing")}: <strong>{currentEvent?.title}</strong>
           </p>
         </div>
 
@@ -1180,10 +1181,10 @@ export function EventManagementPage() {
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium">
-                  ขั้นตอน {currentStep} จาก {totalSteps}
+                  {t("step")} {currentStep} {t("of")} {totalSteps}
                 </span>
                 <span className="text-sm text-muted-foreground">
-                  {Math.round((currentStep / totalSteps) * 100)}% เสร็จสิ้น
+                  {Math.round((currentStep / totalSteps) * 100)}% {t("completed")}
                 </span>
               </div>
               <Progress value={(currentStep / totalSteps) * 100} className="h-2" />
@@ -1210,7 +1211,7 @@ export function EventManagementPage() {
                     className="flex items-center gap-2"
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    ก่อนหน้า
+                    {t("previous")}
                   </Button>
                   
                   {currentStep === totalSteps ? (
@@ -1219,14 +1220,14 @@ export function EventManagementPage() {
                       className="flex items-center gap-2"
                     >
                       <Save className="h-4 w-4" />
-                      บันทึกการเปลี่ยนแปลง
+                      {t("saveChanges")}
                     </Button>
                   ) : (
                     <Button
                       onClick={nextStep}
                       className="flex items-center gap-2"
                     >
-                      ถัดไป
+                      {t("next")}
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   )}
@@ -1240,7 +1241,7 @@ export function EventManagementPage() {
                 onClick={handleCancelEdit}
                 className="flex-1"
               >
-                ยกเลิก
+                {t("cancel")}
               </Button>
             </div>
           </div>
@@ -1253,7 +1254,7 @@ export function EventManagementPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Edit className="h-5 w-5" />
-                    รายละเอียดกิจกรรม
+                    {t("eventDetails")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -1268,7 +1269,7 @@ export function EventManagementPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Lock className="h-5 w-5" />
-                    การดำเนินการจัดการ
+                    {t("managementActions")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y4">
@@ -1278,14 +1279,14 @@ export function EventManagementPage() {
                     onClick={handleDeleteEvent}
                   >
                     <Trash2 className="h-4 w-4" />
-                    ลบกิจกรรม
+                    {t("deleteEvent")}
                   </Button>
 
                   <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                    <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">หมายเหตุสำคัญ:</h4>
+                    <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">{t("importantNotes")}:</h4>
                     <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-                      <li>• การเปลี่ยนแปลงกิจกรรมจะถูกบันทึกในเครื่องในเดโมนี้</li>
-                      <li>• การลบกิจกรรมไม่สามารถยกเลิกได้</li>
+                      <li>• {t("changesSavedLocally")}</li>
+                      <li>• {t("eventDeletionIrreversible")}</li>
                     </ul>
                   </div>
                 </CardContent>
@@ -1295,14 +1296,14 @@ export function EventManagementPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5" />
-                    ข้อมูลกิจกรรม
+                    {t("eventDetails")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 text-sm">
-                    <p><strong>ID:</strong> {currentEvent?.id}</p>
-                    <p><strong>สถานะ:</strong> {currentEvent?.status}</p>
-                    <p><strong>แนะนำ:</strong> {currentEvent?.featured ? 'ใช่' : 'ไม่'}</p>
+                    <p><strong>{t("eventId")}:</strong> {currentEvent?.id}</p>
+                    <p><strong>{t("status")}:</strong> {currentEvent?.status}</p>
+                    <p><strong>{t("featured")}:</strong> {currentEvent?.featured ? t("yes") : t("no")}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -1325,7 +1326,7 @@ export function EventManagementPage() {
               setCurrentStep(1);
             }}
           >
-            ออกจากโหมดการจัดการ
+            {t("exitManagementMode")}
           </Button>
         </div>
       </div>

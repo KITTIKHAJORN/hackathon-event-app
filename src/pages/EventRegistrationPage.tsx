@@ -137,8 +137,8 @@ export function EventRegistrationPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">ไม่พบกิจกรรม</h1>
-          <Button onClick={() => navigate('/events')}>กลับไปยังกิจกรรม</Button>
+          <h1 className="text-2xl font-bold mb-4">{t("eventNotFound")}</h1>
+          <Button onClick={() => navigate('/events')}>{t("backToEvents")}</Button>
         </div>
       </div>
     );
@@ -155,9 +155,9 @@ export function EventRegistrationPage() {
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            กลับไปยังกิจกรรม
+            {t("backToEvent")}
           </Button>
-          <h1 className="text-3xl font-bold mb-2">การลงทะเบียนกิจกรรม</h1>
+          <h1 className="text-3xl font-bold mb-2">{t("eventRegistration")}</h1>
           <p className="text-muted-foreground">{event.title}</p>
         </div>
 
@@ -168,35 +168,35 @@ export function EventRegistrationPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="w-5 h-5" />
-                  รายละเอียดการลงทะเบียน
+                  {t("registrationDetails")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Personal Information */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">ข้อมูลส่วนตัว</h3>
+                    <h3 className="text-lg font-semibold">{t("personalInfo")}</h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="userName">ชื่อเต็ม *</Label>
+                        <Label htmlFor="userName">{t("fullName")} *</Label>
                         <Input
                           id="userName"
                           value={formData.userName}
                           onChange={(e) => handleInputChange('userName', e.target.value)}
-                          placeholder="ป้อนชื่อเต็มของคุณ"
+                          placeholder={t("enterFullName")}
                           required
                         />
                       </div>
                       
                       <div>
-                        <Label htmlFor="userEmail">ที่อยู่อีเมล *</Label>
+                        <Label htmlFor="userEmail">{t("email")} *</Label>
                         <Input
                           id="userEmail"
                           type="email"
                           value={formData.userEmail}
                           onChange={(e) => handleInputChange('userEmail', e.target.value)}
-                          placeholder="ป้อนอีเมลของคุณ"
+                          placeholder={t("enterEmail")}
                           required
                         />
                       </div>
@@ -204,23 +204,23 @@ export function EventRegistrationPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="userPhone">หมายเลขโทรศัพท์ *</Label>
+                        <Label htmlFor="userPhone">{t("phone")} *</Label>
                         <Input
                           id="userPhone"
                           value={formData.userPhone}
                           onChange={(e) => handleInputChange('userPhone', e.target.value)}
-                          placeholder="ป้อนหมายเลขโทรศัพท์ของคุณ"
+                          placeholder={t("enterPhone")}
                           required
                         />
                       </div>
 
                       <div>
-                        <Label htmlFor="company">บริษัท/องค์กร</Label>
+                        <Label htmlFor="company">{t("company")}</Label>
                         <Input
                           id="company"
                           value={formData.company}
                           onChange={(e) => handleInputChange('company', e.target.value)}
-                          placeholder="ป้อนชื่อบริษัทของคุณ"
+                          placeholder={t("enterCompany")}
                         />
                       </div>
                     </div>
@@ -230,14 +230,14 @@ export function EventRegistrationPage() {
 
                   {/* Ticket Selection */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">การเลือกตั๋ว</h3>
+                    <h3 className="text-lg font-semibold">{t("ticketSelection")}</h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="ticketType">ประเภทตั๋ว *</Label>
+                        <Label htmlFor="ticketType">{t("ticketType")} *</Label>
                         <Select value={formData.ticketType} onValueChange={(value) => handleInputChange('ticketType', value)}>
                           <SelectTrigger>
-                            <SelectValue placeholder="เลือกประเภทตั๋ว" />
+                            <SelectValue placeholder={t("selectTicketType")} />
                           </SelectTrigger>
                           <SelectContent>
                             {Object.entries(event.pricing)
@@ -254,22 +254,22 @@ export function EventRegistrationPage() {
                                 const getDisplayName = (fieldKey: string): string => {
                                   // Predefined mappings for known fields
                                   const fieldMappings: Record<string, string> = {
-                                    'earlyBird': 'Early Bird',
-                                    'fullMarathon': 'Full Marathon (42.195km)',
-                                    'halfMarathon': 'Half Marathon (21.1km)',
-                                    'miniMarathon': 'Mini Marathon (10km)',
-                                    'funRun': 'Fun Run (5km)',
-                                    'member': 'Member Price',
-                                    'general': 'General Admission',
-                                    'premium': 'Premium Ticket',
-                                    'adult': 'Adult Ticket',
-                                    'child': 'Child Ticket',
-                                    'senior': 'Senior Ticket',
-                                    'free': 'Free Entry',
-                                    'regular': 'Regular',
-                                    'student': 'Student',
-                                    'group': 'Group',
-                                    'vip': 'VIP'
+                                    'earlyBird': t("earlyBird"),
+                                    'fullMarathon': t("fullMarathon"),
+                                    'halfMarathon': t("halfMarathon"),
+                                    'miniMarathon': t("miniMarathon"),
+                                    'funRun': t("funRun"),
+                                    'member': t("member"),
+                                    'general': t("general"),
+                                    'premium': t("premium"),
+                                    'adult': t("adult"),
+                                    'child': t("child"),
+                                    'senior': t("senior"),
+                                    'free': t("free"),
+                                    'regular': t("regular"),
+                                    'student': t("student"),
+                                    'group': t("group"),
+                                    'vip': t("vip")
                                   };
                                   
                                   // Return predefined mapping if exists
@@ -298,7 +298,7 @@ export function EventRegistrationPage() {
                       </div>
                       
                       <div>
-                        <Label htmlFor="quantity">จำนวน</Label>
+                        <Label htmlFor="quantity">{t("quantity")}</Label>
                         <Select value={formData.quantity.toString()} onValueChange={(value) => handleInputChange('quantity', parseInt(value))}>
                           <SelectTrigger>
                             <SelectValue />
@@ -317,25 +317,25 @@ export function EventRegistrationPage() {
 
                   {/* Additional Information */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">ข้อมูลเพิ่มเติม</h3>
+                    <h3 className="text-lg font-semibold">{t("additionalInfo")}</h3>
 
                     <div>
-                      <Label htmlFor="dietaryRequirements">ข้อกำหนดด้านอาหาร</Label>
+                      <Label htmlFor="dietaryRequirements">{t("dietaryReq")}</Label>
                       <Input
                         id="dietaryRequirements"
                         value={formData.dietaryRequirements}
                         onChange={(e) => handleInputChange('dietaryRequirements', e.target.value)}
-                        placeholder="ข้อจำกัดด้านอาหารหรือความชอบใดๆ"
+                        placeholder={t("dietaryPlaceholder")}
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="notes">หมายเหตุเพิ่มเติม</Label>
+                      <Label htmlFor="notes">{t("notes")}</Label>
                       <Textarea
                         id="notes"
                         value={formData.notes}
                         onChange={(e) => handleInputChange('notes', e.target.value)}
-                        placeholder="ข้อมูลเพิ่มเติมหรือคำขอพิเศษใดๆ"
+                        placeholder={t("notesPlaceholder")}
                         rows={3}
                       />
                     </div>
@@ -348,14 +348,14 @@ export function EventRegistrationPage() {
                       onClick={() => navigate(`/events/${event.id}`)}
                       className="flex-1"
                     >
-                      ยกเลิก
+                      {t("cancel")}
                     </Button>
                     <Button
                       type="submit"
                       disabled={submitting}
                       className="flex-1"
                     >
-                      {submitting ? 'กำลังส่ง...' : 'เสร็จสิ้นการลงทะเบียน'}
+                      {submitting ? t("submitting") : t("completeRegistrationBtn")}
                     </Button>
                   </div>
                 </form>
@@ -369,7 +369,7 @@ export function EventRegistrationPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="w-5 h-5" />
-                  สรุปคำสั่งซื้อ
+                  {t("orderSummary")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -383,22 +383,22 @@ export function EventRegistrationPage() {
                 {formData.ticketType && (
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span>ประเภทตั๋ว:</span>
+                      <span>{t("ticketTypeLabel")}</span>
                       <span className="capitalize">{formData.ticketType}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>ราคาต่อตั๋ว:</span>
+                      <span>{t("pricePerTicket")}</span>
                       <span>{getTicketPrice(formData.ticketType).toLocaleString()} {event.pricing.currency}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>จำนวน:</span>
+                      <span>{t("quantity")}:</span>
                       <span>{formData.quantity}</span>
                     </div>
 
                     <Separator />
 
                     <div className="flex justify-between font-semibold text-lg">
-                      <span>รวม:</span>
+                      <span>{t("total")}:</span>
                       <span>{getTotalAmount().toLocaleString()} {event.pricing.currency}</span>
                     </div>
                   </div>
@@ -406,7 +406,7 @@ export function EventRegistrationPage() {
 
                 {!formData.ticketType && (
                   <p className="text-muted-foreground text-center py-4">
-                    กรุณาเลือกประเภทตั๋วเพื่อดูราคา
+                    {t("selectTicketFirst")}
                   </p>
                 )}
               </CardContent>
