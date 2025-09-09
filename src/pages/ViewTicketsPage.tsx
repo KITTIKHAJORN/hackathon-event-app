@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,8 +20,8 @@ export function ViewTicketsPage() {
     
     if (!userName.trim()) {
       toast({
-        title: t("usernameRequired"),
-        description: t("pleaseEnterUsername"),
+        title: "Username Required",
+        description: "Please enter your username to search for tickets.",
         variant: "destructive",
       });
       return;
@@ -61,22 +62,22 @@ export function ViewTicketsPage() {
       
       if (userTickets.length === 0) {
         toast({
-          title: t("noTicketsFound"),
-          description: `${t("noTicketsFoundDesc")} "${userName}". ${t("pleaseCheckUsername")}`,
+          title: "No Tickets Found",
+          description: `No tickets found for username "${userName}". Please check your username and try again.`,
           variant: "default",
         });
       } else {
         toast({
-          title: t("ticketsFound"),
-          description: `${t("foundTickets")} ${userTickets.length} ${t("ticketsFor")} "${userName}".`,
+          title: "Tickets Found",
+          description: `Found ${userTickets.length} ticket(s) for "${userName}".`,
           variant: "default",
         });
       }
     } catch (error) {
       console.error('Error fetching tickets from API:', error);
       toast({
-        title: t("searchError"),
-        description: t("failedToFetchTickets"),
+        title: "Search Error",
+        description: "Failed to fetch tickets from server. Please try again.",
         variant: "destructive",
       });
     } finally {
