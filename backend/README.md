@@ -38,19 +38,6 @@ Content-Type: application/json
 }
 ```
 
-### Send OTP Email
-```
-POST /send-otp
-Content-Type: application/json
-
-{
-  "eventId": "event_12345",
-  "email": "user@example.com",
-  "otp": "123456",
-  "eventName": "My Hackathon Event"
-}
-```
-
 ## Email Configuration
 
 For Gmail:
