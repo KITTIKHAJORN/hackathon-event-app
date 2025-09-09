@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EventCard } from "@/components/event/EventCard";
+import { EventSearch } from "@/components/event/EventSearch";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Search, ArrowRight, Code, Music, Users, Presentation, X, Calendar, MapPin, User, Ticket } from "lucide-react";
 import heroImage from "@/assets/hero-banner.jpg";
@@ -18,6 +19,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieCha
 export function HomePage() {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [featuredEvents, setFeaturedEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,39 +137,43 @@ export function HomePage() {
             {t("heroSubtitle")}
           </p>
           
-          {/* Search Bar */}
-          <div className="max-w-2xl mx-auto mb-8">
-            <form onSubmit={handleSearch} className="relative">
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <input
-                    type="text"
-                    placeholder="Search events by name..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-12 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={clearSearch}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  )}
-                </div>
-                <Button 
-                  type="submit" 
-                  size="lg" 
-                  disabled={isSearching}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-4 h-auto rounded-full"
+          {/* Event Search */}
+          <div className="max-w-2xl mx-auto mb-8 relative">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search events by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-6 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                autoComplete="off"
+                role="combobox"
+                aria-expanded={searchQuery ? "true" : "false"}
+                aria-haspopup="listbox"
+                aria-autocomplete="list"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                 >
-                  {isSearching ? "Searching..." : "Search"}
-                </Button>
-              </div>
-            </form>
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+
+            {/* Autocomplete Dropdown */}
+            {searchQuery && (
+              <EventSearch
+                searchQuery={searchQuery}
+                onSelect={(event) => {
+                  setSearchQuery("");
+                  navigate(`/events/${event.id}`);
+                }}
+                onClose={() => setSearchQuery("")}
+              />
+            )}
           </div>
           
 
