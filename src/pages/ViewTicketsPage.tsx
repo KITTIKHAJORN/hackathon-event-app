@@ -21,7 +21,7 @@ export function ViewTicketsPage() {
     if (!userName.trim()) {
       toast({
         title: "Username Required",
-        description: "Please enter your username to search for tickets.",
+        description: "Please enter your Username Or Email to search for tickets.",
         variant: "destructive",
       });
       return;
