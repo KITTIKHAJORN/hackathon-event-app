@@ -3,6 +3,7 @@ import { otpService, EventOTPInfo } from './otpService';
 
 const API_BASE_URL = 'http://54.169.154.143:3863';
 const TICKET_API_URL = 'http://54.169.154.143:3863/event-tickets';
+const EMAIL_SERVICE_URL = 'http://localhost:3001'; // Backend email service
 
 export interface EventData {
   id: string;
@@ -163,7 +164,6 @@ export interface CreateEventRequest {
 export interface CreateEventResponse {
   success: boolean;
   eventId: string;
-  otp: EventOTPInfo;
   message: string;
 }
 
@@ -259,8 +259,6 @@ class EventService {
 
     return locationsByCategory[category] || locationsByCategory["default"] || [];
   }
-
-
 
   async getEventById(id: string): Promise<EventData | null> {
     const events = await this.getAllEvents();
@@ -407,13 +405,6 @@ class EventService {
       // Generate a unique event ID
       const eventId = `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
-      // Create OTP for the event
-      const otpInfo = otpService.createEventOTP(eventId, eventData.creatorEmail);
-      
-      // In a real application, you would send this data to your backend API
-      // For now, we'll simulate the API response
-      console.log('🎪 Creating event with OTP:', { eventId, otpInfo, eventData });
-      
       // Store event data locally (in production, this would be sent to backend)
       const localEvents = this.getLocalEvents();
       const newEvent: EventData = {
@@ -461,15 +452,56 @@ class EventService {
       localEvents.push(newEvent);
       this.saveLocalEvents(localEvents);
       
+      // Send email with Event ID (non-critical - don't fail event creation if email fails)
+      await this.sendEventIdEmail(
+        eventId, 
+        eventData.creatorEmail, 
+        eventData.title,
+        eventData.date,
+        eventData.location
+      );
+      
       return {
         success: true,
         eventId,
-        otp: otpInfo,
-        message: 'Event created successfully with OTP for management'
+        message: 'Event created successfully. Event ID has been sent to your email.'
       };
     } catch (error) {
       console.error('❌ Error creating event:', error);
       throw new Error('Failed to create event');
+    }
+  }
+
+  // Request OTP for event management
+  async requestEventOTP(eventId: string, email: string): Promise<EventOTPInfo | null> {
+    try {
+      // Check if event exists
+      const event = await this.getEventById(eventId);
+      if (!event) {
+        return null;
+      }
+      
+      // Check if email matches the event creator
+      if (event.organizer.contact !== email) {
+        return null;
+      }
+      
+      // Create OTP for the event
+      const otpInfo = otpService.createEventOTP(eventId, email);
+      
+      // Send OTP email
+      const emailSent = await this.sendOTPEmail(eventId, email, otpInfo.otp, event.title);
+      
+      if (!emailSent) {
+        // If email failed, we should handle this appropriately
+        console.warn('⚠️ Failed to send OTP email. User may need to request OTP again.');
+        return null;
+      }
+      
+      return otpInfo;
+    } catch (error) {
+      console.error('❌ Error requesting OTP:', error);
+      return null;
     }
   }
 
@@ -583,6 +615,66 @@ class EventService {
     } catch (error) {
       console.error('❌ Error loading events, falling back to local events only:', error);
       return this.getLocalEvents();
+    }
+  }
+
+  // Send Event ID email
+  private async sendEventIdEmail(eventId: string, email: string, eventName: string, eventDate?: string, eventLocation?: string) {
+    try {
+      const response = await fetch(`${EMAIL_SERVICE_URL}/send-event-id`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventId,
+          email,
+          eventName,
+          eventDate,
+          eventLocation
+        })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        console.log('📧 Event ID email sent successfully');
+      } else {
+        console.warn('⚠️ Email service warning:', result.message || result.error);
+      }
+      return result.success;
+    } catch (error) {
+      console.warn('⚠️ Failed to send Event ID email (email service may not be configured):', error);
+      // Don't treat this as a critical error - the event was still created
+      return true;
+    }
+  }
+
+  // Send OTP email
+  private async sendOTPEmail(eventId: string, email: string, otp: string, eventName: string) {
+    try {
+      const response = await fetch(`${EMAIL_SERVICE_URL}/send-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventId,
+          email,
+          otp,
+          eventName
+        })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        console.log('📧 OTP email sent successfully');
+      } else {
+        console.error('❌ Failed to send OTP email:', result.error);
+      }
+      return result.success;
+    } catch (error) {
+      console.error('❌ Error sending OTP email:', error);
+      return false;
     }
   }
 }
