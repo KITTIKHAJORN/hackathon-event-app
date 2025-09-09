@@ -26,9 +26,6 @@ export function HomePage() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [dashboardData, setDashboardData] = useState({
     totalEvents: 0,
-    upcomingEvents: 0,
-    registeredUsers: 0,
-    totalTickets: 0,
   });
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [eventTrendData, setEventTrendData] = useState<any[]>([]);
@@ -43,7 +40,9 @@ export function HomePage() {
         
         // Get real dashboard statistics
         const stats = await eventService.getDashboardStats();
-        setDashboardData(stats);
+        setDashboardData({
+          totalEvents: stats.totalEvents,
+        });
         
         // Get real category distribution data
         const categories = await eventService.getCategoryDistribution();
@@ -112,40 +111,8 @@ export function HomePage() {
     setShowSearchResults(false);
   };
 
-  // Event categories for homepage
-  const categories = [
-    {
-      name: t("technology"),
-      icon: Code,
-      count: 24,
-      gradient: "from-blue-500 to-purple-600",
-      href: "/events?category=technology"
-    },
-    {
-      name: t("music"),
-      icon: Music,
-      count: 18,
-      gradient: "from-pink-500 to-red-500",
-      href: "/events?category=music"
-    },
-    {
-      name: t("workshop"),
-      icon: Users,
-      count: 32,
-      gradient: "from-green-500 to-teal-500",
-      href: "/events?category=workshop"
-    },
-    {
-      name: t("conference"),
-      icon: Presentation,
-      count: 15,
-      gradient: "from-orange-500 to-yellow-500",
-      href: "/events?category=conference"
-    }
-  ];
-
-  // Colors for charts
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82ca9d'];
+  // Colors for charts - Enhanced beautiful color palette
+  const COLORS = ['#4f46e5', '#7c3aed', '#db2777', '#e11d48', '#d97706', '#059669', '#0284c7', '#7c3aed'];
 
   return (
     <div className="min-h-screen bg-background">
@@ -226,100 +193,55 @@ export function HomePage() {
       </section>
 
       {/* Dashboard Section */}
-      <section className="py-16 bg-muted/30">
+      <section className="py-16 bg-gradient-to-br from-primary/5 to-secondary/5">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Event Dashboard</h2>
-            <p className="text-muted-foreground text-lg">
-              Get insights into our event platform
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Event
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Get insights into our event platform and explore categories
             </p>
           </div>
           
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <Card>
+          {/* Main Stats and Categories Distribution */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            {/* Combined Total Events and Event Categories card */}
+            <Card className="lg:col-span-1 hover:shadow-lg transition-all duration-300">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Events</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Platform Stats</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{dashboardData.totalEvents}</div>
-                <p className="text-xs text-muted-foreground">All events in our system</p>
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Events</p>
+                      <h3 className="text-2xl font-bold text-primary">{dashboardData.totalEvents}</h3>
+                    </div>
+                    <div className="p-2 rounded-full bg-primary/10">
+                      <Calendar className="h-5 w-5 text-primary" />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Categories</p>
+                      <h3 className="text-2xl font-bold text-primary">{categoryData.length}</h3>
+                    </div>
+                    <div className="p-2 rounded-full bg-primary/10">
+                      <Calendar className="h-5 w-5 text-primary" />
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
             
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{dashboardData.upcomingEvents}</div>
-                <p className="text-xs text-muted-foreground">Events happening soon</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Registered Users</CardTitle>
-                <User className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{dashboardData.registeredUsers.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">Active community members</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Tickets Sold</CardTitle>
-                <Ticket className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{dashboardData.totalTickets.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">Tickets purchased</p>
-              </CardContent>
-            </Card>
-          </div>
-          
-          {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Event Trend Chart */}
-            <Card className="col-span-1">
+            {/* Event Categories Distribution Chart */}
+            <Card className="lg:col-span-2 hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <CardTitle>Event Trends</CardTitle>
-                <p className="text-sm text-muted-foreground">Events created per month</p>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={{
-                    events: {
-                      label: "Events",
-                      color: "hsl(var(--chart-1))",
-                    },
-                  }}
-                  className="h-[300px]"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={eventTrendData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="events" fill="var(--color-events)" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-            
-            {/* Category Distribution Chart */}
-            <Card className="col-span-1">
-              <CardHeader>
-                <CardTitle>Event Categories</CardTitle>
+                <CardTitle className="text-xl text-primary">Categories Distribution</CardTitle>
                 <p className="text-sm text-muted-foreground">Distribution of events by category</p>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex items-center justify-center pb-0" style={{ height: '300px' }}>
                 <ChartContainer
                   config={categoryData.reduce((acc, category, index) => {
                     acc[category.name] = {
@@ -328,7 +250,7 @@ export function HomePage() {
                     };
                     return acc;
                   }, {} as Record<string, { label: string; color: string }>)}
-                  className="h-[300px]"
+                  className="h-full w-full"
                 >
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -340,100 +262,59 @@ export function HomePage() {
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                       >
                         {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={COLORS[index % COLORS.length]} 
+                            stroke="#ffffff"
+                            strokeWidth={2}
+                          />
                         ))}
                       </Pie>
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Legend />
+                      <ChartTooltip 
+                        content={<ChartTooltipContent />} 
+                        formatter={(value) => [value, 'Events']}
+                      />
+                      <Legend 
+                        layout="vertical" 
+                        verticalAlign="middle" 
+                        align="right"
+                        wrapperStyle={{ paddingRight: '20px' }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </ChartContainer>
               </CardContent>
             </Card>
           </div>
-        </div>
-      </section>
-
-      {/* Categories Section */}
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">{t("categories")}</h2>
-            <p className="text-muted-foreground text-lg">
-              Explore events by category
-            </p>
-          </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {categories.map((category) => {
-              const Icon = category.icon;
-              return (
-                <Link key={category.name} to={category.href}>
-                  <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">
-                    <CardContent className="p-6 text-center">
-                      <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r ${category.gradient} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                        <Icon className="h-8 w-8 text-white" />
-                      </div>
-                      <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">
-                        {category.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {category.count} events
-                      </p>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Search Results Section */}
-      {showSearchResults && (
-        <section className="py-16 bg-muted/20">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h2 className="text-3xl font-bold mb-4">
-                  Search Results for "{searchQuery}"
-                </h2>
-                <p className="text-muted-foreground">
-                  Found {searchResults.length} event(s)
-                </p>
-              </div>
-              <Button variant="outline" onClick={clearSearch}>
-                Clear Search
-                <X className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-
-            {searchResults.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {searchResults.map((event) => (
-                  <EventCard key={event.id} event={event} />
+          {/* Event Categories Section - Similar to Categories Section */}
+          <Card className="hover:shadow-lg transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="text-xl text-primary">Event Categories</CardTitle>
+              <p className="text-sm text-muted-foreground">Explore events by category</p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {categoryData.map((category, index) => (
+                  <div 
+                    key={category.name} 
+                    className="p-4 rounded-lg bg-primary/10 hover:from-primary/20 hover:to-secondary/20 transition-all duration-300 hover:scale-105 text-center"
+                  >
+                    <div className="mx-auto mb-2 p-2 rounded-full bg-primary/10 w-12 h-12 flex items-center justify-center">
+                      <Calendar className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="font-semibold text-primary text-sm">{category.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">{category.value} events</p>
+                  </div>
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="max-w-md mx-auto">
-                  <Search className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">No Events Found</h3>
-                  <p className="text-muted-foreground mb-4">
-                    We couldn't find any events matching "{searchQuery}". Try searching with different keywords.
-                  </p>
-                  <Button variant="outline" onClick={clearSearch}>
-                    Clear Search
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
+            </CardContent>
+          </Card>
+        </div>
+      </section>
 
       {/* Featured Events Section */}
       <section className="py-16">
