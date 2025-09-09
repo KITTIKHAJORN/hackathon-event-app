@@ -10,8 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OTPInput } from "@/components/common/OTPInput";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { eventService, EventData } from "@/services/eventService";
-import { Lock, Edit, Trash2, Search, Shield, Mail, Send, CheckCircle, Calendar, MapPin, Users, DollarSign, Save, ChevronLeft, ChevronRight, Plus, Ticket, RefreshCw, Clock } from "lucide-react";
+
+import { eventService, EventData, LayoutConfig } from "@/services/eventService";
+import { Lock, Edit, Trash2, Search, Shield, Mail, Send, CheckCircle, Calendar, MapPin, Users, DollarSign, Save, ChevronLeft, ChevronRight, Plus, Ticket, RefreshCw, Layout } from "lucide-react";
+import LayoutEditor from "@/components/layout/LayoutEditor";
+import LayoutToolbar from "@/components/layout/LayoutToolbar";
+
 
 // EventData is imported from eventService
 
@@ -39,6 +43,17 @@ export function EventManagementPage() {
     price: number;
     description?: string;
   }>>([]);
+  const [layoutConfig, setLayoutConfig] = useState<LayoutConfig | null>(null);
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  
+  // Wrapper function to handle both direct values and functions
+  const handleSetFieldValues = (values: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => {
+    if (typeof values === 'function') {
+      setFieldValues(values);
+    } else {
+      setFieldValues(values);
+    }
+  };
 
   // Request OTP for event management
   const handleRequestOTP = async () => {
@@ -119,6 +134,12 @@ export function EventManagementPage() {
           setEditedEvent({ ...event }); // Create a copy for editing
           setIsVerified(true);
           setActiveTab("manage");
+          
+          // Initialize tickets from pricing
+          initializeTicketsFromPricing(event);
+          
+          // Initialize layout config
+          setLayoutConfig(event.layoutConfig || null);
           toast({
             title: t("verificationSuccess"),
             description: t("manageEventAccess"),
@@ -457,10 +478,10 @@ export function EventManagementPage() {
 
   // Step titles
   const stepTitles = [
-    "ข้อมูลพื้นฐาน",
-    "กำหนดการ",
-    "สถานที่",
-    "ความจุและราคา"
+    t("basicInformation"),
+    t("schedule"),
+    t("location"),
+    t("capacityAndPricing")
   ];
 
   // Render step content for editing
@@ -472,7 +493,7 @@ export function EventManagementPage() {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="title">ชื่อกิจกรรม</Label>
+              <Label htmlFor="title">{t("eventTitle")}</Label>
               <Input
                 id="title"
                 value={editedEvent.title || ''}
@@ -482,7 +503,7 @@ export function EventManagementPage() {
             </div>
             
             <div>
-              <Label htmlFor="description">คำอธิบาย</Label>
+              <Label htmlFor="description">{t("description")}</Label>
               <Textarea
                 id="description"
                 value={editedEvent.description || ''}
@@ -494,7 +515,7 @@ export function EventManagementPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="category">หมวดหมู่</Label>
+                <Label htmlFor="category">{t("category")}</Label>
                 <Input
                   id="category"
                   value={editedEvent.category || ''}
@@ -504,7 +525,7 @@ export function EventManagementPage() {
               </div>
               
               <div>
-                <Label htmlFor="organizer">ผู้จัดงาน</Label>
+                <Label htmlFor="organizer">{t("organizer")}</Label>
                 <Input
                   id="organizer"
                   value={editedEvent.organizer.name || ''}
@@ -521,7 +542,7 @@ export function EventManagementPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="startDate">วันที่เริ่มต้น</Label>
+                <Label htmlFor="startDate">{t("startDate")}</Label>
                 <div className="relative mt-1">
                   <Input
                     id="startDate"
@@ -542,7 +563,7 @@ export function EventManagementPage() {
               </div>
               
               <div>
-                <Label htmlFor="startTime">เวลาเริ่มต้น</Label>
+                <Label htmlFor="startTime">{t("startTime")}</Label>
                 <div className="relative mt-1">
                   <Input
                     id="startTime"
@@ -597,7 +618,7 @@ export function EventManagementPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="endDate">วันที่สิ้นสุด</Label>
+                <Label htmlFor="endDate">{t("endDate")}</Label>
                 <div className="relative mt-1">
                   <Input
                     id="endDate"
@@ -618,7 +639,7 @@ export function EventManagementPage() {
               </div>
               
               <div>
-                <Label htmlFor="endTime">เวลาสิ้นสุด</Label>
+                <Label htmlFor="endTime">{t("endTime")}</Label>
                 <div className="relative mt-1">
                   <Input
                     id="endTime"
@@ -677,55 +698,58 @@ export function EventManagementPage() {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="locationType">ประเภทสถานที่</Label>
+              <Label htmlFor="locationType">{t("locationType")}</Label>
               <Select
                 value={editedEvent.location.type || ''}
                 onValueChange={(value) => handleNestedChange('location', 'type', value)}
               >
                 <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="เลือกประเภทสถานที่" />
+                  <SelectValue placeholder={t("selectLocationType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="onsite">ในสถานที่</SelectItem>
-                  <SelectItem value="online">ออนไลน์</SelectItem>
-                  <SelectItem value="hybrid">ผสม</SelectItem>
+                  <SelectItem value="onsite">{t("onsite")}</SelectItem>
+                  <SelectItem value="online">{t("online")}</SelectItem>
+                  <SelectItem value="hybrid">{t("hybrid")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             {editedEvent.location.type !== 'online' && (
               <div>
-                <Label htmlFor="venue">สถานที่</Label>
+                <Label htmlFor="venue">{t("venue")}</Label>
                 <Input
                   id="venue"
                   value={editedEvent.location.venue || ''}
                   onChange={(e) => handleNestedChange('location', 'venue', e.target.value)}
                   className="mt-1"
+                  placeholder={t("enterVenueName")}
                 />
               </div>
             )}
             
             {editedEvent.location.type !== 'online' && (
               <div>
-                <Label htmlFor="address">ที่อยู่</Label>
+                <Label htmlFor="address">{t("address")}</Label>
                 <Textarea
                   id="address"
                   value={editedEvent.location.address || ''}
                   onChange={(e) => handleNestedChange('location', 'address', e.target.value)}
                   className="w-full min-h-[80px] mt-1"
                   rows={2}
+                  placeholder={t("enterFullAddress")}
                 />
               </div>
             )}
             
             {editedEvent.location.type !== 'onsite' && (
               <div>
-                <Label htmlFor="onlineLink">ลิงก์ออนไลน์</Label>
+                <Label htmlFor="onlineLink">{t("onlineLink")}</Label>
                 <Input
                   id="onlineLink"
                   value={editedEvent.location.onlineLink || ''}
                   onChange={(e) => handleNestedChange('location', 'onlineLink', e.target.value)}
                   className="mt-1"
+                  placeholder={t("enterOnlineLink")}
                 />
               </div>
             )}
@@ -737,7 +761,7 @@ export function EventManagementPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="maxCapacity">ความจุสูงสุด</Label>
+                <Label htmlFor="maxCapacity">{t("maxCapacity")}</Label>
                 <Input
                   id="maxCapacity"
                   type="number"
@@ -748,7 +772,7 @@ export function EventManagementPage() {
               </div>
               
               <div>
-                <Label htmlFor="registered">ลงทะเบียนแล้ว</Label>
+                <Label htmlFor="registered">{t("registered")}</Label>
                 <Input
                   id="registered"
                   type="number"
@@ -759,7 +783,7 @@ export function EventManagementPage() {
               </div>
               
               <div>
-                <Label htmlFor="available">ว่าง</Label>
+                <Label htmlFor="available">{t("available")}</Label>
                 <Input
                   id="available"
                   type="number"
@@ -771,7 +795,7 @@ export function EventManagementPage() {
             </div>
             
             <div>
-              <Label htmlFor="currency">สกุลเงิน</Label>
+              <Label htmlFor="currency">{t("currency")}</Label>
               <Input
                 id="currency"
                 value={editedEvent.pricing.currency || ''}
@@ -783,7 +807,7 @@ export function EventManagementPage() {
             {/* Dynamic Ticket Types */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label className="text-lg font-semibold">ประเภทตั๋ว</Label>
+                <Label className="text-lg font-semibold">{t("ticketTypes")}</Label>
                 <div className="flex gap-2">
                   <Button
                     type="button"
@@ -793,7 +817,7 @@ export function EventManagementPage() {
                     className="flex items-center gap-2"
                   >
                     <Plus className="h-4 w-4" />
-                    เพิ่มประเภทตั๋ว
+                    {t("addTicketType")}
                   </Button>
                   {tickets.length > 0 && (
                     <>
@@ -803,10 +827,10 @@ export function EventManagementPage() {
                         variant="outline"
                         size="sm"
                         className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
-                        title="รีเซ็ตเป็นราคาเดิม"
+                        title={t("resetToOriginal")}
                       >
                         <RefreshCw className="h-4 w-4" />
-                        รีเซ็ต
+                        {t("reset")}
                       </Button>
                       <Button
                         type="button"
@@ -814,10 +838,10 @@ export function EventManagementPage() {
                         variant="outline"
                         size="sm"
                         className="flex items-center gap-2 text-destructive hover:text-destructive"
-                        title="ล้างตั๋วทั้งหมด"
+                        title={t("clearAllTickets")}
                       >
                         <Trash2 className="h-4 w-4" />
-                        ล้างทั้งหมด
+                        {t("clear")}
                       </Button>
                     </>
                   )}
@@ -827,15 +851,15 @@ export function EventManagementPage() {
               {tickets.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Ticket className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No ticket types added yet</p>
-                  <p className="text-sm">Click "Add Ticket Type" to create your first ticket</p>
+                  <p>{t("noTicketsFound")}</p>
+                  <p className="text-sm">{t("addTicketTypeToSet")}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {tickets.map((ticket, index) => (
                     <Card key={ticket.type} className="p-4">
                       <div className="flex items-start justify-between mb-4">
-                        <h4 className="font-medium">ตั๋ว #{index + 1}</h4>
+                        <h4 className="font-medium">{t("ticket")} #{index + 1}</h4>
                         <div className="flex gap-1">
                           <Button
                             type="button"
@@ -843,7 +867,7 @@ export function EventManagementPage() {
                             variant="ghost"
                             size="sm"
                             className="text-blue-600 hover:text-blue-700"
-                            title="ทำซ้ำตั๋ว"
+                            title={t("copy")}
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -853,7 +877,7 @@ export function EventManagementPage() {
                             variant="ghost"
                             size="sm"
                             className="text-destructive hover:text-destructive"
-                            title="ลบตั๋ว"
+                            title={t("delete")}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -862,10 +886,10 @@ export function EventManagementPage() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor={`ticketName-${index}`}>ชื่อตั๋ว *</Label>
+                          <Label htmlFor={`ticketName-${index}`}>{t("ticketName")} *</Label>
                           <Input
                             id={`ticketName-${index}`}
-                            placeholder="เช่น Early Bird, VIP, Student"
+                            placeholder={t("egEarlyBird")}
                             value={ticket.name}
                             onChange={(e) => updateTicket(index, 'name', e.target.value)}
                             className="mt-2"
@@ -873,11 +897,11 @@ export function EventManagementPage() {
                         </div>
                         
                         <div>
-                          <Label htmlFor={`ticketPrice-${index}`}>ราคา ({editedEvent.pricing.currency}) *</Label>
+                          <Label htmlFor={`ticketPrice-${index}`}>{t("price")} ({editedEvent.pricing.currency}) *</Label>
                           <Input
                             id={`ticketPrice-${index}`}
                             type="number"
-                            placeholder="0 สำหรับฟรี"
+                            placeholder={t("forFree")}
                             value={ticket.price}
                             onChange={(e) => updateTicket(index, 'price', parseFloat(e.target.value) || 0)}
                             className="mt-2"
@@ -886,10 +910,10 @@ export function EventManagementPage() {
                       </div>
                       
                       <div className="mt-4">
-                        <Label htmlFor={`ticketDescription-${index}`}>คำอธิบาย (ไม่บังคับ)</Label>
+                        <Label htmlFor={`ticketDescription-${index}`}>{t("description")} ({t("optional")})</Label>
                         <Textarea
                           id={`ticketDescription-${index}`}
-                          placeholder="อธิบายสิ่งที่รวมอยู่ในประเภทตั๋วนี้"
+                          placeholder={t("explainWhatsIncluded")}
                           value={ticket.description || ''}
                           onChange={(e) => updateTicket(index, 'description', e.target.value)}
                           className="mt-2"
@@ -917,26 +941,26 @@ export function EventManagementPage() {
       <div className="space-y-5">
         {/* Basic Information */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">ข้อมูลพื้นฐาน</h3>
+          <h3 className="text-lg font-semibold">{t("basicInfo")}</h3>
           <div className="grid grid-cols-1 gap-3">
             <div>
-              <Label className="text-sm font-medium">ชื่อ</Label>
+              <Label className="text-sm font-medium">{t("name")}</Label>
               <p className="text-sm">{currentEvent.title}</p>
             </div>
 
             <div>
-              <Label className="text-sm font-medium">คำอธิบาย</Label>
+              <Label className="text-sm font-medium">{t("description")}</Label>
               <p className="text-sm text-muted-foreground">{currentEvent.description}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <Label className="text-sm font-medium">หมวดหมู่</Label>
+                <Label className="text-sm font-medium">{t("category")}</Label>
                 <p className="text-sm">{currentEvent.category}</p>
               </div>
 
               <div>
-                <Label className="text-sm font-medium">ผู้จัดงาน</Label>
+                <Label className="text-sm font-medium">{t("organizer")}</Label>
                 <p className="text-sm">{currentEvent.organizer.name}</p>
               </div>
             </div>
@@ -945,46 +969,46 @@ export function EventManagementPage() {
 
         {/* Schedule */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">กำหนดการ</h3>
+          <h3 className="text-lg font-semibold">{t("schedule")}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <Label className="text-sm font-medium">เริ่ม</Label>
-              <p className="text-sm">{currentEvent.schedule.startDate} เวลา {currentEvent.schedule.startTime}</p>
+              <Label className="text-sm font-medium">{t("start")}</Label>
+              <p className="text-sm">{currentEvent.schedule.startDate} {t("at")} {currentEvent.schedule.startTime}</p>
             </div>
 
             <div>
-              <Label className="text-sm font-medium">สิ้นสุด</Label>
-              <p className="text-sm">{currentEvent.schedule.endDate} เวลา {currentEvent.schedule.endTime}</p>
+              <Label className="text-sm font-medium">{t("end")}</Label>
+              <p className="text-sm">{currentEvent.schedule.endDate} {t("at")} {currentEvent.schedule.endTime}</p>
             </div>
           </div>
         </div>
 
         {/* Location */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">สถานที่</h3>
+          <h3 className="text-lg font-semibold">{t("location")}</h3>
           <div className="space-y-2">
             <div>
-              <Label className="text-sm font-medium">ประเภท</Label>
+              <Label className="text-sm font-medium">{t("type")}</Label>
               <p className="text-sm capitalize">{currentEvent.location.type}</p>
             </div>
 
             {currentEvent.location.venue && (
               <div>
-                <Label className="text-sm font-medium">สถานที่</Label>
+                <Label className="text-sm font-medium">{t("venue")}</Label>
                 <p className="text-sm">{currentEvent.location.venue}</p>
               </div>
             )}
 
             {currentEvent.location.address && (
               <div>
-                <Label className="text-sm font-medium">ที่อยู่</Label>
+                <Label className="text-sm font-medium">{t("address")}</Label>
                 <p className="text-sm text-muted-foreground">{currentEvent.location.address}</p>
               </div>
             )}
 
             {currentEvent.location.onlineLink && (
               <div>
-                <Label className="text-sm font-medium">ลิงก์ออนไลน์</Label>
+                <Label className="text-sm font-medium">{t("onlineLink")}</Label>
                 <p className="text-sm text-muted-foreground">{currentEvent.location.onlineLink}</p>
               </div>
             )}
@@ -993,29 +1017,29 @@ export function EventManagementPage() {
 
         {/* Capacity & Pricing */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">ความจุและราคา</h3>
+          <h3 className="text-lg font-semibold">{t("capacityAndPricing")}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <Label className="text-sm font-medium">ความจุสูงสุด</Label>
+              <Label className="text-sm font-medium">{t("maxCapacity")}</Label>
               <p className="text-sm">{currentEvent.capacity.max}</p>
             </div>
 
             <div>
-              <Label className="text-sm font-medium">ลงทะเบียนแล้ว</Label>
+              <Label className="text-sm font-medium">{t("registered")}</Label>
               <p className="text-sm">{currentEvent.capacity.registered}</p>
             </div>
 
             <div>
-              <Label className="text-sm font-medium">ว่าง</Label>
+              <Label className="text-sm font-medium">{t("available")}</Label>
               <p className="text-sm">{currentEvent.capacity.available}</p>
             </div>
           </div>
 
           <div className="pt-2">
-            <Label className="text-sm font-medium">ราคา</Label>
+            <Label className="text-sm font-medium">{t("price")}</Label>
             <div className="grid grid-cols-1 gap-2 mt-1">
               <div className="flex justify-between">
-                <span className="text-sm">สกุลเงิน</span>
+                <span className="text-sm">{t("currency")}</span>
                 <span className="text-sm font-medium">{currentEvent.pricing.currency}</span>
               </div>
               {getPricingFields(currentEvent.pricing).map((field) => (
@@ -1029,8 +1053,8 @@ export function EventManagementPage() {
               {getPricingFields(currentEvent.pricing).length === 0 && (
                 <div className="text-sm text-muted-foreground text-center py-4 border border-dashed rounded-lg">
                   <DollarSign className="h-6 w-6 mx-auto mb-2 opacity-50" />
-                  <p>ไม่มีข้อมูลราคา</p>
-                  <p className="text-xs">เพิ่มประเภทตั๋วเพื่อกำหนดราคา</p>
+                  <p>{t("noPricingInfo")}</p>
+                  <p className="text-xs">{t("addTicketTypeToSet")}</p>
                 </div>
               )}
             </div>
@@ -1047,7 +1071,7 @@ export function EventManagementPage() {
           className="w-full mt-4"
         >
           <Edit className="h-4 w-4 mr-2" />
-          แก้ไขรายละเอียดกิจกรรม
+          {t("editEvent")}
         </Button>
       </div>
     );
@@ -1058,16 +1082,16 @@ export function EventManagementPage() {
       <div className="min-h-screen bg-background py-8">
         <div className="container mx-auto px-4 max-w-2xl">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-4">การจัดการกิจกรรม</h1>
+            <h1 className="text-3xl font-bold mb-4">{t("eventManagement")}</h1>
             <p className="text-muted-foreground">
-              ป้อนรายละเอียดกิจกรรมของคุณเพื่อจัดการกิจกรรม
+              {t("enterEventDetails")}
             </p>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="request">ขอ OTP</TabsTrigger>
-              <TabsTrigger value="verify" disabled={!otpRequested}>ป้อน OTP</TabsTrigger>
+              <TabsTrigger value="request">{t("requestOTP")}</TabsTrigger>
+              <TabsTrigger value="verify" disabled={!otpRequested}>{t("enterOTP")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="request" className="space-y-6">
@@ -1075,17 +1099,17 @@ export function EventManagementPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Mail className="h-5 w-5" />
-                    ขอสิทธิ์การจัดการ
+                    {t("requestAccess")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="eventId">รหัสกิจกรรม *</Label>
+                    <Label htmlFor="eventId">{t("enterEventId")} *</Label>
                     <div className="relative mt-2">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="eventId"
-                        placeholder="ป้อนรหัสกิจกรรมของคุณ"
+                        placeholder={t("enterYourEventId")}
                         value={eventId}
                         onChange={(e) => setEventId(e.target.value)}
                         className="pl-10"
@@ -1094,13 +1118,13 @@ export function EventManagementPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="email">อีเมลผู้สร้าง *</Label>
+                    <Label htmlFor="email">{t("enterCreatorEmail")} *</Label>
                     <div className="relative mt-2">
                       <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="email"
                         type="email"
-                        placeholder="ป้อนอีเมลที่ใช้ในการสร้างกิจกรรม"
+                        placeholder={t("enterEmailUsed")}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-10"
@@ -1113,15 +1137,13 @@ export function EventManagementPage() {
                     className="w-full flex items-center gap-2"
                     disabled={!eventId || !email || requestLoading}
                   >
-                    {requestLoading ? "กำลังส่ง OTP..." : "ขอ OTP"}
+                    {requestLoading ? t("sending") : t("requestOTP")}
                     <Send className="h-4 w-4" />
                   </Button>
 
                   <div className="bg-muted/30 rounded-lg p-4">
                     <p className="text-sm text-muted-foreground">
-                      <strong>วิธีการทำงาน:</strong> หลังจากส่งรหัสกิจกรรมและอีเมลของคุณแล้ว
-                      เราจะส่ง OTP 6 หลักไปยังที่อยู่อีเมลของคุณ
-                      ป้อน OTP นั้นในขั้นตอนต่อไปเพื่อเข้าถึงการจัดการกิจกรรม
+                      <strong>{t("howItWorks")}</strong> {t("afterSubmitting")}
                     </p>
                   </div>
                 </CardContent>
@@ -1133,14 +1155,14 @@ export function EventManagementPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5" />
-                    ยืนยันการเข้าถึงของคุณ
+                    {t("verifyYourAccess")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                     <p className="text-sm text-muted-foreground">
-                      OTP ถูกส่งไปยัง <strong>{email}</strong>.
-                      กรุณาตรวจสอบอีเมลของคุณและป้อนรหัส 6 หลักด้านล่าง
+                      {t("otpSentTo")} <strong>{email}</strong>.
+                      {t("checkYourEmail")}
                     </p>
                   </div>
 
@@ -1149,8 +1171,8 @@ export function EventManagementPage() {
                       onComplete={handleOTPVerification}
                       loading={verificationLoading}
                       error={verificationError}
-                      title="Enter Your OTP"
-                      description="Enter the 6-digit OTP sent to your email"
+                      title={t("enterYourOTP")}
+                      description={t("enter6DigitOTP")}
                       showResend={false}
                     />
                   </div>
@@ -1167,9 +1189,9 @@ export function EventManagementPage() {
     <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-4 text-primary">จัดการกิจกรรมของคุณ</h1>
+          <h1 className="text-3xl font-bold mb-4 text-primary">{t("manageEventTitle")}</h1>
           <p className="text-muted-foreground">
-            คุณกำลังจัดการ: <strong>{currentEvent?.title}</strong>
+            {t("managing")}: <strong>{currentEvent?.title}</strong>
           </p>
         </div>
 
@@ -1180,10 +1202,10 @@ export function EventManagementPage() {
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium">
-                  ขั้นตอน {currentStep} จาก {totalSteps}
+                  {t("step")} {currentStep} {t("of")} {totalSteps}
                 </span>
                 <span className="text-sm text-muted-foreground">
-                  {Math.round((currentStep / totalSteps) * 100)}% เสร็จสิ้น
+                  {Math.round((currentStep / totalSteps) * 100)}% {t("completed")}
                 </span>
               </div>
               <Progress value={(currentStep / totalSteps) * 100} className="h-2" />
@@ -1210,7 +1232,7 @@ export function EventManagementPage() {
                     className="flex items-center gap-2"
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    ก่อนหน้า
+                    {t("previous")}
                   </Button>
                   
                   {currentStep === totalSteps ? (
@@ -1219,14 +1241,14 @@ export function EventManagementPage() {
                       className="flex items-center gap-2"
                     >
                       <Save className="h-4 w-4" />
-                      บันทึกการเปลี่ยนแปลง
+                      {t("saveChanges")}
                     </Button>
                   ) : (
                     <Button
                       onClick={nextStep}
                       className="flex items-center gap-2"
                     >
-                      ถัดไป
+                      {t("next")}
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   )}
@@ -1240,74 +1262,403 @@ export function EventManagementPage() {
                 onClick={handleCancelEdit}
                 className="flex-1"
               >
-                ยกเลิก
+                {t("cancel")}
               </Button>
             </div>
           </div>
         ) : (
-          // View mode
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Event Details */}
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Edit className="h-5 w-5" />
-                    รายละเอียดกิจกรรม
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {renderViewMode()}
-                </CardContent>
-              </Card>
-            </div>
 
-            {/* Management Actions */}
-            <div>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Lock className="h-5 w-5" />
-                    การดำเนินการจัดการ
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y4">
-                  <Button
-                    className="w-full flex items-center gap-2"
-                    variant="destructive"
-                    onClick={handleDeleteEvent}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    ลบกิจกรรม
-                  </Button>
+          // View mode with tabs
+          <Tabs defaultValue="details" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="details">Event Details</TabsTrigger>
+              <TabsTrigger value="layout">Layout Editor</TabsTrigger>
+              <TabsTrigger value="actions">Actions</TabsTrigger>
+            </TabsList>
 
-                  <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                    <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">หมายเหตุสำคัญ:</h4>
-                    <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-                      <li>• การเปลี่ยนแปลงกิจกรรมจะถูกบันทึกในเครื่องในเดโมนี้</li>
-                      <li>• การลบกิจกรรมไม่สามารถยกเลิกได้</li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5" />
-                    ข้อมูลกิจกรรม
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <p><strong>ID:</strong> {currentEvent?.id}</p>
-                    <p><strong>สถานะ:</strong> {currentEvent?.status}</p>
-                    <p><strong>แนะนำ:</strong> {currentEvent?.featured ? 'ใช่' : 'ไม่'}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+            <TabsContent value="details">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Event Details */}
+                <div className="lg:col-span-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Edit className="h-5 w-5" />
+                        Event Details
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {renderViewMode()}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Event Information */}
+                <div>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5" />
+                        Event Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 text-sm">
+                        <p><strong>ID:</strong> {currentEvent?.id}</p>
+                        <p><strong>Status:</strong> {currentEvent?.status}</p>
+                        <p><strong>Featured:</strong> {currentEvent?.featured ? 'Yes' : 'No'}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="layout" className="h-[calc(100vh-200px)] -mx-24">
+              <div className="h-full flex">
+                {/* Left Toolbar */}
+                <LayoutToolbar
+                  onSave={async () => {
+                    console.log('💾 Save layout clicked');
+                    
+                    if (currentEvent) {
+                      try {
+                        // Get all custom heading fields from fieldValues and merge them into the event
+                        const customHeadingFields = Object.keys(fieldValues).filter(key => 
+                          key.startsWith('customheading_') && !key.endsWith('_name')
+                        );
+                        
+                        let updatedEvent = { ...currentEvent };
+                        
+                        // First, remove all existing custom heading fields from the event
+                        // We need to check both old ID-based fields and new name-based fields
+                        Object.keys(updatedEvent).forEach(key => {
+                          if (key.startsWith('customheading_') || 
+                              (typeof updatedEvent[key] === 'object' && Array.isArray(updatedEvent[key]) && 
+                               !['tags', 'requirements', 'speakers', 'tracks', 'activities'].includes(key))) {
+                            delete updatedEvent[key];
+                            console.log(`🗑️ Removed existing custom heading field: ${key}`);
+                          }
+                        });
+                        
+                        // Then, add only the fields that exist in fieldValues
+                        customHeadingFields.forEach(fieldName => {
+                          const fieldValue = fieldValues[fieldName];
+                          const fieldNameValue = fieldValues[`${fieldName}_name`] || 'Custom Heading';
+                          
+                          if (fieldValue !== undefined && fieldValue.trim() !== '') {
+                            // Convert string to array format
+                            const arrayValue = fieldValue.split('\n').filter(item => item.trim() !== '');
+                            
+                            // Use the user-defined field name as the key instead of the ID
+                            const cleanFieldName = fieldNameValue.toLowerCase().replace(/[^a-z0-9]/g, '');
+                            updatedEvent = {
+                              ...updatedEvent,
+                              [cleanFieldName]: arrayValue
+                            };
+                            console.log(`📝 Added custom heading field: ${cleanFieldName} (${fieldNameValue}) = ${JSON.stringify(arrayValue)}`);
+                          }
+                        });
+                        
+                        // Clean up fieldValues to remove deleted custom heading fields
+                        const cleanedFieldValues = { ...fieldValues };
+                        Object.keys(cleanedFieldValues).forEach(key => {
+                          if (key.startsWith('customheading_') && !customHeadingFields.includes(key) && !key.endsWith('_name')) {
+                            delete cleanedFieldValues[key];
+                            delete cleanedFieldValues[`${key}_name`];
+                            console.log(`🧹 Cleaned up deleted field from fieldValues: ${key}`);
+                          }
+                        });
+                        setFieldValues(cleanedFieldValues);
+                        
+                        // Update the event in the API
+                        await eventService.updateEventInAPI(currentEvent.id, updatedEvent);
+                        setCurrentEvent(updatedEvent);
+                        
+                        // Show success message
+                        alert('Layout saved successfully!');
+                        console.log('✅ Layout saved to API');
+                      } catch (error) {
+                        console.error('❌ Error saving layout:', error);
+                        alert('Error saving layout. Please try again.');
+                      }
+                    }
+                  }}
+                  onReset={() => {
+                    console.log('Reset layout');
+                  }}
+                  onAddHeading={async () => {
+                    console.log('🔍 onAddHeading clicked');
+                    console.log('currentEvent:', currentEvent);
+                    
+                    if (currentEvent) {
+                      try {
+                        // Generate unique ID for the custom textfield
+                        const fieldId = `customheading_${Date.now()}`;
+                        const fieldName = 'Custom Heading';
+                        const cleanFieldName = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        
+                        // Add to currentEvent as an array field with clean name
+                        const updatedEvent = {
+                          ...currentEvent,
+                          [cleanFieldName]: [''] // Start with empty array
+                        };
+                        
+                        // Update the event in the API immediately
+                        await eventService.updateEventInAPI(currentEvent.id, updatedEvent);
+                        setCurrentEvent(updatedEvent);
+                        
+                        // Add to fieldValues for editing
+                        setFieldValues(prev => ({
+                          ...prev,
+                          [fieldId]: '',
+                          [`${fieldId}_name`]: fieldName
+                        }));
+                        
+                        console.log('✅ Added new heading field to API:', cleanFieldName);
+                      } catch (error) {
+                        console.error('❌ Error adding heading field:', error);
+                        alert('Error adding heading field. Please try again.');
+                      }
+                    } else {
+                      console.log('❌ Missing currentEvent');
+                    }
+                  }}
+                  onAddTags={() => {
+                    console.log('🔍 onAddTags clicked');
+                    if (currentEvent) {
+                      // Check if tags field exists in event object
+                      const hasTagsField = 'tags' in currentEvent;
+                      
+                      if (hasTagsField) {
+                        // Update existing tags in event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          tags: [...(currentEvent.tags || []), 'new tag']
+                        });
+                        
+                        // Update the event in the current state
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Updated existing tags field in event object');
+                      } else {
+                        // Add new tags field to event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          tags: ['tag1', 'tag2', 'tag3']
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Added new tags field to event object');
+                      }
+                    }
+                  }}
+                  onAddRequirements={() => {
+                    console.log('🔍 onAddRequirements clicked');
+                    if (currentEvent) {
+                      // Check if requirements field exists in event object
+                      const hasRequirementsField = 'requirements' in currentEvent;
+                      
+                      if (hasRequirementsField) {
+                        // Update existing requirements in event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          requirements: [...(currentEvent.requirements || []), 'new requirement']
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Updated existing requirements field in event object');
+                      } else {
+                        // Add new requirements field to event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          requirements: ['requirement1', 'requirement2', 'requirement3']
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Added new requirements field to event object');
+                      }
+                    }
+                  }}
+                  onAddSpeakers={() => {
+                    console.log('🔍 onAddSpeakers clicked');
+                    if (currentEvent) {
+                      // Check if speakers field exists in event object
+                      const hasSpeakersField = 'speakers' in currentEvent;
+                      
+                      if (hasSpeakersField) {
+                        // Update existing speakers in event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          speakers: [...(currentEvent.speakers || []), {
+                            name: 'Speaker Name',
+                            title: 'Speaker Title',
+                            company: 'Company Name',
+                            bio: 'Speaker bio information',
+                            image: ''
+                          }]
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Updated existing speakers field in event object');
+                      } else {
+                        // Add new speakers field to event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          speakers: [{
+                            name: 'Speaker Name',
+                            title: 'Speaker Title',
+                            company: 'Company Name',
+                            bio: 'Speaker bio information',
+                            image: ''
+                          }]
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Added new speakers field to event object');
+                      }
+                    }
+                  }}
+                  onAddTracks={() => {
+                    console.log('🔍 onAddTracks clicked');
+                    if (currentEvent) {
+                      // Check if tracks field exists in event object
+                      const hasTracksField = 'tracks' in currentEvent;
+                      
+                      if (hasTracksField) {
+                        // Update existing tracks in event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          tracks: [...(currentEvent.tracks || []), 'new track']
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Updated existing tracks field in event object');
+                      } else {
+                        // Add new tracks field to event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          tracks: ['track1', 'track2', 'track3']
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Added new tracks field to event object');
+                      }
+                    }
+                  }}
+                  onAddActivities={() => {
+                    console.log('🔍 onAddActivities clicked');
+                    if (currentEvent) {
+                      // Check if activities field exists in event object
+                      const hasActivitiesField = 'activities' in currentEvent;
+                      
+                      if (hasActivitiesField) {
+                        // Update existing activities in event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          activities: [...(currentEvent.activities || []), 'new activity']
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Updated existing activities field in event object');
+                      } else {
+                        // Add new activities field to event object
+                        const updatedEvent = Object.assign({}, currentEvent!, {
+                          activities: ['activity1', 'activity2', 'activity3']
+                        });
+                        
+                        setCurrentEvent(updatedEvent);
+                        console.log('✅ Added new activities field to event object');
+                      }
+                    }
+                  }}
+                />
+                
+                {/* Main Content */}
+                <Card className="h-full flex-1">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Layout className="h-5 w-5" />
+                      Layout Editor
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="h-full p-0 overflow-y-auto">
+                    <LayoutEditor
+                      eventId={eventId}
+                      currentEvent={currentEvent || undefined}
+                      currentLayout={layoutConfig || undefined}
+                      fieldValues={fieldValues}
+                      setFieldValues={handleSetFieldValues}
+                      onLayoutChange={(layout) => {
+                        setLayoutConfig(layout);
+                      }}
+                      onUpdateEvent={async (updatedEvent) => {
+                        setCurrentEvent(updatedEvent);
+                        
+                        // Update the event in the API immediately for custom heading fields
+                        try {
+                          await eventService.updateEventInAPI(eventId, updatedEvent);
+                          console.log('✅ Event updated in API:', updatedEvent);
+                        } catch (error) {
+                          console.error('❌ Failed to update event in API:', error);
+                        }
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="actions">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Management Actions */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Lock className="h-5 w-5" />
+                      Management Actions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Button 
+                      className="w-full flex items-center gap-2" 
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <Edit className="h-4 w-4" />
+                      Edit Event
+                    </Button>
+                    
+                    <Button 
+                      className="w-full flex items-center gap-2" 
+                      variant="destructive"
+                      onClick={handleDeleteEvent}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete Event
+                    </Button>
+
+                    <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                      <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">Important Notes:</h4>
+                      <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                        <li>• Event changes are saved via API</li>
+                        <li>• Deleting an event cannot be undone</li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Event Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5" />
+                      Event Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm">
+                      <p><strong>ID:</strong> {currentEvent?.id}</p>
+                      <p><strong>Status:</strong> {currentEvent?.status}</p>
+                      <p><strong>Featured:</strong> {currentEvent?.featured ? 'Yes' : 'No'}</p>
+                      <p><strong>Layout Config:</strong> {layoutConfig ? 'Enabled' : 'Default'}</p>
+                      <p><strong>Custom Fields:</strong> {layoutConfig?.customFields?.length || 0}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
+
         )}
 
         <div className="mt-8 text-center">
@@ -1325,7 +1676,7 @@ export function EventManagementPage() {
               setCurrentStep(1);
             }}
           >
-            ออกจากโหมดการจัดการ
+            {t("exitManagementMode")}
           </Button>
         </div>
       </div>
