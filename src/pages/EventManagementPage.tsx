@@ -10,10 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OTPInput } from "@/components/common/OTPInput";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+
 import { eventService, EventData, LayoutConfig } from "@/services/eventService";
 import { Lock, Edit, Trash2, Search, Shield, Mail, Send, CheckCircle, Calendar, MapPin, Users, DollarSign, Save, ChevronLeft, ChevronRight, Plus, Ticket, RefreshCw, Layout } from "lucide-react";
 import LayoutEditor from "@/components/layout/LayoutEditor";
 import LayoutToolbar from "@/components/layout/LayoutToolbar";
+
 
 // EventData is imported from eventService
 
@@ -57,8 +59,8 @@ export function EventManagementPage() {
   const handleRequestOTP = async () => {
     if (!eventId || !email) {
       toast({
-        title: "Missing Information",
-        description: "Please enter Event ID and Email",
+        title: t("incompleteData"),
+        description: t("enterEventIdEmail"),
         variant: "destructive",
       });
       return;
@@ -71,8 +73,8 @@ export function EventManagementPage() {
       const event = await eventService.getEventById(eventId);
       if (!event) {
         toast({
-          title: "Event Not Found",
-          description: "No event found with this ID",
+          title: t("eventNotFound"),
+          description: t("eventNotFoundDesc"),
           variant: "destructive",
         });
         setRequestLoading(false);
@@ -87,21 +89,21 @@ export function EventManagementPage() {
         setOtpRequested(true);
         setActiveTab("verify");
         toast({
-          title: "OTP Requested",
-          description: `OTP has been sent to ${email}. Please check your email.`,
+          title: t("otpRequested"),
+          description: `${t("otpSentTo")} ${email}. ${t("checkEmailOTP")}.`,
         });
       } else {
         toast({
-          title: "OTP Request Failed",
-          description: "Unable to generate OTP. Please check your Event ID and Email.",
+          title: t("otpRequestFailed"),
+          description: t("otpRequestFailedDesc"),
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error('OTP request error:', error);
       toast({
-        title: "Error",
-        description: "An error occurred while requesting OTP",
+        title: t("error"),
+        description: t("otpRequestError"),
         variant: "destructive",
       });
     } finally {
@@ -112,7 +114,7 @@ export function EventManagementPage() {
   // Verify OTP and load event
   const handleOTPVerification = async (inputOtp: string) => {
     if (!eventId || !email) {
-      setVerificationError("Please enter Event ID and Email");
+      setVerificationError(t("enterEventIdEmail"));
       return;
     }
 
@@ -139,18 +141,18 @@ export function EventManagementPage() {
           // Initialize layout config
           setLayoutConfig(event.layoutConfig || null);
           toast({
-            title: "Verification Successful",
-            description: "You can now manage your event",
+            title: t("verificationSuccess"),
+            description: t("manageEventAccess"),
           });
         } else {
-          setVerificationError("Event not found");
+          setVerificationError(t("eventNotFound"));
         }
       } else {
-        setVerificationError("Invalid OTP or unauthorized access");
+        setVerificationError(t("invalidOTP"));
       }
     } catch (error) {
       console.error('OTP verification error:', error);
-      setVerificationError("Verification failed. Please try again.");
+      setVerificationError(t("verificationFailed"));
     } finally {
       setVerificationLoading(false);
     }
@@ -160,15 +162,15 @@ export function EventManagementPage() {
   const handleDeleteEvent = async () => {
     if (!currentEvent || !eventId || !email) return;
 
-    const confirmed = window.confirm("Are you sure you want to delete this event? This action cannot be undone.");
+    const confirmed = window.confirm(t("confirmDelete"));
     if (!confirmed) return;
 
     try {
       const success = await eventService.deleteEvent(eventId, "", email);
       if (success) {
         toast({
-          title: "Event Deleted",
-          description: "Your event has been successfully deleted",
+          title: t("eventDeleted"),
+          description: t("eventDeletedDesc"),
         });
         // Reset state
         setIsVerified(false);
@@ -180,16 +182,16 @@ export function EventManagementPage() {
         setOtpRequested(false);
       } else {
         toast({
-          title: "Delete Failed",
-          description: "Failed to delete event. Please try again.",
+          title: t("deleteFailed"),
+          description: t("failedToDelete"),
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error('Delete error:', error);
       toast({
-        title: "Error",
-        description: "An error occurred while deleting the event",
+        title: t("error"),
+        description: t("deleteError"),
         variant: "destructive",
       });
     }
@@ -285,6 +287,50 @@ export function EventManagementPage() {
       price: ticketToDuplicate.price
     };
     setTickets(prev => [...prev, newTicket]);
+  };
+
+  const handleTimeIconClick = (inputId: string) => {
+    const input = document.getElementById(inputId) as HTMLInputElement;
+    if (input) {
+      input.focus();
+      input.click();
+      // For better browser support
+      if (input.showPicker) {
+        input.showPicker();
+      } else {
+        // Fallback for browsers that don't support showPicker
+        input.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      }
+    }
+  };
+
+  // Convert 24-hour time to 12-hour AM/PM format
+  const formatTime12Hour = (time24: string) => {
+    if (!time24) return '';
+    const [hours, minutes] = time24.split(':');
+    const hour24 = parseInt(hours, 10);
+    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+    const ampm = hour24 >= 12 ? 'PM' : 'AM';
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  // Convert 12-hour AM/PM format to 24-hour format
+  const formatTime24Hour = (time12: string) => {
+    if (!time12) return '';
+    const timeRegex = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i;
+    const match = time12.match(timeRegex);
+    if (!match) return time12; // Return as-is if format doesn't match
+    
+    let [, hours, minutes, ampm] = match;
+    let hour24 = parseInt(hours, 10);
+    
+    if (ampm.toUpperCase() === 'AM') {
+      if (hour24 === 12) hour24 = 0;
+    } else {
+      if (hour24 !== 12) hour24 += 12;
+    }
+    
+    return `${hour24.toString().padStart(2, '0')}:${minutes}`;
   };
 
   // Initialize tickets from event pricing when editing starts
@@ -392,8 +438,8 @@ export function EventManagementPage() {
         setIsEditing(false);
         setCurrentStep(1);
         toast({
-          title: "Event Updated",
-          description: "Your event has been successfully updated",
+          title: t("eventUpdated"),
+          description: t("eventUpdatedDesc"),
         });
       } else {
         throw new Error('Update failed');
@@ -401,8 +447,8 @@ export function EventManagementPage() {
     } catch (error) {
       console.error('❌ Save error:', error);
       toast({
-        title: "Error",
-        description: "Failed to save event changes",
+        title: t("error"),
+        description: t("failedToUpdate"),
         variant: "destructive",
       });
     }
@@ -432,10 +478,10 @@ export function EventManagementPage() {
 
   // Step titles
   const stepTitles = [
-    "Basic Information",
-    "Schedule",
-    "Location",
-    "Capacity & Pricing"
+    t("basicInformation"),
+    t("schedule"),
+    t("location"),
+    t("capacityAndPricing")
   ];
 
   // Render step content for editing
@@ -447,7 +493,7 @@ export function EventManagementPage() {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="title">Event Title</Label>
+              <Label htmlFor="title">{t("eventTitle")}</Label>
               <Input
                 id="title"
                 value={editedEvent.title || ''}
@@ -457,7 +503,7 @@ export function EventManagementPage() {
             </div>
             
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t("description")}</Label>
               <Textarea
                 id="description"
                 value={editedEvent.description || ''}
@@ -469,7 +515,7 @@ export function EventManagementPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category">{t("category")}</Label>
                 <Input
                   id="category"
                   value={editedEvent.category || ''}
@@ -479,7 +525,7 @@ export function EventManagementPage() {
               </div>
               
               <div>
-                <Label htmlFor="organizer">Organizer</Label>
+                <Label htmlFor="organizer">{t("organizer")}</Label>
                 <Input
                   id="organizer"
                   value={editedEvent.organizer.name || ''}
@@ -496,49 +542,153 @@ export function EventManagementPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="startDate">Start Date</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={editedEvent.schedule.startDate || ''}
-                  onChange={(e) => handleNestedChange('schedule', 'startDate', e.target.value)}
-                  className="mt-1"
-                />
+                <Label htmlFor="startDate">{t("startDate")}</Label>
+                <div className="relative mt-1">
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={editedEvent.schedule.startDate || ''}
+                    onChange={(e) => handleNestedChange('schedule', 'startDate', e.target.value)}
+                    onClick={() => handleTimeIconClick('startDate')}
+                    className="w-full cursor-pointer pr-12 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden [&::-webkit-clear-button]:hidden"
+                    style={{ colorScheme: 'light' }}
+                  />
+                  <div
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                    onClick={() => handleTimeIconClick('startDate')}
+                  >
+                    <Calendar className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                  </div>
+                </div>
               </div>
               
               <div>
-                <Label htmlFor="startTime">Start Time</Label>
-                <Input
-                  id="startTime"
-                  type="time"
-                  value={editedEvent.schedule.startTime || ''}
-                  onChange={(e) => handleNestedChange('schedule', 'startTime', e.target.value)}
-                  className="mt-1"
-                />
+                <Label htmlFor="startTime">{t("startTime")}</Label>
+                <div className="relative mt-1">
+                  <Input
+                    id="startTime"
+                    type="text"
+                    placeholder="h:mm AM/PM"
+                    value={formatTime12Hour(editedEvent.schedule.startTime || '')}
+                    onChange={(e) => {
+                      const time24 = formatTime24Hour(e.target.value);
+                      handleNestedChange('schedule', 'startTime', time24);
+                    }}
+                    onClick={() => {
+                      const picker = document.getElementById('startTimePicker') as HTMLInputElement;
+                      if (picker) {
+                        picker.focus();
+                        picker.click();
+                        if (picker.showPicker) {
+                          picker.showPicker();
+                        }
+                      }
+                    }}
+                    className="w-full pr-12 cursor-pointer"
+                  />
+                  {/* Hidden time input for picker */}
+                  <input
+                    id="startTimePicker"
+                    type="time"
+                    value={editedEvent.schedule.startTime || ''}
+                    onChange={(e) => {
+                      handleNestedChange('schedule', 'startTime', e.target.value);
+                    }}
+                    className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ zIndex: 10 }}
+                  />
+                  <div
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                    onClick={() => {
+                      const picker = document.getElementById('startTimePicker') as HTMLInputElement;
+                      if (picker) {
+                        picker.focus();
+                        picker.click();
+                        if (picker.showPicker) {
+                          picker.showPicker();
+                        }
+                      }
+                    }}
+                  >
+                    <Clock className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                  </div>
+                </div>
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="endDate">End Date</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={editedEvent.schedule.endDate || ''}
-                  onChange={(e) => handleNestedChange('schedule', 'endDate', e.target.value)}
-                  className="mt-1"
-                />
+                <Label htmlFor="endDate">{t("endDate")}</Label>
+                <div className="relative mt-1">
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={editedEvent.schedule.endDate || ''}
+                    onChange={(e) => handleNestedChange('schedule', 'endDate', e.target.value)}
+                    onClick={() => handleTimeIconClick('endDate')}
+                    className="w-full cursor-pointer pr-12 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden [&::-webkit-clear-button]:hidden"
+                    style={{ colorScheme: 'light' }}
+                  />
+                  <div
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                    onClick={() => handleTimeIconClick('endDate')}
+                  >
+                    <Calendar className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                  </div>
+                </div>
               </div>
               
               <div>
-                <Label htmlFor="endTime">End Time</Label>
-                <Input
-                  id="endTime"
-                  type="time"
-                  value={editedEvent.schedule.endTime || ''}
-                  onChange={(e) => handleNestedChange('schedule', 'endTime', e.target.value)}
-                  className="mt-1"
-                />
+                <Label htmlFor="endTime">{t("endTime")}</Label>
+                <div className="relative mt-1">
+                  <Input
+                    id="endTime"
+                    type="text"
+                    placeholder="h:mm AM/PM"
+                    value={formatTime12Hour(editedEvent.schedule.endTime || '')}
+                    onChange={(e) => {
+                      const time24 = formatTime24Hour(e.target.value);
+                      handleNestedChange('schedule', 'endTime', time24);
+                    }}
+                    onClick={() => {
+                      const picker = document.getElementById('endTimePicker') as HTMLInputElement;
+                      if (picker) {
+                        picker.focus();
+                        picker.click();
+                        if (picker.showPicker) {
+                          picker.showPicker();
+                        }
+                      }
+                    }}
+                    className="w-full pr-12 cursor-pointer"
+                  />
+                  {/* Hidden time input for picker */}
+                  <input
+                    id="endTimePicker"
+                    type="time"
+                    value={editedEvent.schedule.endTime || ''}
+                    onChange={(e) => {
+                      handleNestedChange('schedule', 'endTime', e.target.value);
+                    }}
+                    className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ zIndex: 10 }}
+                  />
+                  <div
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                    onClick={() => {
+                      const picker = document.getElementById('endTimePicker') as HTMLInputElement;
+                      if (picker) {
+                        picker.focus();
+                        picker.click();
+                        if (picker.showPicker) {
+                          picker.showPicker();
+                        }
+                      }
+                    }}
+                  >
+                    <Clock className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -548,55 +698,58 @@ export function EventManagementPage() {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="locationType">Location Type</Label>
-              <Select 
-                value={editedEvent.location.type || ''} 
+              <Label htmlFor="locationType">{t("locationType")}</Label>
+              <Select
+                value={editedEvent.location.type || ''}
                 onValueChange={(value) => handleNestedChange('location', 'type', value)}
               >
                 <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select location type" />
+                  <SelectValue placeholder={t("selectLocationType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="onsite">Onsite</SelectItem>
-                  <SelectItem value="online">Online</SelectItem>
-                  <SelectItem value="hybrid">Hybrid</SelectItem>
+                  <SelectItem value="onsite">{t("onsite")}</SelectItem>
+                  <SelectItem value="online">{t("online")}</SelectItem>
+                  <SelectItem value="hybrid">{t("hybrid")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             {editedEvent.location.type !== 'online' && (
               <div>
-                <Label htmlFor="venue">Venue</Label>
+                <Label htmlFor="venue">{t("venue")}</Label>
                 <Input
                   id="venue"
                   value={editedEvent.location.venue || ''}
                   onChange={(e) => handleNestedChange('location', 'venue', e.target.value)}
                   className="mt-1"
+                  placeholder={t("enterVenueName")}
                 />
               </div>
             )}
             
             {editedEvent.location.type !== 'online' && (
               <div>
-                <Label htmlFor="address">Address</Label>
+                <Label htmlFor="address">{t("address")}</Label>
                 <Textarea
                   id="address"
                   value={editedEvent.location.address || ''}
                   onChange={(e) => handleNestedChange('location', 'address', e.target.value)}
                   className="w-full min-h-[80px] mt-1"
                   rows={2}
+                  placeholder={t("enterFullAddress")}
                 />
               </div>
             )}
             
             {editedEvent.location.type !== 'onsite' && (
               <div>
-                <Label htmlFor="onlineLink">Online Link</Label>
+                <Label htmlFor="onlineLink">{t("onlineLink")}</Label>
                 <Input
                   id="onlineLink"
                   value={editedEvent.location.onlineLink || ''}
                   onChange={(e) => handleNestedChange('location', 'onlineLink', e.target.value)}
                   className="mt-1"
+                  placeholder={t("enterOnlineLink")}
                 />
               </div>
             )}
@@ -608,7 +761,7 @@ export function EventManagementPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="maxCapacity">Max Capacity</Label>
+                <Label htmlFor="maxCapacity">{t("maxCapacity")}</Label>
                 <Input
                   id="maxCapacity"
                   type="number"
@@ -619,7 +772,7 @@ export function EventManagementPage() {
               </div>
               
               <div>
-                <Label htmlFor="registered">Registered</Label>
+                <Label htmlFor="registered">{t("registered")}</Label>
                 <Input
                   id="registered"
                   type="number"
@@ -630,7 +783,7 @@ export function EventManagementPage() {
               </div>
               
               <div>
-                <Label htmlFor="available">Available</Label>
+                <Label htmlFor="available">{t("available")}</Label>
                 <Input
                   id="available"
                   type="number"
@@ -642,7 +795,7 @@ export function EventManagementPage() {
             </div>
             
             <div>
-              <Label htmlFor="currency">Currency</Label>
+              <Label htmlFor="currency">{t("currency")}</Label>
               <Input
                 id="currency"
                 value={editedEvent.pricing.currency || ''}
@@ -654,7 +807,7 @@ export function EventManagementPage() {
             {/* Dynamic Ticket Types */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label className="text-lg font-semibold">Ticket Types</Label>
+                <Label className="text-lg font-semibold">{t("ticketTypes")}</Label>
                 <div className="flex gap-2">
                   <Button
                     type="button"
@@ -664,7 +817,7 @@ export function EventManagementPage() {
                     className="flex items-center gap-2"
                   >
                     <Plus className="h-4 w-4" />
-                    Add Ticket Type
+                    {t("addTicketType")}
                   </Button>
                   {tickets.length > 0 && (
                     <>
@@ -674,10 +827,10 @@ export function EventManagementPage() {
                         variant="outline"
                         size="sm"
                         className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
-                        title="Reset to original pricing"
+                        title={t("resetToOriginal")}
                       >
                         <RefreshCw className="h-4 w-4" />
-                        Reset
+                        {t("reset")}
                       </Button>
                       <Button
                         type="button"
@@ -685,10 +838,10 @@ export function EventManagementPage() {
                         variant="outline"
                         size="sm"
                         className="flex items-center gap-2 text-destructive hover:text-destructive"
-                        title="Clear all tickets"
+                        title={t("clearAllTickets")}
                       >
                         <Trash2 className="h-4 w-4" />
-                        Clear All
+                        {t("clear")}
                       </Button>
                     </>
                   )}
@@ -698,15 +851,15 @@ export function EventManagementPage() {
               {tickets.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Ticket className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No ticket types added yet</p>
-                  <p className="text-sm">Click "Add Ticket Type" to create your first ticket</p>
+                  <p>{t("noTicketsFound")}</p>
+                  <p className="text-sm">{t("addTicketTypeToSet")}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {tickets.map((ticket, index) => (
                     <Card key={ticket.type} className="p-4">
                       <div className="flex items-start justify-between mb-4">
-                        <h4 className="font-medium">Ticket #{index + 1}</h4>
+                        <h4 className="font-medium">{t("ticket")} #{index + 1}</h4>
                         <div className="flex gap-1">
                           <Button
                             type="button"
@@ -714,7 +867,7 @@ export function EventManagementPage() {
                             variant="ghost"
                             size="sm"
                             className="text-blue-600 hover:text-blue-700"
-                            title="Duplicate ticket"
+                            title={t("copy")}
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -724,7 +877,7 @@ export function EventManagementPage() {
                             variant="ghost"
                             size="sm"
                             className="text-destructive hover:text-destructive"
-                            title="Remove ticket"
+                            title={t("delete")}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -733,10 +886,10 @@ export function EventManagementPage() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor={`ticketName-${index}`}>Ticket Name *</Label>
+                          <Label htmlFor={`ticketName-${index}`}>{t("ticketName")} *</Label>
                           <Input
                             id={`ticketName-${index}`}
-                            placeholder="e.g., Early Bird, VIP, Student"
+                            placeholder={t("egEarlyBird")}
                             value={ticket.name}
                             onChange={(e) => updateTicket(index, 'name', e.target.value)}
                             className="mt-2"
@@ -744,11 +897,11 @@ export function EventManagementPage() {
                         </div>
                         
                         <div>
-                          <Label htmlFor={`ticketPrice-${index}`}>Price ({editedEvent.pricing.currency}) *</Label>
+                          <Label htmlFor={`ticketPrice-${index}`}>{t("price")} ({editedEvent.pricing.currency}) *</Label>
                           <Input
                             id={`ticketPrice-${index}`}
                             type="number"
-                            placeholder="0 for free"
+                            placeholder={t("forFree")}
                             value={ticket.price}
                             onChange={(e) => updateTicket(index, 'price', parseFloat(e.target.value) || 0)}
                             className="mt-2"
@@ -757,10 +910,10 @@ export function EventManagementPage() {
                       </div>
                       
                       <div className="mt-4">
-                        <Label htmlFor={`ticketDescription-${index}`}>Description (Optional)</Label>
+                        <Label htmlFor={`ticketDescription-${index}`}>{t("description")} ({t("optional")})</Label>
                         <Textarea
                           id={`ticketDescription-${index}`}
-                          placeholder="Describe what's included in this ticket type"
+                          placeholder={t("explainWhatsIncluded")}
                           value={ticket.description || ''}
                           onChange={(e) => updateTicket(index, 'description', e.target.value)}
                           className="mt-2"
@@ -788,26 +941,26 @@ export function EventManagementPage() {
       <div className="space-y-5">
         {/* Basic Information */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">Basic Information</h3>
+          <h3 className="text-lg font-semibold">{t("basicInfo")}</h3>
           <div className="grid grid-cols-1 gap-3">
             <div>
-              <Label className="text-sm font-medium">Title</Label>
+              <Label className="text-sm font-medium">{t("name")}</Label>
               <p className="text-sm">{currentEvent.title}</p>
             </div>
-            
+
             <div>
-              <Label className="text-sm font-medium">Description</Label>
+              <Label className="text-sm font-medium">{t("description")}</Label>
               <p className="text-sm text-muted-foreground">{currentEvent.description}</p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <Label className="text-sm font-medium">Category</Label>
+                <Label className="text-sm font-medium">{t("category")}</Label>
                 <p className="text-sm">{currentEvent.category}</p>
               </div>
-              
+
               <div>
-                <Label className="text-sm font-medium">Organizer</Label>
+                <Label className="text-sm font-medium">{t("organizer")}</Label>
                 <p className="text-sm">{currentEvent.organizer.name}</p>
               </div>
             </div>
@@ -816,46 +969,46 @@ export function EventManagementPage() {
 
         {/* Schedule */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">Schedule</h3>
+          <h3 className="text-lg font-semibold">{t("schedule")}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <Label className="text-sm font-medium">Start</Label>
-              <p className="text-sm">{currentEvent.schedule.startDate} at {currentEvent.schedule.startTime}</p>
+              <Label className="text-sm font-medium">{t("start")}</Label>
+              <p className="text-sm">{currentEvent.schedule.startDate} {t("at")} {currentEvent.schedule.startTime}</p>
             </div>
-            
+
             <div>
-              <Label className="text-sm font-medium">End</Label>
-              <p className="text-sm">{currentEvent.schedule.endDate} at {currentEvent.schedule.endTime}</p>
+              <Label className="text-sm font-medium">{t("end")}</Label>
+              <p className="text-sm">{currentEvent.schedule.endDate} {t("at")} {currentEvent.schedule.endTime}</p>
             </div>
           </div>
         </div>
 
         {/* Location */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">Location</h3>
+          <h3 className="text-lg font-semibold">{t("location")}</h3>
           <div className="space-y-2">
             <div>
-              <Label className="text-sm font-medium">Type</Label>
+              <Label className="text-sm font-medium">{t("type")}</Label>
               <p className="text-sm capitalize">{currentEvent.location.type}</p>
             </div>
-            
+
             {currentEvent.location.venue && (
               <div>
-                <Label className="text-sm font-medium">Venue</Label>
+                <Label className="text-sm font-medium">{t("venue")}</Label>
                 <p className="text-sm">{currentEvent.location.venue}</p>
               </div>
             )}
-            
+
             {currentEvent.location.address && (
               <div>
-                <Label className="text-sm font-medium">Address</Label>
+                <Label className="text-sm font-medium">{t("address")}</Label>
                 <p className="text-sm text-muted-foreground">{currentEvent.location.address}</p>
               </div>
             )}
-            
+
             {currentEvent.location.onlineLink && (
               <div>
-                <Label className="text-sm font-medium">Online Link</Label>
+                <Label className="text-sm font-medium">{t("onlineLink")}</Label>
                 <p className="text-sm text-muted-foreground">{currentEvent.location.onlineLink}</p>
               </div>
             )}
@@ -864,29 +1017,29 @@ export function EventManagementPage() {
 
         {/* Capacity & Pricing */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">Capacity & Pricing</h3>
+          <h3 className="text-lg font-semibold">{t("capacityAndPricing")}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <Label className="text-sm font-medium">Max Capacity</Label>
+              <Label className="text-sm font-medium">{t("maxCapacity")}</Label>
               <p className="text-sm">{currentEvent.capacity.max}</p>
             </div>
-            
+
             <div>
-              <Label className="text-sm font-medium">Registered</Label>
+              <Label className="text-sm font-medium">{t("registered")}</Label>
               <p className="text-sm">{currentEvent.capacity.registered}</p>
             </div>
-            
+
             <div>
-              <Label className="text-sm font-medium">Available</Label>
+              <Label className="text-sm font-medium">{t("available")}</Label>
               <p className="text-sm">{currentEvent.capacity.available}</p>
             </div>
           </div>
-          
+
           <div className="pt-2">
-            <Label className="text-sm font-medium">Pricing</Label>
+            <Label className="text-sm font-medium">{t("price")}</Label>
             <div className="grid grid-cols-1 gap-2 mt-1">
               <div className="flex justify-between">
-                <span className="text-sm">Currency</span>
+                <span className="text-sm">{t("currency")}</span>
                 <span className="text-sm font-medium">{currentEvent.pricing.currency}</span>
               </div>
               {getPricingFields(currentEvent.pricing).map((field) => (
@@ -900,8 +1053,8 @@ export function EventManagementPage() {
               {getPricingFields(currentEvent.pricing).length === 0 && (
                 <div className="text-sm text-muted-foreground text-center py-4 border border-dashed rounded-lg">
                   <DollarSign className="h-6 w-6 mx-auto mb-2 opacity-50" />
-                  <p>No pricing information available</p>
-                  <p className="text-xs">Add ticket types to set pricing</p>
+                  <p>{t("noPricingInfo")}</p>
+                  <p className="text-xs">{t("addTicketTypeToSet")}</p>
                 </div>
               )}
             </div>
@@ -918,7 +1071,7 @@ export function EventManagementPage() {
           className="w-full mt-4"
         >
           <Edit className="h-4 w-4 mr-2" />
-          Edit Event Details
+          {t("editEvent")}
         </Button>
       </div>
     );
@@ -929,16 +1082,16 @@ export function EventManagementPage() {
       <div className="min-h-screen bg-background py-8">
         <div className="container mx-auto px-4 max-w-2xl">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-4">Event Management</h1>
+            <h1 className="text-3xl font-bold mb-4">{t("eventManagement")}</h1>
             <p className="text-muted-foreground">
-              Enter your event details to manage your event
+              {t("enterEventDetails")}
             </p>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="request">Request OTP</TabsTrigger>
-              <TabsTrigger value="verify" disabled={!otpRequested}>Enter OTP</TabsTrigger>
+              <TabsTrigger value="request">{t("requestOTP")}</TabsTrigger>
+              <TabsTrigger value="verify" disabled={!otpRequested}>{t("enterOTP")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="request" className="space-y-6">
@@ -946,17 +1099,17 @@ export function EventManagementPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Mail className="h-5 w-5" />
-                    Request Management Access
+                    {t("requestAccess")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="eventId">Event ID *</Label>
+                    <Label htmlFor="eventId">{t("enterEventId")} *</Label>
                     <div className="relative mt-2">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="eventId"
-                        placeholder="Enter your event ID"
+                        placeholder={t("enterYourEventId")}
                         value={eventId}
                         onChange={(e) => setEventId(e.target.value)}
                         className="pl-10"
@@ -965,13 +1118,13 @@ export function EventManagementPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="email">Creator Email *</Label>
+                    <Label htmlFor="email">{t("enterCreatorEmail")} *</Label>
                     <div className="relative mt-2">
                       <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="email"
                         type="email"
-                        placeholder="Enter the email used when creating the event"
+                        placeholder={t("enterEmailUsed")}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-10"
@@ -979,20 +1132,18 @@ export function EventManagementPage() {
                     </div>
                   </div>
 
-                  <Button 
+                  <Button
                     onClick={handleRequestOTP}
                     className="w-full flex items-center gap-2"
                     disabled={!eventId || !email || requestLoading}
                   >
-                    {requestLoading ? "Sending OTP..." : "Request OTP"}
+                    {requestLoading ? t("sending") : t("requestOTP")}
                     <Send className="h-4 w-4" />
                   </Button>
 
                   <div className="bg-muted/30 rounded-lg p-4">
                     <p className="text-sm text-muted-foreground">
-                      <strong>How it works:</strong> After submitting your Event ID and email, 
-                      we'll send a 6-digit OTP to your email address. 
-                      Enter that OTP in the next step to access event management.
+                      <strong>{t("howItWorks")}</strong> {t("afterSubmitting")}
                     </p>
                   </div>
                 </CardContent>
@@ -1004,14 +1155,14 @@ export function EventManagementPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5" />
-                    Verify Your Access
+                    {t("verifyYourAccess")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                     <p className="text-sm text-muted-foreground">
-                      OTP has been sent to <strong>{email}</strong>. 
-                      Please check your email and enter the 6-digit code below.
+                      {t("otpSentTo")} <strong>{email}</strong>.
+                      {t("checkYourEmail")}
                     </p>
                   </div>
 
@@ -1020,8 +1171,8 @@ export function EventManagementPage() {
                       onComplete={handleOTPVerification}
                       loading={verificationLoading}
                       error={verificationError}
-                      title="Enter Your OTP"
-                      description="Enter the 6-digit OTP sent to your email"
+                      title={t("enterYourOTP")}
+                      description={t("enter6DigitOTP")}
                       showResend={false}
                     />
                   </div>
@@ -1038,9 +1189,9 @@ export function EventManagementPage() {
     <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-4 text-primary">Manage Your Event</h1>
+          <h1 className="text-3xl font-bold mb-4 text-primary">{t("manageEventTitle")}</h1>
           <p className="text-muted-foreground">
-            You are now managing: <strong>{currentEvent?.title}</strong>
+            {t("managing")}: <strong>{currentEvent?.title}</strong>
           </p>
         </div>
 
@@ -1051,10 +1202,10 @@ export function EventManagementPage() {
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium">
-                  Step {currentStep} of {totalSteps}
+                  {t("step")} {currentStep} {t("of")} {totalSteps}
                 </span>
                 <span className="text-sm text-muted-foreground">
-                  {Math.round((currentStep / totalSteps) * 100)}% complete
+                  {Math.round((currentStep / totalSteps) * 100)}% {t("completed")}
                 </span>
               </div>
               <Progress value={(currentStep / totalSteps) * 100} className="h-2" />
@@ -1081,23 +1232,23 @@ export function EventManagementPage() {
                     className="flex items-center gap-2"
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    Previous
+                    {t("previous")}
                   </Button>
                   
                   {currentStep === totalSteps ? (
-                    <Button 
+                    <Button
                       onClick={handleSaveEvent}
                       className="flex items-center gap-2"
                     >
                       <Save className="h-4 w-4" />
-                      Save Changes
+                      {t("saveChanges")}
                     </Button>
                   ) : (
                     <Button
                       onClick={nextStep}
                       className="flex items-center gap-2"
                     >
-                      Next
+                      {t("next")}
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   )}
@@ -1111,11 +1262,12 @@ export function EventManagementPage() {
                 onClick={handleCancelEdit}
                 className="flex-1"
               >
-                Cancel
+                {t("cancel")}
               </Button>
             </div>
           </div>
         ) : (
+
           // View mode with tabs
           <Tabs defaultValue="details" className="space-y-6">
             <TabsList className="grid w-full grid-cols-3">
@@ -1506,11 +1658,12 @@ export function EventManagementPage() {
               </div>
             </TabsContent>
           </Tabs>
+
         )}
 
         <div className="mt-8 text-center">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => {
               setIsVerified(false);
               setCurrentEvent(null);
@@ -1523,7 +1676,7 @@ export function EventManagementPage() {
               setCurrentStep(1);
             }}
           >
-            Exit Management Mode
+            {t("exitManagementMode")}
           </Button>
         </div>
       </div>

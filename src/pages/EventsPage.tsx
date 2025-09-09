@@ -36,8 +36,8 @@ export function EventsPage() {
         setAllEvents([]);
         setCategories([]);
         toast({
-          title: "Error",
-          description: "Failed to load events. Please try again later.",
+          title: t("error"),
+          description: t("failedToLoad"),
           variant: "destructive",
         });
       } finally {
@@ -67,7 +67,7 @@ export function EventsPage() {
   }, [allEvents, searchQuery, selectedCategory, selectedLocation]);
 
   const categoryOptions = useMemo(() => {
-    const options = [{ value: "all", label: "All Categories" }];
+    const options = [{ value: "all", label: t("all") }];
     if (categories && Array.isArray(categories)) {
       categories.forEach(cat => {
         options.push({ value: cat.id, label: cat.name });
@@ -77,11 +77,11 @@ export function EventsPage() {
   }, [categories]);
 
   const locations = [
-    { value: "all", label: "All Locations" },
-    { value: "bangkok", label: "Bangkok" },
-    { value: "phuket", label: "Phuket" },
-    { value: "chiang mai", label: "Chiang Mai" },
-    { value: "pattaya", label: "Pattaya" },
+    { value: "all", label: t("all") },
+    { value: "bangkok", label: t("bangkok") },
+    { value: "phuket", label: t("phuket") },
+    { value: "chiang mai", label: t("chiangMai") },
+    { value: "pattaya", label: t("pattaya") },
   ];
 
   return (
@@ -91,7 +91,7 @@ export function EventsPage() {
         <div className="container mx-auto px-4">
           <h1 className="text-3xl font-bold mb-4">{t("events")}</h1>
           <p className="text-muted-foreground text-lg">
-            Discover amazing events happening around you
+            {t("eventsPageDesc")}
           </p>
         </div>
       </div>
@@ -123,7 +123,7 @@ export function EventsPage() {
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                       <Input
-                        placeholder="Search events..."
+                        placeholder={t("search")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-10"
@@ -179,7 +179,7 @@ export function EventsPage() {
                       setSelectedLocation("all");
                     }}
                   >
-                    Clear Filters
+                    {t("clear")}
                   </Button>
                 </div>
               </CardContent>
@@ -190,7 +190,7 @@ export function EventsPage() {
           <div className="flex-1">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">
-                {filteredEvents.length} events found
+                {t("eventsFound")}: {filteredEvents.length}
               </h2>
             </div>
 
@@ -213,7 +213,7 @@ export function EventsPage() {
             ) : (
               <div className="text-center py-12">
                 <div className="text-muted-foreground text-lg mb-4">
-                  No events found matching your criteria
+                  {t("noEventsFound")}
                 </div>
                 <Button
                   variant="outline"
@@ -223,7 +223,7 @@ export function EventsPage() {
                     setSelectedLocation("all");
                   }}
                 >
-                  Clear all filters
+                  {t("clear")}
                 </Button>
               </div>
             )}

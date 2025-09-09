@@ -9,9 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, CreditCard, User, Mail, Phone, Building } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { eventService, EventData } from "@/services/eventService";
 
 export function EventRegistrationPage() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -42,8 +44,8 @@ export function EventRegistrationPage() {
       } catch (error) {
         console.error('Error loading event:', error);
         toast({
-          title: "Error",
-          description: "Failed to load event details.",
+          title: t("error"),
+          description: t("failedToLoadEvent"),
           variant: "destructive",
         });
       } finally {
@@ -73,8 +75,8 @@ export function EventRegistrationPage() {
     
     if (!event || !formData.userName || !formData.userEmail || !formData.userPhone || !formData.ticketType) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields.",
+        title: t("error"),
+        description: t("fillRequiredFields"),
         variant: "destructive",
       });
       return;
@@ -104,8 +106,8 @@ export function EventRegistrationPage() {
       
       if (result) {
         toast({
-          title: "Success!",
-          description: "Your registration has been submitted successfully.",
+          title: t("success"),
+          description: t("registrationSubmitted"),
         });
         navigate(`/events/${event.id}`);
       } else {
@@ -114,8 +116,8 @@ export function EventRegistrationPage() {
     } catch (error) {
       console.error('Registration error:', error);
       toast({
-        title: "Error",
-        description: "Failed to submit registration. Please try again.",
+        title: t("error"),
+        description: t("registrationFailed"),
         variant: "destructive",
       });
     } finally {
@@ -135,8 +137,8 @@ export function EventRegistrationPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Event Not Found</h1>
-          <Button onClick={() => navigate('/events')}>Back to Events</Button>
+          <h1 className="text-2xl font-bold mb-4">{t("eventNotFound")}</h1>
+          <Button onClick={() => navigate('/events')}>{t("backToEvents")}</Button>
         </div>
       </div>
     );
@@ -153,9 +155,9 @@ export function EventRegistrationPage() {
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Event
+            {t("backToEvent")}
           </Button>
-          <h1 className="text-3xl font-bold mb-2">Event Registration</h1>
+          <h1 className="text-3xl font-bold mb-2">{t("eventRegistration")}</h1>
           <p className="text-muted-foreground">{event.title}</p>
         </div>
 
@@ -166,35 +168,35 @@ export function EventRegistrationPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="w-5 h-5" />
-                  Registration Details
+                  {t("registrationDetails")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Personal Information */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Personal Information</h3>
-                    
+                    <h3 className="text-lg font-semibold">{t("personalInfo")}</h3>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="userName">Full Name *</Label>
+                        <Label htmlFor="userName">{t("fullName")} *</Label>
                         <Input
                           id="userName"
                           value={formData.userName}
                           onChange={(e) => handleInputChange('userName', e.target.value)}
-                          placeholder="Enter your full name"
+                          placeholder={t("enterFullName")}
                           required
                         />
                       </div>
                       
                       <div>
-                        <Label htmlFor="userEmail">Email Address *</Label>
+                        <Label htmlFor="userEmail">{t("email")} *</Label>
                         <Input
                           id="userEmail"
                           type="email"
                           value={formData.userEmail}
                           onChange={(e) => handleInputChange('userEmail', e.target.value)}
-                          placeholder="Enter your email"
+                          placeholder={t("enterEmail")}
                           required
                         />
                       </div>
@@ -202,23 +204,23 @@ export function EventRegistrationPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="userPhone">Phone Number *</Label>
+                        <Label htmlFor="userPhone">{t("phone")} *</Label>
                         <Input
                           id="userPhone"
                           value={formData.userPhone}
                           onChange={(e) => handleInputChange('userPhone', e.target.value)}
-                          placeholder="Enter your phone number"
+                          placeholder={t("enterPhone")}
                           required
                         />
                       </div>
-                      
+
                       <div>
-                        <Label htmlFor="company">Company/Organization</Label>
+                        <Label htmlFor="company">{t("company")}</Label>
                         <Input
                           id="company"
                           value={formData.company}
                           onChange={(e) => handleInputChange('company', e.target.value)}
-                          placeholder="Enter your company name"
+                          placeholder={t("enterCompany")}
                         />
                       </div>
                     </div>
@@ -228,14 +230,14 @@ export function EventRegistrationPage() {
 
                   {/* Ticket Selection */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Ticket Selection</h3>
-                    
+                    <h3 className="text-lg font-semibold">{t("ticketSelection")}</h3>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="ticketType">Ticket Type *</Label>
+                        <Label htmlFor="ticketType">{t("ticketType")} *</Label>
                         <Select value={formData.ticketType} onValueChange={(value) => handleInputChange('ticketType', value)}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select ticket type" />
+                            <SelectValue placeholder={t("selectTicketType")} />
                           </SelectTrigger>
                           <SelectContent>
                             {Object.entries(event.pricing)
@@ -252,22 +254,22 @@ export function EventRegistrationPage() {
                                 const getDisplayName = (fieldKey: string): string => {
                                   // Predefined mappings for known fields
                                   const fieldMappings: Record<string, string> = {
-                                    'earlyBird': 'Early Bird',
-                                    'fullMarathon': 'Full Marathon (42.195km)',
-                                    'halfMarathon': 'Half Marathon (21.1km)',
-                                    'miniMarathon': 'Mini Marathon (10km)',
-                                    'funRun': 'Fun Run (5km)',
-                                    'member': 'Member Price',
-                                    'general': 'General Admission',
-                                    'premium': 'Premium Ticket',
-                                    'adult': 'Adult Ticket',
-                                    'child': 'Child Ticket',
-                                    'senior': 'Senior Ticket',
-                                    'free': 'Free Entry',
-                                    'regular': 'Regular',
-                                    'student': 'Student',
-                                    'group': 'Group',
-                                    'vip': 'VIP'
+                                    'earlyBird': t("earlyBird"),
+                                    'fullMarathon': t("fullMarathon"),
+                                    'halfMarathon': t("halfMarathon"),
+                                    'miniMarathon': t("miniMarathon"),
+                                    'funRun': t("funRun"),
+                                    'member': t("member"),
+                                    'general': t("general"),
+                                    'premium': t("premium"),
+                                    'adult': t("adult"),
+                                    'child': t("child"),
+                                    'senior': t("senior"),
+                                    'free': t("free"),
+                                    'regular': t("regular"),
+                                    'student': t("student"),
+                                    'group': t("group"),
+                                    'vip': t("vip")
                                   };
                                   
                                   // Return predefined mapping if exists
@@ -296,7 +298,7 @@ export function EventRegistrationPage() {
                       </div>
                       
                       <div>
-                        <Label htmlFor="quantity">Quantity</Label>
+                        <Label htmlFor="quantity">{t("quantity")}</Label>
                         <Select value={formData.quantity.toString()} onValueChange={(value) => handleInputChange('quantity', parseInt(value))}>
                           <SelectTrigger>
                             <SelectValue />
@@ -315,25 +317,25 @@ export function EventRegistrationPage() {
 
                   {/* Additional Information */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Additional Information</h3>
-                    
+                    <h3 className="text-lg font-semibold">{t("additionalInfo")}</h3>
+
                     <div>
-                      <Label htmlFor="dietaryRequirements">Dietary Requirements</Label>
+                      <Label htmlFor="dietaryRequirements">{t("dietaryReq")}</Label>
                       <Input
                         id="dietaryRequirements"
                         value={formData.dietaryRequirements}
                         onChange={(e) => handleInputChange('dietaryRequirements', e.target.value)}
-                        placeholder="Any dietary restrictions or preferences"
+                        placeholder={t("dietaryPlaceholder")}
                       />
                     </div>
-                    
+
                     <div>
-                      <Label htmlFor="notes">Additional Notes</Label>
+                      <Label htmlFor="notes">{t("notes")}</Label>
                       <Textarea
                         id="notes"
                         value={formData.notes}
                         onChange={(e) => handleInputChange('notes', e.target.value)}
-                        placeholder="Any additional information or special requests"
+                        placeholder={t("notesPlaceholder")}
                         rows={3}
                       />
                     </div>
@@ -346,14 +348,14 @@ export function EventRegistrationPage() {
                       onClick={() => navigate(`/events/${event.id}`)}
                       className="flex-1"
                     >
-                      Cancel
+                      {t("cancel")}
                     </Button>
                     <Button
                       type="submit"
                       disabled={submitting}
                       className="flex-1"
                     >
-                      {submitting ? 'Submitting...' : 'Complete Registration'}
+                      {submitting ? t("submitting") : t("completeRegistrationBtn")}
                     </Button>
                   </div>
                 </form>
@@ -367,7 +369,7 @@ export function EventRegistrationPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="w-5 h-5" />
-                  Order Summary
+                  {t("orderSummary")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -375,36 +377,36 @@ export function EventRegistrationPage() {
                   <h4 className="font-semibold">{event.title}</h4>
                   <p className="text-sm text-muted-foreground">{event.organizer.name}</p>
                 </div>
-                
+
                 <Separator />
-                
+
                 {formData.ticketType && (
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span>Ticket Type:</span>
+                      <span>{t("ticketTypeLabel")}</span>
                       <span className="capitalize">{formData.ticketType}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Price per ticket:</span>
+                      <span>{t("pricePerTicket")}</span>
                       <span>{getTicketPrice(formData.ticketType).toLocaleString()} {event.pricing.currency}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Quantity:</span>
+                      <span>{t("quantity")}:</span>
                       <span>{formData.quantity}</span>
                     </div>
-                    
+
                     <Separator />
-                    
+
                     <div className="flex justify-between font-semibold text-lg">
-                      <span>Total:</span>
+                      <span>{t("total")}:</span>
                       <span>{getTotalAmount().toLocaleString()} {event.pricing.currency}</span>
                     </div>
                   </div>
                 )}
-                
+
                 {!formData.ticketType && (
                   <p className="text-muted-foreground text-center py-4">
-                    Please select a ticket type to see pricing
+                    {t("selectTicketFirst")}
                   </p>
                 )}
               </CardContent>

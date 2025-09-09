@@ -57,7 +57,7 @@ export function EventCard({ event, variant = "default" }: EventCardProps) {
         </Badge>
         {(variant === "featured" || event.featured) && (
           <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground">
-            Featured
+            {t("featuredEvents")}
           </Badge>
         )}
       </div>
@@ -77,7 +77,7 @@ export function EventCard({ event, variant = "default" }: EventCardProps) {
           </div>
           <div className="flex items-center text-sm text-muted-foreground">
             <MapPin className="h-4 w-4 mr-2 text-primary" />
-            {event.location.venue || event.location.address || 'Online Event'}
+            {event.location.venue || event.location.address || t("onlineEvent")}
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center text-sm text-muted-foreground">
@@ -95,7 +95,7 @@ export function EventCard({ event, variant = "default" }: EventCardProps) {
       <CardFooter className="p-6 pt-0">
         <Button asChild className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
           <Link to={`/events/${event.id}`}>
-            View Details
+            {t("viewDetails")}
           </Link>
         </Button>
       </CardFooter>

@@ -1,30 +1,32 @@
-# Hackathon Event Email Service
+# บริการส่งอีเมลสำหรับแอปอีเวนต์แฮกกาธอน
 
-This is a simple backend service for sending emails in the Hackathon Event App.
+นี่คือบริการแบ็กเอนด์อย่างง่ายสำหรับส่งอีเมลในแอปอีเวนต์แฮกกาธอน
 
-## Setup
+## การติดตั้งและตั้งค่า
 
-1. Create a `.env` file based on `.env.example`:
-   ```
-   EMAIL_USER=your-email@gmail.com
-   EMAIL_PASS=your-app-password
-   SMTP_HOST=smtp.gmail.com
-   SMTP_PORT=587
-   ```
+### ขั้นตอนที่ 1: สร้างไฟล์ .env
+สร้างไฟล์ `.env` โดยอ้างอิงจาก `.env.example`:
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+```env
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+```
 
-3. Start the server:
-   ```bash
-   npm start
-   ```
+### ขั้นตอนที่ 2: ติดตั้งแพ็กเกจที่จำเป็น
+```bash
+npm install
+```
+
+### ขั้นตอนที่ 3: เริ่มเซิร์ฟเวอร์
+```bash
+npm start
+```
 
 ## API Endpoints
 
-### Send Event ID Email
+### ส่งอีเมลรหัสอีเวนต์
 ```
 POST /send-event-id
 Content-Type: application/json
@@ -38,7 +40,7 @@ Content-Type: application/json
 }
 ```
 
-### Send OTP Email
+### ส่งอีเมล OTP
 ```
 POST /send-otp
 Content-Type: application/json
@@ -51,11 +53,60 @@ Content-Type: application/json
 }
 ```
 
-## Email Configuration
+## การกำหนดค่าอีเมล
 
-For Gmail:
-1. Enable 2-factor authentication
-2. Generate an App Password
-3. Use the App Password as `EMAIL_PASS`
+### สำหรับ Gmail:
+1. เปิดใช้งานการยืนยันตัวตนแบบสองขั้นตอนในบัญชี Google ของคุณ
+2. สร้างรหัสผ่านแอปในการตั้งค่าบัญชี Google
+3. ใช้รหัสผ่านแอปเป็น `EMAIL_PASS` ในไฟล์ `.env`
 
-For other providers, update `SMTP_HOST` and `SMTP_PORT` accordingly.
+### สำหรับผู้ให้บริการอีเมลอื่น:
+อัปเดต `SMTP_HOST` และ `SMTP_PORT` ตามความเหมาะสมสำหรับผู้ให้บริการอีเมลของคุณ
+
+## ฟีเจอร์
+
+- ✅ ส่งอีเมลรหัสอีเวนต์อัตโนมัติหลังจากสร้างอีเวนต์
+- ✅ ส่ง OTP สำหรับการยืนยันตัวตนในการจัดการอีเวนต์
+- ✅ รองรับการตั้งค่า SMTP สำหรับผู้ให้บริการอีเมลต่างๆ
+- ✅ จัดการข้อผิดพลาดและการบันทึกอย่างเหมาะสม
+- ✅ ตรวจสอบการกำหนดค่าอีเมลอัตโนมัติ
+
+## การแก้ไขปัญหา
+
+### ไม่สามารถส่งอีเมลได้
+1. ตรวจสอบว่าการตั้งค่า `.env` ถูกต้อง
+2. ตรวจสอบว่ารหัสผ่านแอปถูกต้อง (สำหรับ Gmail)
+3. ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต
+4. ตรวจสอบไฟร์วอลล์และการตั้งค่าอีเมล
+
+### เซิร์ฟเวอร์ไม่เริ่มทำงาน
+1. ตรวจสอบว่า Node.js ได้รับการติดตั้งแล้ว
+2. ตรวจสอบว่าแพ็กเกจทั้งหมดได้รับการติดตั้งแล้ว (`npm install`)
+3. ตรวจสอบว่าไฟล์ `.env` มีอยู่และถูกต้อง
+
+## การพัฒนา
+
+หากต้องการพัฒนาหรือแก้ไขบริการนี้:
+
+1. แก้ไขไฟล์ `server.js`
+2. ทดสอบการเปลี่ยนแปลงโดยใช้ Postman หรือ curl
+3. ตรวจสอบบันทึกคอนโซลสำหรับข้อผิดพลาด
+
+## ตัวอย่างการใช้งาน
+
+### ทดสอบด้วย curl
+```bash
+curl -X POST http://localhost:3001/send-event-id \
+  -H "Content-Type: application/json" \
+  -d '{
+    "eventId": "test_123",
+    "email": "test@example.com",
+    "eventName": "Test Event",
+    "eventDate": "2025-12-25",
+    "eventLocation": "Bangkok"
+  }'
+```
+
+## ใบอนุญาต
+
+บริการนี้เป็นส่วนหนึ่งของแอปอีเวนต์แฮกกาธอนและอยู่ภายใต้ใบอนุญาตเดียวกัน

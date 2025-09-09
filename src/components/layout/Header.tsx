@@ -20,6 +20,7 @@ export function Header() {
   const navigation = [
     { name: t("home"), href: "/" },
     { name: t("events"), href: "/events" },
+    { name: t("viewTickets"), href: "/view-tickets" },
     { name: t("createEvent"), href: "/create-event" },
     { name: t("manageEvent"), href: "/manage-event" },
   ];
@@ -27,14 +28,12 @@ export function Header() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    // Updated header with horizontal margin to prevent touching edges
+    <header className="sticky top-5 left-2 right-2 z-50 w-[calc(100%-10rem)] mx-auto border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 rounded-3xl ring-2 ring-border/40">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group">
-            <div className="p-2 rounded-lg bg-gradient-primary group-hover:shadow-glow transition-all duration-300">
-              <Calendar className="h-6 w-6 text-primary-foreground" />
-            </div>
             <span className="font-bold text-xl bg-gradient-primary bg-clip-text text-transparent">
               EventHub
             </span>

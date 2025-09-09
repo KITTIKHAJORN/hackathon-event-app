@@ -46,8 +46,8 @@ export function EventDetailPage() {
       } catch (error) {
         console.error('❌ Error loading event:', error);
         toast({
-          title: "Error",
-          description: "Failed to load event details. Please try again later.",
+          title: t("error"),
+          description: t("failedToLoad"),
           variant: "destructive",
         });
       } finally {
@@ -63,7 +63,7 @@ export function EventDetailPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
-          <h1 className="text-2xl font-bold mb-4">Loading Event...</h1>
+          <h1 className="text-2xl font-bold mb-4">{t("loadingEvents")}</h1>
         </div>
       </div>
     );
@@ -73,9 +73,9 @@ export function EventDetailPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Event Not Found</h1>
+          <h1 className="text-2xl font-bold mb-4">{t("eventNotFound")}</h1>
           <Button asChild>
-            <Link to="/events">Back to Events</Link>
+            <Link to="/events">{t("backToEvents")}</Link>
           </Button>
         </div>
       </div>
@@ -120,11 +120,11 @@ export function EventDetailPage() {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/50" />
-        <div className="absolute top-4 left-4">
-          <Button variant="secondary" asChild>
+        <div className="absolute top-14 left-4">
+          <Button asChild>
             <Link to="/events">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Events
+              {t("backToEvents")}
             </Link>
           </Button>
         </div>
@@ -133,7 +133,7 @@ export function EventDetailPage() {
             {event.category}
           </Badge>
           <h1 className="text-4xl font-bold mb-2">{event.title}</h1>
-          <p className="text-lg opacity-90">Organized by {event.organizer.name}</p>
+          <p className="text-lg opacity-90">{t("organizer")}: {event.organizer.name}</p>
         </div>
       </div>
 
@@ -144,16 +144,16 @@ export function EventDetailPage() {
             {/* Event Info */}
             <Card>
               <CardHeader>
-                <CardTitle>Event Details</CardTitle>
+                <CardTitle>{t("eventDetails")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <p className="text-muted-foreground leading-relaxed">
                   {event.description}
                 </p>
-                
+
                 {event.requirements && event.requirements.length > 0 && (
                   <div>
-                    <h4 className="font-semibold mb-2">Requirements</h4>
+                    <h4 className="font-semibold mb-2">{t("requirements")}</h4>
                     <ul className="text-muted-foreground list-disc list-inside space-y-1">
                       {event.requirements.map((req, index) => (
                         <li key={index}>{req}</li>
@@ -225,8 +225,8 @@ export function EventDetailPage() {
                                   )}
                                   {item.distance && (
                                     <p className="text-muted-foreground text-sm">
-                                      Distance: {item.distance}
-                                      {item.startTime && ` • Start: ${item.startTime}`}
+                                      {t("distance")}: {item.distance}
+                                      {item.startTime && ` • ${t("startTime")}: ${item.startTime}`}
                                     </p>
                                   )}
                                 </div>
@@ -303,9 +303,9 @@ export function EventDetailPage() {
                 <div className="flex items-center gap-3">
                   <MapPin className="h-5 w-5 text-primary" />
                   <div>
-                    <div className="font-medium">{event.location.venue || 'Online Event'}</div>
+                    <div className="font-medium">{event.location.venue || t("onlineEvent")}</div>
                     <div className="text-sm text-muted-foreground">
-                      {event.location.address || 'Virtual Event'}
+                      {event.location.address || t("virtualEvent")}
                     </div>
                   </div>
                 </div>
@@ -316,10 +316,10 @@ export function EventDetailPage() {
                   <Users className="h-5 w-5 text-primary" />
                   <div>
                     <div className="font-medium">
-                      {event.capacity.registered}/{event.capacity.max} Attendees
+                      {event.capacity.registered}/{event.capacity.max} {t("attendees")}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {event.capacity.available} spots left
+                      {event.capacity.available} {t("seatsAvailable")}
                     </div>
                   </div>
                 </div>
@@ -341,7 +341,7 @@ export function EventDetailPage() {
                 <div className="flex items-start gap-3">
                   <Building2 className="h-5 w-5 text-primary mt-0.5" />
                   <div className="flex-1">
-                    <div className="font-medium">Organized by</div>
+                    <div className="font-medium">{t("organizer")}</div>
                     <div className="text-sm font-semibold text-primary">
                       {event.organizer.name}
                     </div>
@@ -361,8 +361,8 @@ export function EventDetailPage() {
                 <Separator />
 
                 <div className="space-y-3">
-                  <Button 
-                    className="w-full" 
+                  <Button
+                    className="w-full"
                     size="lg"
                     onClick={() => navigate(`/events/${event.id}/register`)}
                   >
