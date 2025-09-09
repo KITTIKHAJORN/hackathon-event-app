@@ -28,8 +28,9 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-card border-t border-border">
-      <div className="container mx-auto px-4 py-12">
+    // Updated footer with rounded-full styling similar to header but without sticky positioning
+    <footer className="border border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 rounded-full ring-2 ring-border/40 my-4 mx-auto w-[calc(100%-5rem)]">
+      <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
@@ -108,14 +109,11 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-border pt-8 mt-8">
+        <div>
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-muted-foreground">
               © 2024 EventHub. All rights reserved.
             </p>
-            <div className="text-sm text-muted-foreground">
-              Built with ❤️ using React & TypeScript
-            </div>
           </div>
         </div>
       </div>
