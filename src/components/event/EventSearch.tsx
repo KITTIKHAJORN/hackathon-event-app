@@ -74,6 +74,11 @@ export function EventSearch({ searchQuery, onSelect, onClose }: EventSearchProps
     setActiveIndex(index);
   }, []);
 
+  // Handle mouse leave to clear highlighting
+  const handleMouseLeave = useCallback(() => {
+    setActiveIndex(-1);
+  }, []);
+
   // Effect to trigger search when debounced query changes
   useEffect(() => {
     performSearch(debouncedSearchQuery);
@@ -158,7 +163,7 @@ export function EventSearch({ searchQuery, onSelect, onClose }: EventSearchProps
       >
 
 
-        <Command className="rounded-none border-0 pb-3">
+        <Command className="rounded-none border-0 pb-3" shouldFilter={false}>
           <CommandList className="max-h-64 overflow-hidden">
             {isSearching ? (
               <div className="px-3 py-2 text-sm text-muted-foreground">
@@ -171,20 +176,21 @@ export function EventSearch({ searchQuery, onSelect, onClose }: EventSearchProps
             ) : (
               searchResults.map((event, index) => (
                 <CommandItem
-                  key={event.id}
+                  key={`${event.id}-${index}`}
                   ref={(el) => (itemRefs.current[index] = el)}
-                  value={event.title}
+                  value={`search-result-${event.id}-${index}`}
                   onSelect={() => handleSelect(event)}
-                  className={`flex items-center gap-3 px-3 py-2 cursor-pointer border-0 rounded-none ${
+                  onMouseEnter={() => handleMouseEnter(index)}
+                  onMouseLeave={handleMouseLeave}
+                  className={`flex items-center gap-3 px-3 py-2 cursor-pointer border-0 rounded-none transition-colors duration-150 ${
                     activeIndex === index
                       ? 'bg-accent text-accent-foreground'
-                      : 'hover:bg-accent/50'
-                  }`}
+                      : ''
+                  } [&:not([data-selected])]:hover:bg-accent/30`}
                   role="option"
                   aria-selected={activeIndex === index}
                   aria-activedescendant={activeIndex === index ? `event-${event.id}` : undefined}
                   id={`event-${event.id}`}
-                  onMouseEnter={() => handleMouseEnter(index)}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate text-left">{event.title}</div>
