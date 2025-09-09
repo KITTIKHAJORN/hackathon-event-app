@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, MapPin, Users, DollarSign, ChevronLeft, ChevronRight, Upload, Mail, Lock, CheckCircle, FileText, Image, Plus, Trash2, Ticket } from "lucide-react";
+import { Calendar, MapPin, Users, DollarSign, ChevronLeft, ChevronRight, Upload, Mail, Lock, CheckCircle, FileText, Image, Plus, Trash2, Ticket, Clock } from "lucide-react";
 import { eventService, CreateEventRequest } from "@/services/eventService";
 import { useNavigate } from "react-router-dom";
 
@@ -206,6 +206,50 @@ export function CreateEventPage() {
 
   const removeTag = (tagToRemove: string) => {
     updateFormData("tags", formData.tags.filter(tag => tag !== tagToRemove));
+  };
+
+  const handleTimeIconClick = (inputId: string) => {
+    const input = document.getElementById(inputId) as HTMLInputElement;
+    if (input) {
+      input.focus();
+      input.click();
+      // For better browser support
+      if (input.showPicker) {
+        input.showPicker();
+      } else {
+        // Fallback for browsers that don't support showPicker
+        input.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      }
+    }
+  };
+
+  // Convert 24-hour time to 12-hour AM/PM format
+  const formatTime12Hour = (time24: string) => {
+    if (!time24) return '';
+    const [hours, minutes] = time24.split(':');
+    const hour24 = parseInt(hours, 10);
+    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+    const ampm = hour24 >= 12 ? 'PM' : 'AM';
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  // Convert 12-hour AM/PM format to 24-hour format
+  const formatTime24Hour = (time12: string) => {
+    if (!time12) return '';
+    const timeRegex = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i;
+    const match = time12.match(timeRegex);
+    if (!match) return time12; // Return as-is if format doesn't match
+    
+    let [, hours, minutes, ampm] = match;
+    let hour24 = parseInt(hours, 10);
+    
+    if (ampm.toUpperCase() === 'AM') {
+      if (hour24 === 12) hour24 = 0;
+    } else {
+      if (hour24 !== 12) hour24 += 12;
+    }
+    
+    return `${hour24.toString().padStart(2, '0')}:${minutes}`;
   };
 
 
@@ -457,46 +501,158 @@ export function CreateEventPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="startDate">Start Date *</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={formData.schedule.startDate}
-                  onChange={(e) => updateFormData("schedule", { ...formData.schedule, startDate: e.target.value })}
-                  className="mt-2"
-                />
+                <div className="relative mt-2">
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={formData.schedule.startDate}
+                    onChange={(e) => {
+                      // Format date to ensure DD/MM/YYYY format
+                      const date = e.target.value;
+                      if (date) {
+                        const [year, month, day] = date.split('-');
+                        if (year.length <= 4 && month.length <= 2 && day.length <= 2) {
+                          updateFormData("schedule", { ...formData.schedule, startDate: date });
+                        }
+                      } else {
+                        updateFormData("schedule", { ...formData.schedule, startDate: date });
+                      }
+                    }}
+                    onClick={() => handleTimeIconClick('startDate')}
+                    className="w-full cursor-pointer pr-12 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden [&::-webkit-clear-button]:hidden"
+                    style={{ colorScheme: 'light' }}
+                    max="9999-12-31"
+                    min="2024-01-01"
+                  />
+                  <div 
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                    onClick={() => handleTimeIconClick('startDate')}
+                  >
+                    <Calendar className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                  </div>
+                </div>
               </div>
               <div>
                 <Label htmlFor="startTime">Start Time *</Label>
-                <Input
-                  id="startTime"
-                  type="time"
-                  value={formData.schedule.startTime}
-                  onChange={(e) => updateFormData("schedule", { ...formData.schedule, startTime: e.target.value })}
-                  className="mt-2"
-                />
+                <div className="relative mt-2">
+                  <Input
+                    id="startTime"
+                    type="text"
+                    placeholder="h:mm AM/PM"
+                    value={formatTime12Hour(formData.schedule.startTime)}
+                    onChange={(e) => {
+                      const time24 = formatTime24Hour(e.target.value);
+                      updateFormData("schedule", { ...formData.schedule, startTime: time24 });
+                    }}
+                    onClick={() => {
+                      const picker = document.getElementById('startTimePicker') as HTMLInputElement;
+                      if (picker) {
+                        picker.focus();
+                        picker.click();
+                        if (picker.showPicker) {
+                          picker.showPicker();
+                        }
+                      }
+                    }}
+                    className="w-full pr-12 cursor-pointer"
+                  />
+                  {/* Hidden time input for picker */}
+                  <input
+                    id="startTimePicker"
+                    type="time"
+                    value={formData.schedule.startTime}
+                    onChange={(e) => {
+                      updateFormData("schedule", { ...formData.schedule, startTime: e.target.value });
+                    }}
+                    className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ zIndex: 10 }}
+                  />
+                  <div 
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer pointer-events-none"
+                    style={{ zIndex: 20 }}
+                  >
+                    <Clock className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                  </div>
+                </div>
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="endDate">End Date *</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={formData.schedule.endDate}
-                  onChange={(e) => updateFormData("schedule", { ...formData.schedule, endDate: e.target.value })}
-                  className="mt-2"
-                />
+                <div className="relative mt-2">
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={formData.schedule.endDate}
+                    onChange={(e) => {
+                      // Format date to ensure DD/MM/YYYY format
+                      const date = e.target.value;
+                      if (date) {
+                        const [year, month, day] = date.split('-');
+                        if (year.length <= 4 && month.length <= 2 && day.length <= 2) {
+                          updateFormData("schedule", { ...formData.schedule, endDate: date });
+                        }
+                      } else {
+                        updateFormData("schedule", { ...formData.schedule, endDate: date });
+                      }
+                    }}
+                    onClick={() => handleTimeIconClick('endDate')}
+                    className="w-full cursor-pointer pr-12 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden [&::-webkit-clear-button]:hidden"
+                    style={{ colorScheme: 'light' }}
+                    max="9999-12-31"
+                    min="2024-01-01"
+                  />
+                  <div 
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                    onClick={() => handleTimeIconClick('endDate')}
+                  >
+                    <Calendar className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                  </div>
+                </div>
               </div>
               <div>
                 <Label htmlFor="endTime">End Time *</Label>
-                <Input
-                  id="endTime"
-                  type="time"
-                  value={formData.schedule.endTime}
-                  onChange={(e) => updateFormData("schedule", { ...formData.schedule, endTime: e.target.value })}
-                  className="mt-2"
-                />
+                <div className="relative mt-2">
+                  <Input
+                    id="endTime"
+                    type="text"
+                    placeholder="h:mm AM/PM"
+                    value={formatTime12Hour(formData.schedule.endTime)}
+                    onChange={(e) => {
+                      const time24 = formatTime24Hour(e.target.value);
+                      updateFormData("schedule", { ...formData.schedule, endTime: time24 });
+                    }}
+                    onClick={() => {
+                      const picker = document.getElementById('endTimePicker') as HTMLInputElement;
+                      if (picker) {
+                        picker.focus();
+                        picker.click();
+                        if (picker.showPicker) {
+                          picker.showPicker();
+                        }
+                      }
+                    }}
+                    className="w-full pr-12 cursor-pointer"
+                  />
+                  {/* Hidden time input for picker */}
+                  <input
+                    id="endTimePicker"
+                    type="time"
+                    value={formData.schedule.endTime}
+                    onChange={(e) => {
+                      updateFormData("schedule", { ...formData.schedule, endTime: e.target.value });
+                    }}
+                    className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ zIndex: 10 }}
+                  />
+                  <div 
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer pointer-events-none"
+                    style={{ zIndex: 20 }}
+                  >
+                    <Clock className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -539,13 +695,15 @@ export function CreateEventPage() {
             {formData.location.type !== 'online' && (
               <div>
                 <Label htmlFor="venue">Venue *</Label>
-                <Input
-                  id="venue"
-                  placeholder="Enter venue name"
-                  value={formData.location.venue}
-                  onChange={(e) => updateFormData("location", { ...formData.location, venue: e.target.value })}
-                  className="mt-2"
-                />
+                <div className="relative mt-2">
+                  <Input
+                    id="venue"
+                    placeholder="Enter venue name"
+                    value={formData.location.venue}
+                    onChange={(e) => updateFormData("location", { ...formData.location, venue: e.target.value })}
+                    className="w-full cursor-text"
+                  />
+                </div>
                 
                 {/* Location suggestions based on category */}
                 {locationSuggestions.length > 0 && (
@@ -572,66 +730,74 @@ export function CreateEventPage() {
             {formData.location.type !== 'online' && (
               <div>
                 <Label htmlFor="address">Full Address</Label>
-                <Textarea
-                  id="address"
-                  placeholder="Complete address with directions"
-                  value={formData.location.address}
-                  onChange={(e) => updateFormData("location", { ...formData.location, address: e.target.value })}
-                  className="mt-2"
-                  rows={3}
-                />
+                <div className="relative mt-2">
+                  <Textarea
+                    id="address"
+                    placeholder="Complete address with directions"
+                    value={formData.location.address}
+                    onChange={(e) => updateFormData("location", { ...formData.location, address: e.target.value })}
+                    className="w-full cursor-text resize-none"
+                    rows={3}
+                  />
+                </div>
               </div>
             )}
             
             {formData.location.type !== 'onsite' && (
               <div>
                 <Label htmlFor="onlineLink">Online Link *</Label>
-                <Input
-                  id="onlineLink"
-                  placeholder="https://zoom.us/j/example123"
-                  value={formData.location.onlineLink}
-                  onChange={(e) => updateFormData("location", { ...formData.location, onlineLink: e.target.value })}
-                  className="mt-2"
-                />
+                <div className="relative mt-2">
+                  <Input
+                    id="onlineLink"
+                    placeholder="https://zoom.us/j/example123"
+                    value={formData.location.onlineLink}
+                    onChange={(e) => updateFormData("location", { ...formData.location, onlineLink: e.target.value })}
+                    className="w-full cursor-text"
+                  />
+                </div>
               </div>
             )}
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="latitude">Latitude (Optional)</Label>
-                <Input
-                  id="latitude"
-                  type="number"
-                  step="any"
-                  placeholder="13.7205"
-                  value={formData.location.coordinates.lat}
-                  onChange={(e) => updateFormData("location", { 
-                    ...formData.location, 
-                    coordinates: { 
-                      ...formData.location.coordinates, 
-                      lat: parseFloat(e.target.value) || 0 
-                    } 
-                  })}
-                  className="mt-2"
-                />
+                <Label htmlFor="latitude">Latitude</Label>
+                <div className="relative mt-2">
+                  <Input
+                    id="latitude"
+                    type="number"
+                    step="any"
+                    placeholder="13.7205"
+                    value={formData.location.coordinates.lat || ''}
+                    onChange={(e) => updateFormData("location", { 
+                      ...formData.location, 
+                      coordinates: { 
+                        ...formData.location.coordinates, 
+                        lat: parseFloat(e.target.value) || 0 
+                      } 
+                    })}
+                    className="w-full cursor-pointer"
+                  />
+                </div>
               </div>
               <div>
-                <Label htmlFor="longitude">Longitude (Optional)</Label>
-                <Input
-                  id="longitude"
-                  type="number"
-                  step="any"
-                  placeholder="100.5592"
-                  value={formData.location.coordinates.lng}
-                  onChange={(e) => updateFormData("location", { 
-                    ...formData.location, 
-                    coordinates: { 
-                      ...formData.location.coordinates, 
-                      lng: parseFloat(e.target.value) || 0 
-                    } 
-                  })}
-                  className="mt-2"
-                />
+                <Label htmlFor="longitude">Longitude</Label>
+                <div className="relative mt-2">
+                  <Input
+                    id="longitude"
+                    type="number"
+                    step="any"
+                    placeholder="100.5592"
+                    value={formData.location.coordinates.lng || ''}
+                    onChange={(e) => updateFormData("location", { 
+                      ...formData.location, 
+                      coordinates: { 
+                        ...formData.location.coordinates, 
+                        lng: parseFloat(e.target.value) || 0 
+                      } 
+                    })}
+                    className="w-full cursor-pointer"
+                  />
+                </div>
               </div>
             </div>
           </div>

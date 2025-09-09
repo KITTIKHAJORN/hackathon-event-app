@@ -70,6 +70,24 @@ export interface EventData {
   activities?: string[];
 }
 
+// Dashboard interfaces
+export interface DashboardStats {
+  totalEvents: number;
+  upcomingEvents: number;
+  registeredUsers: number;
+  totalTickets: number;
+}
+
+export interface CategoryDistribution {
+  name: string;
+  value: number;
+}
+
+export interface EventTrendData {
+  month: string;
+  events: number;
+}
+
 export interface EventSystemResponse {
   id: string;
   eventSystem: {
@@ -1108,6 +1126,103 @@ class EventService {
     } catch (error) {
       console.error('❌ Error sending OTP email:', error);
       return false;
+    }
+  }
+
+  // Dashboard methods
+  async getDashboardStats(): Promise<DashboardStats> {
+    try {
+      const events = await this.getAllEvents();
+      
+      // Calculate total events
+      const totalEvents = events.length;
+      
+      // Calculate upcoming events (events starting in the future)
+      const now = new Date();
+      const upcomingEvents = events.filter(event => {
+        const eventDate = new Date(event.schedule.startDate);
+        return eventDate >= now;
+      }).length;
+      
+      // For registered users and tickets, we'll get real data from the API
+      const tickets = await this.getAllTickets();
+      const totalTickets = tickets.length;
+      const registeredUsers = new Set(tickets.map(ticket => ticket.userId)).size;
+      
+      return {
+        totalEvents,
+        upcomingEvents,
+        registeredUsers,
+        totalTickets
+      };
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      // Return default values if there's an error
+      return {
+        totalEvents: 0,
+        upcomingEvents: 0,
+        registeredUsers: 0,
+        totalTickets: 0
+      };
+    }
+  }
+
+  async getCategoryDistribution(): Promise<CategoryDistribution[]> {
+    try {
+      const events = await this.getAllEvents();
+      
+      // Group events by category
+      const categoryMap: Record<string, number> = {};
+      events.forEach(event => {
+        if (categoryMap[event.category]) {
+          categoryMap[event.category]++;
+        } else {
+          categoryMap[event.category] = 1;
+        }
+      });
+      
+      // Convert to array format for the chart
+      return Object.entries(categoryMap).map(([name, value]) => ({
+        name,
+        value
+      }));
+    } catch (error) {
+      console.error('Error fetching category distribution:', error);
+      return [];
+    }
+  }
+
+  async getEventTrendData(): Promise<EventTrendData[]> {
+    try {
+      const events = await this.getAllEvents();
+      
+      // Group events by month
+      const monthMap: Record<string, number> = {};
+      
+      events.forEach(event => {
+        // Format date as "YYYY-MM" for grouping
+        const eventDate = new Date(event.schedule.startDate);
+        const monthKey = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}`;
+        
+        if (monthMap[monthKey]) {
+          monthMap[monthKey]++;
+        } else {
+          monthMap[monthKey] = 1;
+        }
+      });
+      
+      // Convert to array format and sort by date
+      const trendData = Object.entries(monthMap)
+        .map(([month, events]) => ({
+          month,
+          events
+        }))
+        .sort((a, b) => a.month.localeCompare(b.month));
+      
+      return trendData;
+    } catch (error) {
+      console.error('Error fetching event trend data:', error);
+      return [];
     }
   }
 }
