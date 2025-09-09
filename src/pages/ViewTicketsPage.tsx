@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Ticket, Search, User, Calendar, MapPin, Clock } from "lucide-react";
+import { Ticket, Search, User } from "lucide-react";
 import { eventService, TicketData, EventData } from "@/services/eventService";
 import { useToast } from "@/hooks/use-toast";
 
@@ -130,20 +130,18 @@ export function ViewTicketsPage() {
 
   return (
     <div className="min-h-screen bg-background py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        {/* Page Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <Ticket className="h-12 w-12 text-primary mr-3" />
-            <h1 className="text-4xl font-bold">View Your Tickets</h1>
+      <div className="container mx-auto px-4 max-w-2xl">
+        <div className="mb-8">
+          <div className="flex items-center mb-4">
+            <Ticket className="h-8 w-8 text-primary mr-3" />
+            <h1 className="text-3xl font-bold">View Your Tickets</h1>
           </div>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground">
             Enter your username to view all your event tickets
           </p>
         </div>
 
-        {/* Search Form */}
-        <Card className="mb-8">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
               <User className="h-5 w-5 mr-2" />
@@ -151,8 +149,8 @@ export function ViewTicketsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSearch} className="space-y-4">
-              <div className="space-y-2">
+            <form onSubmit={handleSearch} className="space-y-6">
+              <div>
                 <Label htmlFor="username">Username or Email</Label>
                 <Input
                   id="username"
@@ -160,23 +158,22 @@ export function ViewTicketsPage() {
                   placeholder="Enter your username or email address"
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
-                  className="text-lg py-3"
+                  className="mt-2"
                 />
               </div>
               <Button 
                 type="submit" 
-                className="w-full" 
-                size="lg"
+                className="w-full flex items-center gap-2"
                 disabled={loading}
               >
                 {loading ? (
                   <>
-                    <Search className="h-5 w-5 mr-2 animate-spin" />
+                    <Search className="h-4 w-4 animate-spin" />
                     Searching...
                   </>
                 ) : (
                   <>
-                    <Search className="h-5 w-5 mr-2" />
+                    <Search className="h-4 w-4" />
                     Search Tickets
                   </>
                 )}
@@ -187,20 +184,20 @@ export function ViewTicketsPage() {
 
         {/* Search Results */}
         {hasSearched && (
-          <div className="space-y-6">
+          <div className="space-y-6 mt-8">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">
+              <h2 className="text-xl font-semibold">
                 {tickets.length > 0 ? `Your Tickets (${tickets.length})` : 'No Tickets Found'}
               </h2>
               {userName && (
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Showing results for: <span className="font-medium">{userName}</span>
                 </p>
               )}
             </div>
 
             {tickets.length > 0 ? (
-              <div className="grid gap-6">
+              <div className="space-y-6">
                 {tickets.map((ticket) => {
                   const eventData = events[ticket.eventId];
                   return (
@@ -208,14 +205,14 @@ export function ViewTicketsPage() {
                       <CardContent className="p-6">
                         <div className="flex justify-between items-start mb-4">
                           <div>
-                            <h3 className="text-xl font-semibold mb-2">
+                            <h3 className="text-lg font-semibold mb-1">
                               Ticket #{ticket.id?.slice(-8) || 'N/A'}
                             </h3>
-                            <p className="text-muted-foreground">
+                            <p className="text-muted-foreground text-sm">
                               Event ID: {ticket.eventId || 'N/A'}
                             </p>
                           </div>
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(ticket.status || 'pending')}`}>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status || 'pending')}`}>
                             {(ticket.status || 'pending').charAt(0).toUpperCase() + (ticket.status || 'pending').slice(1)}
                           </span>
                         </div>
@@ -223,8 +220,8 @@ export function ViewTicketsPage() {
                         {/* Event Details Section */}
                         {eventData && (
                           <div className="mb-6 p-4 bg-muted/50 rounded-lg">
-                            <h4 className="text-lg font-semibold mb-3 flex items-center">
-                              <Calendar className="h-5 w-5 mr-2 text-primary" />
+                            <h4 className="font-medium mb-3 flex items-center">
+                              <Ticket className="h-4 w-4 mr-2 text-primary" />
                               Event Details
                             </h4>
                             
@@ -234,7 +231,7 @@ export function ViewTicketsPage() {
                                 <img 
                                   src={getEventImageUrl(eventData)} 
                                   alt={eventData.title}
-                                  className="w-full h-48 object-cover rounded-lg shadow-sm"
+                                  className="w-full h-32 object-cover rounded-md shadow-sm"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
                                     target.style.display = 'none';
@@ -243,79 +240,63 @@ export function ViewTicketsPage() {
                               </div>
                             )}
                             
-                            <div className="grid md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <div>
-                                  <span className="font-medium">Event Name:</span> {eventData.title}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Category:</span> {eventData.category}
-                                </div>
-                                <div className="flex items-center">
-                                  <MapPin className="h-4 w-4 mr-1 text-muted-foreground" />
-                                  <span className="font-medium">Location:</span> {eventData.location.venue || eventData.location.type}
-                                </div>
+                            <div className="grid gap-2">
+                              <div className="text-sm">
+                                <span className="font-medium">Event Name:</span> {eventData.title}
                               </div>
-                              <div className="space-y-2">
-                                <div className="flex items-center">
-                                  <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
-                                  <span className="font-medium">Date:</span> {new Date(eventData.schedule.startDate).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                  })}
-                                </div>
-                                <div className="flex items-center">
-                                  <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
-                                  <span className="font-medium">Time:</span> {eventData.schedule.startTime} - {eventData.schedule.endTime}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Organizer:</span> {eventData.organizer.name}
-                                </div>
+                              <div className="text-sm">
+                                <span className="font-medium">Category:</span> {eventData.category}
                               </div>
-                            </div>
-                            <div className="mt-3">
-                              <p className="text-sm text-muted-foreground">
-                                <span className="font-medium">Description:</span> {eventData.description}
-                              </p>
+                              <div className="text-sm">
+                                <span className="font-medium">Location:</span> {eventData.location.venue || eventData.location.type}
+                              </div>
+                              <div className="text-sm">
+                                <span className="font-medium">Date:</span> {new Date(eventData.schedule.startDate).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })}
+                              </div>
+                              <div className="text-sm">
+                                <span className="font-medium">Time:</span> {eventData.schedule.startTime} - {eventData.schedule.endTime}
+                              </div>
+                              <div className="text-sm">
+                                <span className="font-medium">Organizer:</span> {eventData.organizer.name}
+                              </div>
                             </div>
                           </div>
                         )}
 
                         {/* Ticket Details Section */}
                         <div className="mb-4">
-                          <h4 className="text-lg font-semibold mb-3 flex items-center">
-                            <Ticket className="h-5 w-5 mr-2 text-primary" />
+                          <h4 className="font-medium mb-3 flex items-center">
+                            <Ticket className="h-4 w-4 mr-2 text-primary" />
                             Ticket Information
                           </h4>
-                          <div className="grid md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <div>
-                                <span className="font-medium">Name:</span> {ticket.userName || 'N/A'}
-                              </div>
-                              <div>
-                                <span className="font-medium">Email:</span> {ticket.userEmail || 'N/A'}
-                              </div>
-                              <div>
-                                <span className="font-medium">Phone:</span> {ticket.userPhone || 'N/A'}
-                              </div>
+                          <div className="grid gap-2">
+                            <div className="text-sm">
+                              <span className="font-medium">Name:</span> {ticket.userName || 'N/A'}
                             </div>
-                            <div className="space-y-2">
-                              <div>
-                                <span className="font-medium">Ticket Type:</span> {ticket.ticketType || 'N/A'}
-                              </div>
-                              <div>
-                                <span className="font-medium">Quantity:</span> {ticket.quantity || 'N/A'}
-                              </div>
-                              <div>
-                                <span className="font-medium">Total Amount:</span> {ticket.totalAmount || 0} {ticket.currency || 'THB'}
-                              </div>
+                            <div className="text-sm">
+                              <span className="font-medium">Email:</span> {ticket.userEmail || 'N/A'}
+                            </div>
+                            <div className="text-sm">
+                              <span className="font-medium">Phone:</span> {ticket.userPhone || 'N/A'}
+                            </div>
+                            <div className="text-sm">
+                              <span className="font-medium">Ticket Type:</span> {ticket.ticketType || 'N/A'}
+                            </div>
+                            <div className="text-sm">
+                              <span className="font-medium">Quantity:</span> {ticket.quantity || 'N/A'}
+                            </div>
+                            <div className="text-sm">
+                              <span className="font-medium">Total Amount:</span> {ticket.totalAmount || 0} {ticket.currency || 'THB'}
                             </div>
                           </div>
                         </div>
 
                         <div className="pt-4 border-t">
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-xs text-muted-foreground">
                             <span className="font-medium">Purchase Date:</span> {ticket.purchaseDate ? new Date(ticket.purchaseDate).toLocaleDateString('en-US', {
                               year: 'numeric',
                               month: 'long',
@@ -342,8 +323,8 @@ export function ViewTicketsPage() {
             ) : hasSearched && (
               <Card>
                 <CardContent className="text-center py-12">
-                  <Ticket className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">No Tickets Found</h3>
+                  <Ticket className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Tickets Found</h3>
                   <p className="text-muted-foreground mb-4">
                     No tickets are associated with the username "{userName}".
                   </p>
