@@ -11,7 +11,7 @@ import { OTPInput } from "@/components/common/OTPInput";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { eventService, EventData } from "@/services/eventService";
-import { Lock, Edit, Trash2, Search, Shield, Mail, Send, CheckCircle, Calendar, MapPin, Users, DollarSign, Save, ChevronLeft, ChevronRight, Plus, Ticket, RefreshCw } from "lucide-react";
+import { Lock, Edit, Trash2, Search, Shield, Mail, Send, CheckCircle, Calendar, MapPin, Users, DollarSign, Save, ChevronLeft, ChevronRight, Plus, Ticket, RefreshCw, Clock } from "lucide-react";
 
 // EventData is imported from eventService
 
@@ -268,6 +268,50 @@ export function EventManagementPage() {
     setTickets(prev => [...prev, newTicket]);
   };
 
+  const handleTimeIconClick = (inputId: string) => {
+    const input = document.getElementById(inputId) as HTMLInputElement;
+    if (input) {
+      input.focus();
+      input.click();
+      // For better browser support
+      if (input.showPicker) {
+        input.showPicker();
+      } else {
+        // Fallback for browsers that don't support showPicker
+        input.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      }
+    }
+  };
+
+  // Convert 24-hour time to 12-hour AM/PM format
+  const formatTime12Hour = (time24: string) => {
+    if (!time24) return '';
+    const [hours, minutes] = time24.split(':');
+    const hour24 = parseInt(hours, 10);
+    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+    const ampm = hour24 >= 12 ? 'PM' : 'AM';
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  // Convert 12-hour AM/PM format to 24-hour format
+  const formatTime24Hour = (time12: string) => {
+    if (!time12) return '';
+    const timeRegex = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i;
+    const match = time12.match(timeRegex);
+    if (!match) return time12; // Return as-is if format doesn't match
+    
+    let [, hours, minutes, ampm] = match;
+    let hour24 = parseInt(hours, 10);
+    
+    if (ampm.toUpperCase() === 'AM') {
+      if (hour24 === 12) hour24 = 0;
+    } else {
+      if (hour24 !== 12) hour24 += 12;
+    }
+    
+    return `${hour24.toString().padStart(2, '0')}:${minutes}`;
+  };
+
   // Initialize tickets from event pricing when editing starts
   const initializeTicketsFromPricing = (event: EventData) => {
     const ticketTypes = [];
@@ -478,48 +522,152 @@ export function EventManagementPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="startDate">Start Date</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={editedEvent.schedule.startDate || ''}
-                  onChange={(e) => handleNestedChange('schedule', 'startDate', e.target.value)}
-                  className="mt-1"
-                />
+                <div className="relative mt-1">
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={editedEvent.schedule.startDate || ''}
+                    onChange={(e) => handleNestedChange('schedule', 'startDate', e.target.value)}
+                    onClick={() => handleTimeIconClick('startDate')}
+                    className="w-full cursor-pointer pr-12 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden [&::-webkit-clear-button]:hidden"
+                    style={{ colorScheme: 'light' }}
+                  />
+                  <div 
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                    onClick={() => handleTimeIconClick('startDate')}
+                  >
+                    <Calendar className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                  </div>
+                </div>
               </div>
               
               <div>
                 <Label htmlFor="startTime">Start Time</Label>
-                <Input
-                  id="startTime"
-                  type="time"
-                  value={editedEvent.schedule.startTime || ''}
-                  onChange={(e) => handleNestedChange('schedule', 'startTime', e.target.value)}
-                  className="mt-1"
-                />
+                <div className="relative mt-1">
+                  <Input
+                    id="startTime"
+                    type="text"
+                    placeholder="h:mm AM/PM"
+                    value={formatTime12Hour(editedEvent.schedule.startTime || '')}
+                    onChange={(e) => {
+                      const time24 = formatTime24Hour(e.target.value);
+                      handleNestedChange('schedule', 'startTime', time24);
+                    }}
+                    onClick={() => {
+                      const picker = document.getElementById('startTimePicker') as HTMLInputElement;
+                      if (picker) {
+                        picker.focus();
+                        picker.click();
+                        if (picker.showPicker) {
+                          picker.showPicker();
+                        }
+                      }
+                    }}
+                    className="w-full pr-12 cursor-pointer"
+                  />
+                  {/* Hidden time input for picker */}
+                  <input
+                    id="startTimePicker"
+                    type="time"
+                    value={editedEvent.schedule.startTime || ''}
+                    onChange={(e) => {
+                      handleNestedChange('schedule', 'startTime', e.target.value);
+                    }}
+                    className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ zIndex: 10 }}
+                  />
+                  <div 
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                    onClick={() => {
+                      const picker = document.getElementById('startTimePicker') as HTMLInputElement;
+                      if (picker) {
+                        picker.focus();
+                        picker.click();
+                        if (picker.showPicker) {
+                          picker.showPicker();
+                        }
+                      }
+                    }}
+                  >
+                    <Clock className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                  </div>
+                </div>
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="endDate">End Date</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={editedEvent.schedule.endDate || ''}
-                  onChange={(e) => handleNestedChange('schedule', 'endDate', e.target.value)}
-                  className="mt-1"
-                />
+                <div className="relative mt-1">
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={editedEvent.schedule.endDate || ''}
+                    onChange={(e) => handleNestedChange('schedule', 'endDate', e.target.value)}
+                    onClick={() => handleTimeIconClick('endDate')}
+                    className="w-full cursor-pointer pr-12 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden [&::-webkit-clear-button]:hidden"
+                    style={{ colorScheme: 'light' }}
+                  />
+                  <div 
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                    onClick={() => handleTimeIconClick('endDate')}
+                  >
+                    <Calendar className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                  </div>
+                </div>
               </div>
               
               <div>
                 <Label htmlFor="endTime">End Time</Label>
-                <Input
-                  id="endTime"
-                  type="time"
-                  value={editedEvent.schedule.endTime || ''}
-                  onChange={(e) => handleNestedChange('schedule', 'endTime', e.target.value)}
-                  className="mt-1"
-                />
+                <div className="relative mt-1">
+                  <Input
+                    id="endTime"
+                    type="text"
+                    placeholder="h:mm AM/PM"
+                    value={formatTime12Hour(editedEvent.schedule.endTime || '')}
+                    onChange={(e) => {
+                      const time24 = formatTime24Hour(e.target.value);
+                      handleNestedChange('schedule', 'endTime', time24);
+                    }}
+                    onClick={() => {
+                      const picker = document.getElementById('endTimePicker') as HTMLInputElement;
+                      if (picker) {
+                        picker.focus();
+                        picker.click();
+                        if (picker.showPicker) {
+                          picker.showPicker();
+                        }
+                      }
+                    }}
+                    className="w-full pr-12 cursor-pointer"
+                  />
+                  {/* Hidden time input for picker */}
+                  <input
+                    id="endTimePicker"
+                    type="time"
+                    value={editedEvent.schedule.endTime || ''}
+                    onChange={(e) => {
+                      handleNestedChange('schedule', 'endTime', e.target.value);
+                    }}
+                    className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ zIndex: 10 }}
+                  />
+                  <div 
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                    onClick={() => {
+                      const picker = document.getElementById('endTimePicker') as HTMLInputElement;
+                      if (picker) {
+                        picker.focus();
+                        picker.click();
+                        if (picker.showPicker) {
+                          picker.showPicker();
+                        }
+                      }
+                    }}
+                  >
+                    <Clock className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
