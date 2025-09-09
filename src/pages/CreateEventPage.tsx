@@ -69,10 +69,10 @@ export function CreateEventPage() {
   const progress = (currentStep / totalSteps) * 100;
 
   const stepTitles = [
-    "Creator Information",
-    "Basic Information",
-    "Date & Location",
-    "Pricing & Capacity"
+    t("creatorInformation"),
+    t("basicInformation"),
+    t("dateLocation"),
+    t("pricingCapacity")
   ];
 
   // Category options
@@ -141,8 +141,8 @@ export function CreateEventPage() {
   const handleCreateEvent = async () => {
     if (!validateCurrentStep()) {
       toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
+        title: t("error"),
+        description: t("pleaseEnterValidEmail"),
         variant: "destructive",
       });
       return;
@@ -173,14 +173,14 @@ export function CreateEventPage() {
         setOtpInfo(response.otp);
         setEventCreated(true);
         toast({
-          title: "Event Created Successfully!",
+          title: t("eventCreatedSuccess"),
           description: "Your event has been created. Save the OTP to manage it later.",
         });
       }
     } catch (error) {
       console.error('Error creating event:', error);
       toast({
-        title: "Error",
+        title: t("error"),
         description: "Failed to create event. Please try again.",
         variant: "destructive",
       });
@@ -195,13 +195,13 @@ export function CreateEventPage() {
         return (
           <div className="space-y-6">
             <div>
-              <Label htmlFor="creatorEmail">Your Email *</Label>
+              <Label htmlFor="creatorEmail">{t("emailAddress")} *</Label>
               <div className="relative mt-2">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="creatorEmail"
                   type="email"
-                  placeholder="your.email@example.com"
+                  placeholder={t("enterValidEmail")}
                   value={formData.creatorEmail}
                   onChange={(e) => updateFormData("creatorEmail", e.target.value)}
                   className="pl-10"
@@ -238,10 +238,10 @@ export function CreateEventPage() {
         return (
           <div className="space-y-6">
             <div>
-              <Label htmlFor="title">Event Title *</Label>
+              <Label htmlFor="title">{t("eventTitle")} *</Label>
               <Input
                 id="title"
-                placeholder="Enter your event title"
+                placeholder={t("enterEventTitle")}
                 value={formData.title}
                 onChange={(e) => updateFormData("title", e.target.value)}
                 className="mt-2"
@@ -249,10 +249,10 @@ export function CreateEventPage() {
             </div>
             
             <div>
-              <Label htmlFor="description">Description *</Label>
+              <Label htmlFor="description">{t("eventDescription")} *</Label>
               <Textarea
                 id="description"
-                placeholder="Describe your event"
+                placeholder={t("describeYourEvent")}
                 value={formData.description}
                 onChange={(e) => updateFormData("description", e.target.value)}
                 className="mt-2"
@@ -261,10 +261,10 @@ export function CreateEventPage() {
             </div>
             
             <div>
-              <Label htmlFor="category">Category *</Label>
+              <Label htmlFor="category">{t("eventCategory")} *</Label>
               <Select value={formData.category} onValueChange={(value) => updateFormData("category", value)}>
                 <SelectTrigger className="mt-2">
-                  <SelectValue placeholder="Select a category" />
+                  <SelectValue placeholder={t("selectCategory")} />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((category) => (

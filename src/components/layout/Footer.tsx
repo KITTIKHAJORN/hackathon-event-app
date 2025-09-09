@@ -13,10 +13,10 @@ export function Footer() {
       { name: t("conference"), href: "/events?category=conference" },
     ],
     company: [
-      { name: "About", href: "/about" },
-      { name: "Contact", href: "/contact" },
-      { name: "Privacy", href: "/privacy" },
-      { name: "Terms", href: "/terms" },
+      { name: t("aboutUs"), href: "/about" },
+      { name: t("contactUs"), href: "/contact" },
+      { name: t("privacyPolicy"), href: "/privacy" },
+      { name: t("termsOfService"), href: "/terms" },
     ],
   };
 
@@ -68,7 +68,7 @@ export function Footer() {
           {/* Company */}
           <div>
             <h3 className="font-semibold text-sm text-foreground mb-4">
-              Company
+              {t("company")}
             </h3>
             <ul className="space-y-2">
               {footerLinks.company.map((link) => (
@@ -87,7 +87,7 @@ export function Footer() {
           {/* Social */}
           <div>
             <h3 className="font-semibold text-sm text-foreground mb-4">
-              Follow Us
+              {t("followUs")}
             </h3>
             <div className="flex space-x-3">
               {socialLinks.map((social) => {

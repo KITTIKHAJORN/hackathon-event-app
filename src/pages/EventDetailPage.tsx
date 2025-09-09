@@ -124,7 +124,7 @@ export function EventDetailPage() {
           <Button variant="secondary" asChild>
             <Link to="/events">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Events
+              {t("backToEvents")}
             </Link>
           </Button>
         </div>
@@ -133,7 +133,7 @@ export function EventDetailPage() {
             {event.category}
           </Badge>
           <h1 className="text-4xl font-bold mb-2">{event.title}</h1>
-          <p className="text-lg opacity-90">Organized by {event.organizer.name}</p>
+          <p className="text-lg opacity-90">{t("organizedBy")} {event.organizer.name}</p>
         </div>
       </div>
 
@@ -144,7 +144,7 @@ export function EventDetailPage() {
             {/* Event Info */}
             <Card>
               <CardHeader>
-                <CardTitle>Event Details</CardTitle>
+                <CardTitle>{t("eventDetails")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <p className="text-muted-foreground leading-relaxed">
@@ -153,7 +153,7 @@ export function EventDetailPage() {
                 
                 {event.requirements && event.requirements.length > 0 && (
                   <div>
-                    <h4 className="font-semibold mb-2">Requirements</h4>
+                    <h4 className="font-semibold mb-2">{t("requirements")}</h4>
                     <ul className="text-muted-foreground list-disc list-inside space-y-1">
                       {event.requirements.map((req, index) => (
                         <li key={index}>{req}</li>
@@ -303,9 +303,9 @@ export function EventDetailPage() {
                 <div className="flex items-center gap-3">
                   <MapPin className="h-5 w-5 text-primary" />
                   <div>
-                    <div className="font-medium">{event.location.venue || 'Online Event'}</div>
+                    <div className="font-medium">{event.location.venue || t("onlineEvent")}</div>
                     <div className="text-sm text-muted-foreground">
-                      {event.location.address || 'Virtual Event'}
+                      {event.location.address || t("virtualEvent")}
                     </div>
                   </div>
                 </div>
@@ -319,7 +319,7 @@ export function EventDetailPage() {
                       {event.capacity.registered}/{event.capacity.max} Attendees
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {event.capacity.available} spots left
+                      {event.capacity.available} {t("spotsLeft")}
                     </div>
                   </div>
                 </div>
@@ -341,7 +341,7 @@ export function EventDetailPage() {
                 <div className="flex items-start gap-3">
                   <Building2 className="h-5 w-5 text-primary mt-0.5" />
                   <div className="flex-1">
-                    <div className="font-medium">Organized by</div>
+                    <div className="font-medium">{t("organizedBy")}</div>
                     <div className="text-sm font-semibold text-primary">
                       {event.organizer.name}
                     </div>
