@@ -1,8 +1,8 @@
 // Event API Service
 import { otpService, EventOTPInfo } from './otpService';
 
-const API_BASE_URL = 'http://54.169.154.143:3863';
-const TICKET_API_URL = 'http://54.169.154.143:3863/event-tickets';
+const API_BASE_URL = 'https://54.169.154.143:3863';
+const TICKET_API_URL = 'https://54.169.154.143:3863/event-tickets';
 const EMAIL_SERVICE_URL = 'http://localhost:3001'; // Backend email service
 
 export interface EventData {
