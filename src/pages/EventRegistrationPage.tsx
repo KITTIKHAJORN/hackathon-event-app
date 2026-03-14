@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -196,7 +196,7 @@ export function EventRegistrationPage() {
                           type="email"
                           value={formData.userEmail}
                           onChange={(e) => handleInputChange('userEmail', e.target.value)}
-                          placeholder={t("enterEmail")}
+                          placeholder={t("enterEmailAddress")}
                           required
                         />
                       </div>
@@ -209,7 +209,7 @@ export function EventRegistrationPage() {
                           id="userPhone"
                           value={formData.userPhone}
                           onChange={(e) => handleInputChange('userPhone', e.target.value)}
-                          placeholder={t("enterPhone")}
+                          placeholder={t("enterPhonePlaceholder")}
                           required
                         />
                       </div>

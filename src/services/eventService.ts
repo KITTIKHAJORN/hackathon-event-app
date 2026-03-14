@@ -1,8 +1,8 @@
 // Event API Service
 import { otpService, EventOTPInfo } from './otpService';
 
-const API_BASE_URL = 'https://54.169.154.143:3863';
-const TICKET_API_URL = 'https://54.169.154.143:3863/event-tickets';
+const API_BASE_URL = 'http://54.169.154.143:3863';
+const TICKET_API_URL = 'http://54.169.154.143:3863/event-tickets';
 const EMAIL_SERVICE_URL = 'http://localhost:3001'; // Backend email service
 
 export interface EventData {
@@ -304,19 +304,30 @@ interface LocationByCategory {
 class EventService {
   private eventSystemId: string | null = null;
 
+  private sanitizeImageUrl(url: string | undefined): string {
+    if (!url) return '/placeholder.svg';
+    // If URL points to the backend IP with https, change it to http
+    if (url.includes('https://54.169.154.143')) {
+      return url.replace('https://54.169.154.143', 'http://54.169.154.143');
+    }
+    return url;
+  }
+
   private async fetchApi<T>(endpoint: string): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     console.log('🌐 Making API request to:', url);
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
       console.log('📡 Response status:', response.status, response.statusText);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      console.log('📦 Response data type:', typeof data, 'Array?', Array.isArray(data));
-      console.log('📦 Response data length:', Array.isArray(data) ? data.length : 'N/A');
-      console.log('📦 First item structure:', data[0] ? Object.keys(data[0]) : 'No first item');
       return data;
     } catch (error) {
       console.error('❌ API Error:', error);
@@ -884,9 +895,19 @@ class EventService {
       }
       
       console.log('📊 Total events loaded from eventSystem.events:', apiEvents.length);
-      console.log('📋 Events:', apiEvents.map(e => e.id));
       
-      return apiEvents;
+      // Sanitize image URLs in all events
+      const sanitizedEvents = apiEvents.map(event => ({
+        ...event,
+        images: {
+          ...event.images,
+          banner: this.sanitizeImageUrl(event.images?.banner),
+          thumbnail: this.sanitizeImageUrl(event.images?.thumbnail),
+          gallery: (event.images?.gallery || []).map(img => this.sanitizeImageUrl(img))
+        }
+      }));
+      
+      return sanitizedEvents;
     } catch (error) {
       console.error('❌ Error loading events from API:', error);
       throw error; // Don't fallback to local storage

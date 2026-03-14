@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 export type Language = "en" | "th";
 
@@ -129,7 +129,7 @@ const translations = {
     managingEvent: "You are managing",
     requestAccess: "Request Access",
     enterEventId: "Enter Event ID",
-    enterEmail: "Enter Email",
+    enterManagementEmail: "Enter Email",
     requestOTP: "Request OTP",
     enterOTP: "Enter OTP",
     verifyOTP: "Verify OTP",
@@ -181,7 +181,7 @@ const translations = {
     enterOrganizerName: "Enter organizer name",
     organizerEmail: "Organizer Email",
     emailForEventId: "This email will receive your event ID for management",
-    phoneNumber: "Phone Number",
+    organizerPhoneNumber: "Phone Number",
     secureEventManagement: "Secure Event Management",
     secureEventManagementDesc: "After creating your event, you'll receive an Event ID at this email address. When you want to manage your event, you'll need to:",
     backToEvents: "Back to Events",
@@ -221,8 +221,8 @@ const translations = {
     totalAmount: "Total Amount",
     selectTicketType: "Select Ticket Type",
     enterFullName: "Enter your full name",
-    enterEmail: "Enter your email address",
-    enterPhone: "Enter your phone number",
+    enterEmailAddress: "Enter your email address",
+    enterPhonePlaceholder: "Enter your phone number",
     enterCompany: "Enter your company",
     dietaryPlaceholder: "Any dietary restrictions or preferences",
     notesPlaceholder: "Any additional information or special requests",
@@ -248,7 +248,7 @@ const translations = {
     eventDetailsSection: "Event Details",
     ticketDetailsSection: "Ticket Details",
     name: "Name",
-    phoneNumber: "Phone Number",
+    phoneNumberDisplay: "Phone Number",
     ticketQuantity: "Quantity",
     totalAmountLabel: "Total Amount",
     purchaseDateLabel: "Purchase Date",
@@ -256,7 +256,7 @@ const translations = {
     noTicketsFoundForUser: "No tickets found for user",
     noTicketsFoundMessage: "No tickets associated with username",
     pleaseCheckUsername: "Please check your username or email and try again",
-    searching: "Searching...",
+
     searchTicketsButton: "Search Tickets",
 
     // Ticket types
@@ -495,7 +495,7 @@ const translations = {
     managingEvent: "คุณกำลังจัดการ",
     requestAccess: "ขอสิทธิ์การเข้าถึง",
     enterEventId: "ป้อนรหัสอีเวนต์",
-    enterEmail: "ป้อนอีเมล",
+    enterManagementEmail: "ป้อนอีเมล",
     requestOTP: "ขอ OTP",
     enterOTP: "ป้อน OTP",
     verifyOTP: "ยืนยัน OTP",
@@ -540,20 +540,6 @@ const translations = {
     eventsPageDesc: "ค้นพบกิจกรรมที่น่าสนใจที่เกิดขึ้นรอบตัวคุณ",
     bangkok: "กรุงเทพฯ",
     phuket: "ภูเก็ต",
-    chiangMai: "เชียงใหม่",
-    pattaya: "พัทยา",
-    createAnotherEvent: "สร้างกิจกรรมอีกครั้ง",
-    organizerName: "ชื่อผู้จัดงาน",
-    enterOrganizerName: "ป้อนชื่อผู้จัดงาน",
-    organizerEmail: "อีเมลผู้จัดงาน",
-    emailForEventId: "อีเมลนี้จะได้รับรหัสกิจกรรมสำหรับการจัดการ",
-    phoneNumber: "หมายเลขโทรศัพท์",
-    secureEventManagement: "การจัดการกิจกรรมที่ปลอดภัย",
-    secureEventManagementDesc: "หลังจากสร้างกิจกรรมแล้ว คุณจะได้รับรหัสกิจกรรมที่อีเมลนี้ เมื่อคุณต้องการจัดการกิจกรรม คุณจะต้อง:",
-    backToEvents: "กลับไปยังกิจกรรม",
-    incompleteData: "ข้อมูลไม่ครบถ้วน",
-    yourEventId: "รหัสกิจกรรมของคุณ",
-    saveEventId: "บันทึกรหัสนี้สำหรับการจัดการกิจกรรม",
     eventUpdated: "อัปเดตกิจกรรมสำเร็จ",
     eventUpdatedDesc: "กิจกรรมของคุณถูกอัปเดตเรียบร้อยแล้ว",
     eventDeleted: "ลบกิจกรรมสำเร็จ",
@@ -586,8 +572,8 @@ const translations = {
     totalAmount: "จำนวนเงินรวม",
     selectTicketType: "เลือกประเภทตั๋ว",
     enterFullName: "ป้อนชื่อเต็มของคุณ",
-    enterEmail: "ป้อนอีเมลของคุณ",
-    enterPhone: "ป้อนหมายเลขโทรศัพท์ของคุณ",
+    enterEmailAddress: "ป้อนอีเมลของคุณ",
+    enterPhonePlaceholder: "ป้อนหมายเลขโทรศัพท์ของคุณ",
     enterCompany: "ป้อนชื่อบริษัทของคุณ",
     dietaryPlaceholder: "ข้อจำกัดด้านอาหารหรือความชอบใดๆ",
     notesPlaceholder: "ข้อมูลเพิ่มเติมหรือคำขอพิเศษใดๆ",
@@ -613,7 +599,7 @@ const translations = {
     eventDetailsSection: "รายละเอียดกิจกรรม",
     ticketDetailsSection: "ข้อมูลตั๋ว",
     name: "ชื่อ",
-    phoneNumber: "หมายเลขโทรศัพท์",
+    phoneNumberDisplay: "หมายเลขโทรศัพท์",
     ticketQuantity: "จำนวน",
     totalAmountLabel: "จำนวนเงินรวม",
     purchaseDateLabel: "วันที่ซื้อ",
@@ -621,7 +607,7 @@ const translations = {
     noTicketsFoundForUser: "ไม่พบตั๋วสำหรับผู้ใช้",
     noTicketsFoundMessage: "ไม่มีตั๋วที่เกี่ยวข้องกับชื่อผู้ใช้",
     pleaseCheckUsername: "กรุณาตรวจสอบชื่อผู้ใช้หรืออีเมลและลองใหม่อีกครั้ง",
-    searching: "กำลังค้นหา...",
+
     searchTicketsButton: "ค้นหาตั๋ว",
 
     // Ticket types

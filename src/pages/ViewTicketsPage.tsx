@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -283,7 +283,7 @@ export function ViewTicketsPage() {
                               <span className="font-medium">{t("email")}:</span> {ticket.userEmail || 'N/A'}
                             </div>
                             <div className="text-sm">
-                              <span className="font-medium">{t("phoneNumber")}:</span> {ticket.userPhone || 'N/A'}
+                              <span className="font-medium">{t("phoneNumberDisplay")}:</span> {ticket.userPhone || 'N/A'}
                             </div>
                             <div className="text-sm">
                               <span className="font-medium">{t("ticketType")}:</span> {ticket.ticketType || 'N/A'}

@@ -1,15 +1,15 @@
-import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, MapPin, Users, DollarSign, ChevronLeft, ChevronRight, Upload, Mail, Lock, CheckCircle, FileText, Image, Plus, Trash2, Ticket, Clock } from "lucide-react";
-import { eventService, CreateEventRequest } from "@/services/eventService";
+import { CreateEventRequest, eventService } from "@/services/eventService";
+import { Calendar, CheckCircle, ChevronLeft, ChevronRight, Clock, DollarSign, FileText, Image, Lock, Mail, MapPin, Plus, Ticket, Trash2, Upload, Users } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export function CreateEventPage() {
@@ -376,7 +376,7 @@ export function CreateEventPage() {
             </div>
 
             <div>
-              <Label htmlFor="organizerPhone">{t("phoneNumber")}</Label>
+              <Label htmlFor="organizerPhone">{t("organizerPhoneNumber")}</Label>
               <Input
                 id="organizerPhone"
                 placeholder="+66-2-xxx-xxxx"
